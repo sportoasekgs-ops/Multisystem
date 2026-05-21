@@ -1,4 +1,4 @@
-modules = ["python-3.11", "web"]
+modules = ["python-3.11", "web", "postgresql-16"]
 [agent]
 expertMode = true
 integrations = ["google-mail:1.0.0", "resend:1.0.0"]
@@ -29,7 +29,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -m gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
+args = ".pythonlibs/bin/gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
 waitForPort = 5000
 
 [[ports]]

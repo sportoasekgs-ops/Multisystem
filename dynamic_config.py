@@ -34,13 +34,12 @@ _DEFAULT_FREE_MODULES = [
 ]
 
 _DEFAULT_SCHOOL_CLASSES = [
-    "5a", "5b", "5c", "5d", "5e", "5f",
-    "6a (KES)", "6b (KES)", "6c (KES)", "6d (KES)", "6e (KES)", "6f (KES)",
-    "7a (KES)", "7b (KES)", "7c (KES)", "7d (KES)", "7e (KES)", "7f (KES)",
-    "G8G1", "G8G2", "G8G3", "H8H", "R8R1", "R8R2",
-    "G9G1", "G9G2", "G9G3", "H9H", "R9R1", "R9R2", "R9R3",
-    "G10G1", "G10G2", "G10G3", "H10H", "R10R1", "R10R2",
-    "G11a", "G11b", "G11c", "G12Q1", "G13Q2",
+    "5a", "5b", "5c",
+    "6a", "6b", "6c",
+    "7a", "7b", "7c",
+    "8a", "8b", "8c",
+    "9a", "9b", "9c",
+    "10a", "10b", "10c",
 ]
 
 _DEFAULT_MAX_STUDENTS = 5

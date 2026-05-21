@@ -115,7 +115,7 @@ def _handle_post(step_id):
         background_color = request.form.get('background_color', '#fce4ec').strip()
 
         # Logo-Upload
-        logo_filename = get_config('logo_filename', 'logo.png')
+        logo_filename = get_config('logo_filename', '')
         if 'logo_file' in request.files:
             f = request.files['logo_file']
             if f and f.filename:
@@ -128,7 +128,7 @@ def _handle_post(step_id):
                     flash('Logo muss PNG, JPG, SVG oder WebP sein.', 'error')
 
         # Favicon-Upload
-        favicon_filename = get_config('favicon_filename', 'logo.png')
+        favicon_filename = get_config('favicon_filename', '')
         if 'favicon_file' in request.files:
             f = request.files['favicon_file']
             if f and f.filename:
@@ -297,8 +297,8 @@ def _get_step_config(step_id):
             'primary_color':    get_config('primary_color', '#E91E63'),
             'secondary_color':  get_config('secondary_color', '#C2185B'),
             'background_color': get_config('background_color', '#fce4ec'),
-            'logo_filename':    get_config('logo_filename', 'logo.png'),
-            'favicon_filename': get_config('favicon_filename', 'logo.png'),
+            'logo_filename':    get_config('logo_filename', ''),
+            'favicon_filename': get_config('favicon_filename', ''),
         }
     elif step_id == 'smtp':
         return {
@@ -327,7 +327,7 @@ def _get_step_config(step_id):
             'school_name':     get_config('school_name', 'Ihre Einrichtung'),
             'iserv_domain':    get_config('iserv_domain', ''),
             'smtp_host':       get_config('smtp_host', ''),
-            'logo_filename':   get_config('logo_filename', 'logo.png'),
+            'logo_filename':   get_config('logo_filename', ''),
             'primary_color':   get_config('primary_color', '#E91E63'),
         }
     return {}
@@ -402,19 +402,6 @@ def test_smtp():
 
     except Exception as e:
         err = str(e)
-        # Replit blockiert ausgehende SMTP-Verbindungen (Ports 25, 465, 587)
-        if 'Network is unreachable' in err or 'Connection refused' in err or 'timed out' in err.lower():
-            import os as _os
-            if _os.environ.get('REPL_ID') or _os.environ.get('REPLIT_CLUSTER'):
-                return jsonify({
-                    'success': False,
-                    'message': (
-                        '⚠️ Replit blockiert ausgehende SMTP-Verbindungen – '
-                        'das ist eine Netzwerk-Einschränkung der Replit-Plattform. '
-                        'Die Konfiguration ist trotzdem gespeichert und funktioniert '
-                        'auf Render (Produktion) einwandfrei.'
-                    )
-                })
         return jsonify({'success': False, 'message': f'Fehler: {err}'})
 
 

@@ -86,7 +86,7 @@ def get_branding():
         'school_subtitle': get_config('school_subtitle', 'Buchungssystem'),
         'primary_color': get_config('primary_color', '#E91E63'),
         'secondary_color': get_config('secondary_color', '#C2185B'),
-        'logo_filename': get_config('logo_filename', 'logo.png'),
-        'favicon_filename': get_config('favicon_filename', 'logo.png'),
+        'logo_filename': get_config('logo_filename', ''),
+        'favicon_filename': get_config('favicon_filename', ''),
         'background_color': get_config('background_color', '#fce4ec'),
     }

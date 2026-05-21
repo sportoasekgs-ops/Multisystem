@@ -157,13 +157,17 @@ input:checked + .slider:before { transform: translateX(24px); }
             <div class="cms-card">
                 <h3>🖼️ Logo</h3>
                 <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.2rem;flex-wrap:wrap;">
+                    {% if logo_url %}
                     <img id="logo-preview"
                          src="{{ logo_url }}"
                          alt="Aktuelles Logo"
                          style="height:64px;width:auto;border-radius:10px;border:1px solid var(--border);background:#f8fafc;padding:6px;object-fit:contain;">
+                    {% else %}
+                    <div id="logo-preview" style="height:64px;width:64px;border-radius:10px;border:2px dashed var(--border);background:#f8fafc;display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#9ca3af;">🖼️</div>
+                    {% endif %}
                     <div>
                         <p style="margin:0 0 .3rem 0;font-size:.85rem;font-weight:600;color:var(--text-secondary);">Aktuelles Logo</p>
-                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">{{ cms.logo_filename or 'logo.png' }}</p>
+                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">{{ cms.logo_filename or '–' }}</p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -179,13 +183,17 @@ input:checked + .slider:before { transform: translateX(24px); }
             <div class="cms-card">
                 <h3>🔖 Favicon (Browser-Tab-Icon)</h3>
                 <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.2rem;flex-wrap:wrap;">
+                    {% if favicon_url %}
                     <img id="favicon-preview"
                          src="{{ favicon_url }}"
                          alt="Aktuelles Favicon"
                          style="height:40px;width:40px;border-radius:6px;border:1px solid var(--border);background:#f8fafc;padding:4px;object-fit:contain;">
+                    {% else %}
+                    <div id="favicon-preview" style="height:40px;width:40px;border-radius:6px;border:2px dashed var(--border);background:#f8fafc;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#9ca3af;">🔖</div>
+                    {% endif %}
                     <div>
                         <p style="margin:0 0 .3rem 0;font-size:.85rem;font-weight:600;color:var(--text-secondary);">Aktuelles Favicon</p>
-                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">{{ cms.favicon_filename or 'logo.png' }}</p>
+                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">{{ cms.favicon_filename or '–' }}</p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -239,11 +247,6 @@ input:checked + .slider:before { transform: translateX(24px); }
                     <strong>Wichtig:</strong> Gmail erfordert ein <strong>App-Passwort</strong> (nicht das normale Google-Passwort).
                     <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:#1d4ed8;">→ App-Passwort erstellen</a>
                     (Google-Konto → Sicherheit → 2-Schritt-Verifizierung muss aktiv sein)
-                </div>
-                <div style="background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:12px 16px;border-radius:8px;margin-bottom:1.2rem;font-size:.85rem;">
-                    <strong>⚠️ Hinweis zu Replit:</strong>
-                    Replit blockiert ausgehende SMTP-Verbindungen. Der „Test senden"-Button schlägt hier immer fehl – kein Konfigurationsfehler.
-                    <strong>Auf Render (Produktion) funktioniert SMTP.</strong>
                 </div>
                 <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.2rem;">
                     E-Mails werden ausschließlich über SMTP versendet.
@@ -540,8 +543,7 @@ input:checked + .slider:before { transform: translateX(24px); }
             <h3>Hinweise zur Datenbank</h3>
             <ul style="font-size:.88rem;color:var(--text-secondary);line-height:2;padding-left:1.2rem;">
                 <li>Format: <code>postgresql://BENUTZER:PASSWORT@HOST:PORT/DATENBANKNAME</code></li>
-                <li>Unterstützt: PostgreSQL (Neon, Supabase, Render, Replit Database, eigener Server)</li>
-                <li>Bei <strong>Replit</strong>: Datenbank-URL automatisch als <code>DATABASE_URL</code> verfügbar – kein Eintrag hier nötig</li>
+                <li>Unterstützt: PostgreSQL (Neon, Supabase, Render, eigener Server)</li>
                 <li>Bei <strong>Render</strong>: Interne DB-URL aus dem Render-Dashboard kopieren</li>
                 <li>Die URL wird lokal in <code>sportoase_local.json</code> gespeichert (nicht in der Datenbank)</li>
             </ul>

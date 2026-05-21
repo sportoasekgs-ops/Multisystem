@@ -139,6 +139,55 @@ send_email_resend = send_email
 send_email_smtp   = send_email
 
 
+def send_password_reset_email(to_email, username, reset_url):
+    """Sendet eine Passwort-Reset-E-Mail an einen lokalen Admin."""
+    app_name = _get_app_name()
+    subject  = f"🔑 Passwort zurücksetzen – {app_name}"
+
+    html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+    <body style="margin:0;padding:20px;background:#f3f4f6;">
+        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1);">
+            <div style="background:linear-gradient(135deg,#E91E63 0%,#C2185B 100%);padding:24px 30px;">
+                <h2 style="color:white;margin:0;font-size:20px;">🔑 Passwort zurücksetzen</h2>
+            </div>
+            <div style="padding:30px;">
+                <p style="color:#1f2937;font-size:15px;">Hallo <strong>{username}</strong>,</p>
+                <p style="color:#4b5563;font-size:14px;">
+                    du hast eine Anfrage zum Zurücksetzen deines Passworts gestellt.<br>
+                    Klicke auf den folgenden Button, um ein neues Passwort zu setzen:
+                </p>
+                <div style="text-align:center;margin:28px 0;">
+                    <a href="{reset_url}"
+                       style="background:linear-gradient(135deg,#E91E63,#C2185B);color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;">
+                        Passwort zurücksetzen
+                    </a>
+                </div>
+                <div style="background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:14px 18px;border-radius:10px;font-size:13px;">
+                    ⏱️ Dieser Link ist <strong>1 Stunde</strong> gültig und kann nur einmal verwendet werden.
+                </div>
+                <p style="color:#6b7280;font-size:13px;margin-top:20px;">
+                    Falls du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren.
+                    Dein Passwort bleibt unverändert.
+                </p>
+                {_footer()}
+            </div>
+        </div>
+    </body></html>"""
+
+    text = f"""Passwort zurücksetzen – {app_name}
+
+Hallo {username},
+
+du hast eine Anfrage zum Zurücksetzen deines Passworts gestellt.
+Klicke auf den folgenden Link (gültig 1 Stunde):
+
+{reset_url}
+
+Falls du diese Anfrage nicht gestellt hast, kannst du diese E-Mail ignorieren."""
+
+    return send_email(to_email, subject, html, text)
+
+
 # ── E-Mail-Styles ─────────────────────────────────────────────────────────────
 
 def get_email_styles():

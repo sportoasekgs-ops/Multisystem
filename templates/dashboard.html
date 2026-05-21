@@ -846,11 +846,13 @@
     <!-- Kontakt-Information -->
     <div class="contact-info-box">
         <div class="contact-content">
+            {% if logo_url %}
             <img
-                src="{{ url_for('static', filename='logo.png') }}"
+                src="{{ logo_url }}"
                 alt="{{ school_name or 'Logo' }}"
                 class="contact-logo"
             />
+            {% endif %}
             <div class="contact-text">
                 <p>
                     {% if contact_email or contact_phone %}

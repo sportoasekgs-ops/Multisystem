@@ -20,16 +20,16 @@ preload_app = False
 
 def on_starting(server):
     """Called just before the master process is initialized."""
-    server.log.info("Starting SportOase Buchungssystem")
+    server.log.info("Starting Buchungssystem")
 
 def on_reload(server):
     """Called to recycle workers during a reload via SIGHUP."""
-    server.log.info("Reloading SportOase Buchungssystem")
+    server.log.info("Reloading Buchungssystem")
 
 def when_ready(server):
     """Called just after the server is started."""
-    server.log.info("SportOase Buchungssystem is ready to serve requests")
+    server.log.info("Buchungssystem is ready to serve requests")
 
 def on_exit(server):
     """Called just before exiting Gunicorn."""
-    server.log.info("Shutting down SportOase Buchungssystem")
+    server.log.info("Shutting down Buchungssystem")

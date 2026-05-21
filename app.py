@@ -32,7 +32,7 @@ session_secret = os.environ.get('SESSION_SECRET')
 if not session_secret:
     raise RuntimeError(
         "SESSION_SECRET Umgebungsvariable ist nicht gesetzt! "
-        "Bitte setzen Sie einen sicheren, zufälligen Wert in Replit Secrets."
+        "Bitte setzen Sie einen sicheren, zufälligen Wert in den Umgebungsvariablen."
     )
 app.secret_key = session_secret
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
@@ -44,9 +44,17 @@ app.config['SESSION_COOKIE_SECURE'] = True
 @app.after_request
 def add_iframe_headers(response):
     """Erlaubt Einbettung in IServ iFrame"""
-    # Erlaube Einbettung von kgs-pattensen.de
-    response.headers['X-Frame-Options'] = 'ALLOW-FROM https://kgs-pattensen.de'
-    response.headers['Content-Security-Policy'] = "frame-ancestors 'self' https://kgs-pattensen.de"
+    try:
+        from system_config import get_config
+        iserv_domain = get_config('iserv_domain', '')
+        if iserv_domain:
+            origin = f'https://{iserv_domain}'
+            response.headers['X-Frame-Options'] = f'ALLOW-FROM {origin}'
+            response.headers['Content-Security-Policy'] = f"frame-ancestors 'self' {origin}"
+        else:
+            response.headers.pop('X-Frame-Options', None)
+    except Exception:
+        pass
     return response
 
 # SSE Broadcaster für Echtzeit-Benachrichtigungen
@@ -160,15 +168,23 @@ if not _BOOTSTRAP_MODE:
 
     # Datenbanktabellen erstellen (inkl. SystemConfig)
     with app.app_context():
+        # Alle Modelle explizit importieren damit db.create_all() sie findet
+        from models import (  # noqa: F401
+            User, Booking, SlotName, BlockedSlot, SystemConfig,
+            Period, Course, SchoolClass, Notification, PasswordResetToken,
+        )
         db.create_all()
-        # Für bestehende Installationen mit vorhandenen Benutzern:
-        # Setup als abgeschlossen markieren, damit keine Weiterleitung erfolgt
+        # Für bestehende Installationen (vor Setup-Wizard-Feature):
+        # Setup als abgeschlossen markieren wenn Benutzer UND school_name vorhanden.
+        # school_name wird nur im Wizard-Schritt "Allgemeine Daten" gesetzt → nach Factory Reset
+        # ist es gelöscht, daher kein versehentliches Auto-Complete nach Reset.
         try:
             from system_config import get_config, set_config
-            from models import User, SystemConfig
+            from models import User
             if get_config('setup_complete') is None:
                 user_count = User.query.count()
-                if user_count > 0:
+                school_name = get_config('school_name')
+                if user_count > 0 and school_name:
                     set_config('setup_complete', 'true', category='system')
                     print("[SETUP] Bestehende Installation erkannt – Setup als abgeschlossen markiert.")
         except Exception as e:
@@ -192,10 +208,15 @@ app.register_blueprint(admin_dyn_bp)
 @app.before_request
 def check_setup():
     """Leitet zum Setup-Wizard weiter, wenn das System noch nicht eingerichtet ist."""
-    # Statische Dateien und Setup-Routen nie blockieren
+    # Routen, die auch ohne abgeschlossenes Setup erreichbar sein müssen
+    _SETUP_BYPASS = {
+        'static', 'login', 'logout',
+        'oauth_login', 'oauth_callback', 'bootstrap_db',
+        'forgot_password', 'reset_password',
+    }
     if request.endpoint and (
         request.endpoint.startswith('setup.') or
-        request.endpoint == 'static'
+        request.endpoint in _SETUP_BYPASS
     ):
         return None
     # Wenn Setup noch nicht abgeschlossen → Wizard aufrufen
@@ -221,17 +242,20 @@ def _hex_to_rgb(hex_color):
         return '233, 30, 99', '233 30 99'
 
 
-def _resolve_logo_url(filename, default='logo.png'):
-    """Gibt den URL-Pfad zur Logo-Datei zurück (uploads/ oder static root)."""
+def _resolve_logo_url(filename, default=''):
+    """Gibt den URL-Pfad zur Logo-Datei zurück (uploads/ oder static root).
+    Gibt '' zurück wenn kein Logo konfiguriert ist."""
     if not filename:
         filename = default
+    if not filename:
+        return ''
     uploads_path = os.path.join('static', 'uploads', filename)
     if os.path.exists(uploads_path):
         return f'/static/uploads/{filename}'
     static_path = os.path.join('static', filename)
     if os.path.exists(static_path):
         return f'/static/{filename}'
-    return f'/static/{default}'
+    return ''
 
 
 @app.context_processor
@@ -255,16 +279,16 @@ def inject_branding():
             'school_subtitle': 'Buchungssystem',
             'primary_color': '#E91E63',
             'secondary_color': '#C2185B',
-            'logo_filename': 'logo.png',
-            'favicon_filename': 'logo.png',
+            'logo_filename': '',
+            'favicon_filename': '',
             'background_color': '#fce4ec',
         }
 
     primary = branding.get('primary_color', '#E91E63')
     primary_rgb_comma, primary_rgb_space = _hex_to_rgb(primary)
     extra = {
-        'logo_url': _resolve_logo_url(branding.get('logo_filename', 'logo.png')),
-        'favicon_url': _resolve_logo_url(branding.get('favicon_filename', 'logo.png')),
+        'logo_url': _resolve_logo_url(branding.get('logo_filename', '')),
+        'favicon_url': _resolve_logo_url(branding.get('favicon_filename', '')),
         'primary_rgb': primary_rgb_comma,
         'primary_rgb_space': primary_rgb_space,
         'cms_privacy_text': get_config('cms_privacy_text', ''),
@@ -534,6 +558,96 @@ def login_local():
 
     flash(f'Willkommen, {username}! (Lokaler Admin-Login)', 'success')
     return redirect(url_for('dashboard'))
+
+
+# Route: Passwort vergessen (GET = Formular, POST = Token senden)
+@app.route('/login/forgot', methods=['GET', 'POST'])
+def forgot_password():
+    """Passwort-Reset-Anfrage für lokale Admin-Accounts"""
+    if request.method == 'POST':
+        identifier = request.form.get('identifier', '').strip()
+        if not identifier:
+            flash('Bitte Benutzername oder E-Mail eingeben.', 'error')
+            return redirect(url_for('forgot_password'))
+
+        from models import PasswordResetToken
+        import secrets
+        from datetime import datetime, timedelta
+
+        # Suche nach Username oder E-Mail
+        user = User.query.filter(
+            (User.username == identifier) | (User.email == identifier)
+        ).filter_by(role='admin').first()
+
+        # Sicherheitshinweis: immer gleiche Meldung zeigen (kein User-Enumeration)
+        success_msg = ('Wenn ein Admin-Account mit diesem Benutzernamen oder dieser E-Mail existiert '
+                       'und eine E-Mail-Adresse hinterlegt ist, wurde ein Reset-Link verschickt.')
+
+        if user and user.email:
+            # Alte, nicht verwendete Token für diesen User löschen
+            PasswordResetToken.query.filter_by(user_id=user.id, used=False).delete()
+            db.session.flush()
+
+            token_str = secrets.token_urlsafe(48)
+            token = PasswordResetToken(
+                user_id    = user.id,
+                token      = token_str,
+                expires_at = datetime.utcnow() + timedelta(hours=1),
+            )
+            db.session.add(token)
+            db.session.commit()
+
+            reset_url = url_for('reset_password', token=token_str, _external=True)
+            try:
+                from email_service import send_password_reset_email
+                send_password_reset_email(user.email, user.username, reset_url)
+            except Exception as e:
+                app.logger.warning(f"[RESET] E-Mail-Versand fehlgeschlagen: {e}")
+
+        flash(success_msg, 'info')
+        return redirect(url_for('forgot_password'))
+
+    return render_template('forgot_password.html')
+
+
+# Route: Passwort zurücksetzen via Token (GET = neues Passwort Formular, POST = speichern)
+@app.route('/login/reset/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Passwort-Reset via Token"""
+    from models import PasswordResetToken
+    from datetime import datetime
+
+    tok = PasswordResetToken.query.filter_by(token=token, used=False).first()
+
+    if not tok or tok.expires_at < datetime.utcnow():
+        flash('Dieser Reset-Link ist ungültig oder abgelaufen. Bitte erneut anfordern.', 'error')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        pw1 = request.form.get('password', '')
+        pw2 = request.form.get('password2', '')
+
+        if len(pw1) < 8:
+            flash('Das Passwort muss mindestens 8 Zeichen lang sein.', 'error')
+            return render_template('reset_password.html', token=token)
+        if pw1 != pw2:
+            flash('Die Passwörter stimmen nicht überein.', 'error')
+            return render_template('reset_password.html', token=token)
+
+        user = User.query.get(tok.user_id)
+        if not user:
+            flash('Benutzer nicht gefunden.', 'error')
+            return redirect(url_for('login'))
+
+        user.set_password(pw1)
+        tok.used = True
+        db.session.commit()
+
+        app.logger.info(f"[RESET] Passwort für Admin '{user.username}' erfolgreich zurückgesetzt.")
+        flash('Passwort erfolgreich geändert! Du kannst dich jetzt anmelden.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)
 
 
 # Route: IServ SSO Login initiieren
@@ -2884,8 +2998,8 @@ def admin_cms():
         'contact_email':    get_config('contact_email', ''),
         'contact_phone':    get_config('contact_phone', ''),
         'contact_text':     get_config('contact_text', ''),
-        'logo_filename':    get_config('logo_filename', 'logo.png'),
-        'favicon_filename': get_config('favicon_filename', 'logo.png'),
+        'logo_filename':    get_config('logo_filename', ''),
+        'favicon_filename': get_config('favicon_filename', ''),
         'primary_color':    get_config('primary_color', '#E91E63'),
         'smtp_host':        get_config('smtp_host', ''),
         'smtp_port':        get_config('smtp_port', '587'),
@@ -2955,7 +3069,7 @@ def admin_cms_save():
         _ALLOWED = {'.png', '.jpg', '.jpeg', '.svg', '.webp'}
         _os.makedirs(_os.path.join('static', 'uploads'), exist_ok=True)
 
-        logo_filename = get_config('logo_filename', 'logo.png')
+        logo_filename = get_config('logo_filename', '')
         if 'logo_file' in request.files:
             f = request.files['logo_file']
             if f and f.filename:
@@ -2966,7 +3080,7 @@ def admin_cms_save():
                 else:
                     flash('Logo: Nur PNG, JPG, SVG oder WebP erlaubt.', 'error')
 
-        favicon_filename = get_config('favicon_filename', 'logo.png')
+        favicon_filename = get_config('favicon_filename', '')
         if 'favicon_file' in request.files:
             f = request.files['favicon_file']
             if f and f.filename:
@@ -3184,7 +3298,7 @@ if os.environ.get('FLASK_ENV') == 'production' or not os.environ.get('FLASK_DEBU
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
         app.logger.setLevel(logging.INFO)
-        app.logger.info('SportOase Buchungssystem gestartet (Production Mode)')
+        app.logger.info('Buchungssystem gestartet (Production Mode)')
     except Exception as e:
         print(f"Fehler beim Einrichten des Logging-Handlers: {e}")
 
@@ -3223,12 +3337,18 @@ def factory_reset():
         from database import db as _db
         _db.session.commit()
 
+        # Dynamische Defaults neu einseeden (Stunden, Kurse, Klassen)
+        try:
+            from dynamic_config import seed_initial_data as _seed
+            _seed()
+        except Exception as seed_err:
+            app.logger.warning(f"[FACTORY RESET] Seeding nach Reset fehlgeschlagen: {seed_err}")
+
         # Session leeren
         session.clear()
 
         app.logger.warning("[FACTORY RESET] Alle Daten wurden gelöscht. System zurückgesetzt.")
-        flash('✅ System erfolgreich zurückgesetzt. Bitte Einrichtung neu starten.', 'success')
-        return redirect(url_for('setup.setup_index'))
+        return redirect(url_for('setup.index'))
 
     except Exception as e:
         from database import db as _db
