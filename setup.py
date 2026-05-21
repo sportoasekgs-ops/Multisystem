@@ -12,6 +12,7 @@ setup_bp = Blueprint('setup', __name__, url_prefix='/setup')
 
 STEPS = [
     {'id': 'welcome',  'title': 'Willkommen',        'icon': '👋'},
+    {'id': 'database', 'title': 'Datenbank',          'icon': '🗄️'},
     {'id': 'general',  'title': 'Allgemeine Daten',   'icon': '🏫'},
     {'id': 'branding', 'title': 'Design & Branding',  'icon': '🎨'},
     {'id': 'smtp',     'title': 'E-Mail / SMTP',      'icon': '📧'},
@@ -72,6 +73,21 @@ def _handle_post(step_id):
     """Verarbeitet POST-Requests für jeden Wizard-Schritt."""
 
     if step_id == 'welcome':
+        return redirect(url_for('setup.step', step_id='database'))
+
+    elif step_id == 'database':
+        action = request.form.get('action', 'save')
+        if action == 'skip':
+            flash('Datenbank-Schritt übersprungen – bestehende Konfiguration wird verwendet.', 'info')
+            return redirect(url_for('setup.step', step_id='general'))
+
+        from local_config import set_database_url, get_database_url
+        db_url = request.form.get('database_url', '').strip()
+        if db_url:
+            set_database_url(db_url)
+            flash('Datenbank-URL gespeichert. Bitte starte die App neu, damit die Verbindung aktiv wird.', 'success')
+        else:
+            flash('Keine URL eingegeben – bestehende Konfiguration bleibt unverändert.', 'info')
         return redirect(url_for('setup.step', step_id='general'))
 
     elif step_id == 'general':
@@ -192,7 +208,27 @@ def _handle_post(step_id):
 
 def _get_step_config(step_id):
     """Lädt gespeicherte Werte für das aktuelle Formular."""
-    if step_id == 'general':
+    if step_id == 'database':
+        from local_config import get_database_url, get_local
+        raw_url = get_local('database_url', '')
+        env_url = os.environ.get('DATABASE_URL', '') or os.environ.get('SQLALCHEMY_DATABASE_URI', '')
+        db_configured = bool(raw_url or env_url)
+        # Maskierte Anzeige: zeige nur Host, verstecke Passwort
+        display_url = raw_url or env_url
+        if display_url:
+            try:
+                from urllib.parse import urlparse
+                p = urlparse(display_url)
+                db_url_masked = f"{p.scheme}://***:***@{p.hostname}{p.path}"
+            except Exception:
+                db_url_masked = '(konfiguriert)'
+        else:
+            db_url_masked = ''
+        return {
+            'db_configured': db_configured,
+            'db_url_masked': db_url_masked,
+        }
+    elif step_id == 'general':
         return {
             'school_name':     get_config('school_name', ''),
             'school_subtitle': get_config('school_subtitle', ''),
@@ -292,6 +328,28 @@ def test_smtp():
         return jsonify({'success': False, 'message': f'Fehler: {str(e)}'})
 
 
+# ─── AJAX: Datenbank-Test ───────────────────────────────────────────────────
+
+@setup_bp.route('/test-db', methods=['POST'])
+def test_db():
+    """Testet eine PostgreSQL-Verbindung mit der angegebenen URL."""
+    data = request.get_json(silent=True) or {}
+    db_url = data.get('database_url', '').strip()
+
+    if not db_url:
+        return jsonify({'success': False, 'message': 'Bitte eine Datenbank-URL eingeben.'})
+
+    try:
+        import sqlalchemy
+        engine = sqlalchemy.create_engine(db_url, connect_args={'connect_timeout': 8})
+        with engine.connect() as conn:
+            conn.execute(sqlalchemy.text('SELECT 1'))
+        engine.dispose()
+        return jsonify({'success': True, 'message': 'Verbindung erfolgreich! Datenbank ist erreichbar.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Verbindung fehlgeschlagen: {str(e)}'})
+
+
 # ─── Setup von Admin erneut aufrufen ────────────────────────────────────────
 
 @setup_bp.route('/reopen')
@@ -300,4 +358,4 @@ def reopen():
     if session.get('user_role') != 'admin':
         flash('Nur Admins können den Setup-Wizard erneut aufrufen.', 'error')
         return redirect(url_for('dashboard'))
-    return redirect(url_for('setup.step', step_id='general'))
+    return redirect(url_for('setup.step', step_id='database'))

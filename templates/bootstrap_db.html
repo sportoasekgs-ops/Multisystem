@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datenbank einrichten – SportOase</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 520px;
+        }
+        .icon { font-size: 3rem; text-align: center; margin-bottom: 1rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; text-align: center; margin-bottom: 0.5rem; }
+        p.sub { color: #6c757d; text-align: center; font-size: 0.9rem; margin-bottom: 2rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; color: #1a1a2e; margin-bottom: 0.4rem; }
+        input[type="text"] {
+            width: 100%; padding: 0.7rem 0.9rem;
+            border: 1.5px solid #e0e0e0; border-radius: 8px;
+            font-size: 0.9rem; color: #1a1a2e; background: #f8f9fa;
+            font-family: monospace;
+        }
+        input[type="text"]:focus { outline: none; border-color: #E91E63; background: #fff; }
+        .hint { font-size: 0.78rem; color: #6c757d; margin-top: 0.4rem; }
+        .error-box {
+            background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: 8px; padding: 0.7rem 1rem;
+            color: #dc2626; font-size: 0.85rem; margin-bottom: 1.2rem;
+        }
+        .info-box {
+            background: #eff6ff; border: 1px solid #bfdbfe;
+            border-radius: 8px; padding: 0.9rem 1rem;
+            color: #1d4ed8; font-size: 0.82rem; margin: 1.2rem 0;
+            line-height: 1.5;
+        }
+        .info-box code {
+            background: rgba(0,0,0,0.07); padding: 1px 5px;
+            border-radius: 4px; font-size: 0.8rem;
+        }
+        button {
+            width: 100%; margin-top: 1.2rem;
+            padding: 0.8rem; background: #E91E63;
+            color: #fff; border: none; border-radius: 8px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+        }
+        button:hover { background: #C2185B; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="icon">🗄️</div>
+    <h1>Datenbank einrichten</h1>
+    <p class="sub">Bitte gib die PostgreSQL-Verbindungs-URL ein, damit die App starten kann.</p>
+
+    {% if error %}
+    <div class="error-box">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        <div>
+            <label for="db_url">Datenbank-URL</label>
+            <input type="text" id="db_url" name="database_url" required
+                   placeholder="postgresql://user:passwort@host:5432/datenbankname"
+                   autocomplete="off" spellcheck="false">
+            <p class="hint">Format: <code>postgresql://BENUTZER:PASSWORT@HOST:PORT/DATENBANKNAME</code></p>
+        </div>
+
+        <div class="info-box">
+            ℹ️ Du kannst die URL auch als Umgebungsvariable <code>DATABASE_URL</code> setzen und die App neu starten – dann entfällt dieser Schritt automatisch.
+        </div>
+
+        <button type="submit">Speichern & Weiter →</button>
+    </form>
+</div>
+</body>
+</html>

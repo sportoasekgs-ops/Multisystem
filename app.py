@@ -85,78 +85,99 @@ def inject_csrf_token():
 
 # Datenbank-Konfiguration
 # Reihenfolge: lokale Datei (sportoase_local.json) → Env-Var DATABASE_URL
-from local_config import get_database_url, is_database_configured
+from local_config import get_database_url, is_database_configured, set_database_url
 db_uri = get_database_url()
 
-if not db_uri:
-    raise RuntimeError(
-        "Keine DB-URL gefunden. Bitte DATABASE_URL setzen "
-        "oder im Setup-Wizard konfigurieren."
-    )
+# ── Bootstrap-Modus: keine DB-URL vorhanden ──────────────────────────────────
+_BOOTSTRAP_MODE = not bool(db_uri)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-}
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+if _BOOTSTRAP_MODE:
+    # Minimale Routen zum Eingeben der Datenbank-URL
+    @app.route('/', defaults={'path': ''})
+    @app.route('/<path:path>')
+    def bootstrap_catch_all(path):
+        return redirect(url_for('bootstrap_db'))
+
+    @app.route('/bootstrap', methods=['GET', 'POST'])
+    def bootstrap_db():
+        error = None
+        if request.method == 'POST':
+            url = request.form.get('database_url', '').strip()
+            if not url:
+                error = 'Bitte eine Datenbank-URL eingeben.'
+            else:
+                set_database_url(url)
+                return render_template('bootstrap_saved.html')
+        return render_template('bootstrap_db.html', error=error)
+
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
+
+if not _BOOTSTRAP_MODE:
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Importiere zentrale Datenbank-Instanz
 from database import db
 
-# Initialisiere SQLAlchemy mit der App
-db.init_app(app)
+# Initialisiere SQLAlchemy mit der App (nur wenn DB verfügbar)
+if not _BOOTSTRAP_MODE:
+    db.init_app(app)
 
-# Importiere Modelle und Hilfsfunktionen
-from models import (
-    create_user, get_user_by_username, get_user_by_email, 
-    get_user_by_id, verify_password, get_all_users, create_booking,
-    get_bookings_for_date_period, count_students_for_period, get_all_bookings,
-    get_bookings_by_date, get_bookings_for_week, get_booking_by_id,
-    update_booking, delete_booking, User, Booking,
-    create_notification, get_unread_notifications, get_recent_notifications,
-    mark_notification_as_read, mark_all_notifications_as_read,
-    get_unread_notification_count, get_booking_by_id, check_student_double_booking,
-    change_user_password, get_or_create_oauth_user
-)
-from config import *
-from dynamic_config import (
-    get_period_times, get_period as _get_period_dict,
-    get_fixed_offers, get_free_courses, get_school_classes_list,
-    get_max_students, get_booking_advance_minutes,
-    seed_initial_data,
-)
-from email_service import send_booking_notification
-from demo_mode import is_demo_mode, get_demo_bookings_for_week
+# Importiere Modelle und Hilfsfunktionen (nur wenn DB verfügbar)
+if not _BOOTSTRAP_MODE:
+    from models import (
+        create_user, get_user_by_username, get_user_by_email,
+        get_user_by_id, verify_password, get_all_users, create_booking,
+        get_bookings_for_date_period, count_students_for_period, get_all_bookings,
+        get_bookings_by_date, get_bookings_for_week, get_booking_by_id,
+        update_booking, delete_booking, User, Booking,
+        create_notification, get_unread_notifications, get_recent_notifications,
+        mark_notification_as_read, mark_all_notifications_as_read,
+        get_unread_notification_count, get_booking_by_id, check_student_double_booking,
+        change_user_password, get_or_create_oauth_user
+    )
+    from config import *
+    from dynamic_config import (
+        get_period_times, get_period as _get_period_dict,
+        get_fixed_offers, get_free_courses, get_school_classes_list,
+        get_max_students, get_booking_advance_minutes,
+        seed_initial_data,
+    )
+    from email_service import send_booking_notification
+    from demo_mode import is_demo_mode, get_demo_bookings_for_week
 
-# IServ OAuth-Integration initialisieren
-from oauth_config import init_oauth, determine_user_role
-oauth_instance, iserv_client = init_oauth(app)
+    # IServ OAuth-Integration initialisieren
+    from oauth_config import init_oauth, determine_user_role
+    oauth_instance, iserv_client = init_oauth(app)
 
-# System-Konfiguration (Setup-Wizard)
-from system_config import is_setup_complete, get_branding, get_config
+    # System-Konfiguration (Setup-Wizard)
+    from system_config import is_setup_complete, get_branding, get_config
 
-# Datenbanktabellen erstellen (inkl. SystemConfig)
-with app.app_context():
-    db.create_all()
-    # Für bestehende Installationen mit vorhandenen Benutzern:
-    # Setup als abgeschlossen markieren, damit keine Weiterleitung erfolgt
-    try:
-        from system_config import get_config, set_config
-        from models import User, SystemConfig
-        if get_config('setup_complete') is None:
-            user_count = User.query.count()
-            if user_count > 0:
-                set_config('setup_complete', 'true', category='system')
-                print("[SETUP] Bestehende Installation erkannt – Setup als abgeschlossen markiert.")
-    except Exception as e:
-        print(f"[SETUP] Hinweis: Setup-Check fehlgeschlagen: {e}")
+    # Datenbanktabellen erstellen (inkl. SystemConfig)
+    with app.app_context():
+        db.create_all()
+        # Für bestehende Installationen mit vorhandenen Benutzern:
+        # Setup als abgeschlossen markieren, damit keine Weiterleitung erfolgt
+        try:
+            from system_config import get_config, set_config
+            from models import User, SystemConfig
+            if get_config('setup_complete') is None:
+                user_count = User.query.count()
+                if user_count > 0:
+                    set_config('setup_complete', 'true', category='system')
+                    print("[SETUP] Bestehende Installation erkannt – Setup als abgeschlossen markiert.")
+        except Exception as e:
+            print(f"[SETUP] Hinweis: Setup-Check fehlgeschlagen: {e}")
 
-    # Dynamische Konfiguration: Stunden/Kurse/Klassen aus Defaults einseeden
-    try:
-        seed_initial_data()
-    except Exception as e:
-        print(f"[DynConfig] Seeding beim Start fehlgeschlagen: {e}")
+        # Dynamische Konfiguration: Stunden/Kurse/Klassen aus Defaults einseeden
+        try:
+            seed_initial_data()
+        except Exception as e:
+            print(f"[DynConfig] Seeding beim Start fehlgeschlagen: {e}")
 
 # Setup-Wizard Blueprint registrieren
 from setup import setup_bp
@@ -464,6 +485,41 @@ def login():
                            login_title=login_title,
                            login_subtitle=login_subtitle,
                            login_notice=login_notice)
+
+# Route: Lokaler Admin-Login (für Tests ohne IServ)
+@app.route('/login/local', methods=['POST'])
+def login_local():
+    """Lokaler Admin-Login mit Benutzername und Passwort (nur für Admins)"""
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '')
+
+    if not username or not password:
+        flash('Bitte Benutzername und Passwort eingeben.', 'error')
+        return redirect(url_for('login'))
+
+    user = get_user_by_username(username)
+    if not user:
+        flash('Ungültige Anmeldedaten.', 'error')
+        return redirect(url_for('login'))
+
+    if user['role'] != 'admin':
+        flash('Lokaler Login ist nur für Administratoren verfügbar.', 'error')
+        return redirect(url_for('login'))
+
+    user_obj = User.query.filter_by(username=username).first()
+    if not user_obj or not user_obj.password_hash or not user_obj.check_password(password):
+        flash('Ungültige Anmeldedaten.', 'error')
+        return redirect(url_for('login'))
+
+    session.clear()
+    session['user_id'] = user['id']
+    session['user_username'] = user['username']
+    session['user_email'] = user['email']
+    session['user_role'] = user['role']
+
+    flash(f'Willkommen, {username}! (Lokaler Admin-Login)', 'success')
+    return redirect(url_for('dashboard'))
+
 
 # Route: IServ SSO Login initiieren
 @app.route('/login/iserv')

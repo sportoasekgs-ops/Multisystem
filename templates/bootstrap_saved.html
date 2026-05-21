@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datenbank gespeichert – SportOase</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #E91E63 0%, #C2185B 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+        .icon { font-size: 3.5rem; margin-bottom: 1rem; }
+        h1 { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.5rem; }
+        p { color: #6c757d; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.6; }
+        .step {
+            background: #f0fdf4; border: 1px solid #bbf7d0;
+            border-radius: 10px; padding: 1rem 1.2rem;
+            text-align: left; font-size: 0.85rem; color: #166534;
+            margin-bottom: 1.2rem; line-height: 1.7;
+        }
+        .step strong { display: block; font-size: 0.9rem; margin-bottom: 0.3rem; color: #15803d; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="icon">✅</div>
+    <h1>Datenbank-URL gespeichert!</h1>
+    <p>Die URL wurde in der lokalen Konfigurationsdatei hinterlegt. Starte die App jetzt neu, damit die Verbindung aktiv wird.</p>
+
+    <div class="step">
+        <strong>Nächste Schritte:</strong>
+        1. App neu starten (Workflow stoppen und wieder starten)<br>
+        2. Die App öffnet dann automatisch den Setup-Wizard<br>
+        3. Dort kannst du alle weiteren Einstellungen vornehmen
+    </div>
+
+    <p style="font-size:0.8rem; color:#9ca3af;">
+        Die URL ist in <code>sportoase_local.json</code> gespeichert und wird beim nächsten Start verwendet.
+    </p>
+</div>
+</body>
+</html>

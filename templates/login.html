@@ -26,6 +26,42 @@
             {{ login_notice }}
         </div>
         {% endif %}
+
+        <!-- Lokaler Admin-Login (ausgeklappt via Link) -->
+        <div style="margin-top: 2rem; text-align: center;">
+            <button type="button" onclick="toggleLocalLogin()" style="background:none;border:none;color:var(--text-secondary);font-size:0.8rem;cursor:pointer;text-decoration:underline;padding:0;">
+                Admin-Login (lokal)
+            </button>
+        </div>
+
+        <div id="local-login-form" style="display:none; margin-top:1.2rem; padding:1.2rem; background:var(--bg-card); border:1px solid var(--border); border-radius:12px;">
+            <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:1rem; text-align:center;">
+                Nur für Administratoren – ohne IServ
+            </p>
+            <form method="POST" action="{{ url_for('login_local') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div style="margin-bottom:0.8rem;">
+                    <label style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.3rem;color:var(--text-primary);">Benutzername</label>
+                    <input type="text" name="username" required autocomplete="username"
+                        style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;background:var(--bg);color:var(--text-primary);box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:1rem;">
+                    <label style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.3rem;color:var(--text-primary);">Passwort</label>
+                    <input type="password" name="password" required autocomplete="current-password"
+                        style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;background:var(--bg);color:var(--text-primary);box-sizing:border-box;">
+                </div>
+                <button type="submit" style="width:100%;padding:0.7rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-size:0.9rem;font-weight:600;cursor:pointer;">
+                    Anmelden
+                </button>
+            </form>
+        </div>
     </div>
 </div>
+
+<script>
+function toggleLocalLogin() {
+    var form = document.getElementById('local-login-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+</script>
 {% endblock %}
