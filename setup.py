@@ -182,6 +182,10 @@ def _handle_post(step_id):
             flash('Bitte fülle alle IServ-Felder aus oder überspringe diesen Schritt.', 'error')
             return redirect(url_for('setup.step', step_id='iserv'))
 
+        if not admin_email:
+            flash('Bitte gib eine Admin-E-Mail-Adresse ein. Diese wird für den Admin-Zugang über IServ benötigt.', 'error')
+            return redirect(url_for('setup.step', step_id='iserv'))
+
         set_configs({
             'iserv_domain':        iserv_domain,
             'iserv_client_id':     iserv_client_id,
@@ -369,7 +373,7 @@ def test_smtp():
             ipv4 = host
 
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = '✅ SportOase SMTP-Test erfolgreich'
+        msg['Subject'] = '✅ SMTP-Test erfolgreich'
         msg['From']    = user
         msg['To']      = recipient
 
@@ -377,7 +381,7 @@ def test_smtp():
         <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:30px;">
             <h2 style="color:#E91E63;">✅ SMTP-Test erfolgreich!</h2>
             <p>Diese E-Mail wurde über deine SMTP-Konfiguration gesendet.</p>
-            <p style="color:#666;font-size:13px;">SportOase Setup-Wizard</p>
+            <p style="color:#666;font-size:13px;">Buchungssystem Setup-Wizard</p>
         </div>"""
         msg.attach(MIMEText(html, 'html', 'utf-8'))
 

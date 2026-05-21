@@ -79,6 +79,7 @@ input:checked + .slider:before { transform: translateX(24px); }
         <a href="#" class="cms-tab" onclick="showTab('iserv'); return false;">🔐 IServ</a>
         <a href="#" class="cms-tab" onclick="showTab('demo'); return false;">🧪 Demo-Modus</a>
         <a href="#" class="cms-tab" onclick="showTab('database'); return false;">🗄️ Datenbank</a>
+        <a href="#" class="cms-tab" onclick="showTab('reset'); return false;" style="color:#dc2626;border-color:#fca5a5;">🔴 Zurücksetzen</a>
     </div>
 
     <!-- ── DASHBOARD ────────────────────────────────────────────── -->
@@ -212,7 +213,7 @@ input:checked + .slider:before { transform: translateX(24px); }
                                style="width:110px;"
                                class="form-control"
                                oninput="syncColor(this, 'primary-color-pick')">
-                        <span style="font-size:.82rem;color:var(--text-tertiary);">Standard: #E91E63 (SportOase Pink)</span>
+                        <span style="font-size:.82rem;color:var(--text-tertiary);">Standard: #E91E63</span>
                     </div>
                     <p class="form-hint">Ändert die Akzentfarbe in der gesamten App (Buttons, Links, Kopfzeilen).</p>
                 </div>
@@ -547,6 +548,71 @@ input:checked + .slider:before { transform: translateX(24px); }
         </div>
     </div>
 
+    <!-- ── FACTORY RESET ─────────────────────────────────────────── -->
+    <div id="tab-reset" class="cms-section">
+        <div class="cms-card" style="border:2px solid #ef4444;background:#fff5f5;">
+            <h3 style="color:#dc2626;">🔴 System komplett zurücksetzen</h3>
+            <p style="color:#7f1d1d;font-size:.92rem;line-height:1.7;margin-bottom:1.2rem;">
+                Diese Funktion löscht <strong>alle Daten unwiderruflich</strong>:
+            </p>
+            <ul style="color:#7f1d1d;font-size:.88rem;line-height:2;padding-left:1.4rem;margin-bottom:1.5rem;">
+                <li>Alle <strong>Buchungen</strong> und Benachrichtigungen</li>
+                <li>Alle <strong>Benutzerkonten</strong> (Lehrer, Admins)</li>
+                <li>Alle <strong>Slot-Sperrungen</strong> und Slot-Namen</li>
+                <li>Alle <strong>Konfigurationen</strong> (Branding, SMTP, IServ, Kurse, Klassen, Stunden)</li>
+                <li>Die gesamte <strong>Systemkonfiguration</strong> → Setup-Wizard startet neu</li>
+            </ul>
+            <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:14px 18px;margin-bottom:1.5rem;">
+                <strong style="color:#991b1b;">⚠️ Diese Aktion kann NICHT rückgängig gemacht werden!</strong><br>
+                <span style="font-size:.85rem;color:#7f1d1d;">Machen Sie vorher ein Backup der Datenbank, falls Sie die Daten sichern möchten.</span>
+            </div>
+
+            <form method="POST" action="{{ url_for('factory_reset') }}" id="resetForm" onsubmit="return validateReset()">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="form-group" style="background:#fff;border:1.5px solid #fca5a5;border-radius:10px;padding:16px;">
+                    <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;">
+                        <input type="checkbox" name="confirm_check" id="resetCheck" value="1"
+                               style="margin-top:3px;width:18px;height:18px;accent-color:#dc2626;flex-shrink:0;"
+                               onchange="updateResetBtn()">
+                        <span style="font-size:.9rem;color:#374151;line-height:1.5;">
+                            Ich verstehe, dass <strong>alle Daten unwiderruflich gelöscht</strong> werden und
+                            das System auf den Ausgangszustand zurückgesetzt wird.
+                        </span>
+                    </label>
+                </div>
+
+                <div class="form-group" style="margin-top:1rem;">
+                    <label class="form-label" style="color:#dc2626;">
+                        Zur Bestätigung bitte <strong>RESET</strong> eingeben:
+                    </label>
+                    <input type="text" name="confirm_text" id="resetInput"
+                           class="form-control" placeholder="RESET eingeben"
+                           autocomplete="off" spellcheck="false"
+                           style="border-color:#fca5a5;font-family:monospace;letter-spacing:.08em;"
+                           oninput="updateResetBtn()">
+                </div>
+
+                <button type="submit" id="resetBtn" disabled
+                        style="background:#dc2626;color:#fff;border:none;padding:.75rem 2rem;
+                               border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;
+                               opacity:.4;transition:opacity .2s;width:100%;margin-top:.5rem;">
+                    🗑️ Jetzt ALLES löschen und neu starten
+                </button>
+            </form>
+        </div>
+
+        <div class="cms-card" style="border-left:4px solid #6b7280;">
+            <h3>Was passiert danach?</h3>
+            <ul style="font-size:.88rem;color:var(--text-secondary);line-height:2;padding-left:1.2rem;">
+                <li>Sie werden automatisch zum <strong>Einrichtungs-Assistenten</strong> weitergeleitet</li>
+                <li>Der Setup-Wizard führt Sie Schritt für Schritt durch die Neu-Einrichtung</li>
+                <li>Alle Lehrer müssen sich nach dem Reset <strong>neu einloggen</strong></li>
+                <li>Die Datenbank-URL bleibt erhalten (nur die Inhalte werden gelöscht)</li>
+            </ul>
+        </div>
+    </div>
+
     <!-- ── DEMO-MODUS ─────────────────────────────────────────────── -->
     <div id="tab-demo" class="cms-section">
         <div class="cms-card demo-toggle-card">
@@ -592,6 +658,27 @@ function showTab(name) {
     document.querySelectorAll('.cms-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
     event.target.classList.add('active');
+}
+
+function updateResetBtn() {
+    const check = document.getElementById('resetCheck');
+    const input = document.getElementById('resetInput');
+    const btn   = document.getElementById('resetBtn');
+    if (!check || !input || !btn) return;
+    const ready = check.checked && input.value.trim() === 'RESET';
+    btn.disabled = !ready;
+    btn.style.opacity = ready ? '1' : '0.4';
+    btn.style.cursor  = ready ? 'pointer' : 'not-allowed';
+}
+
+function validateReset() {
+    const check = document.getElementById('resetCheck');
+    const input = document.getElementById('resetInput');
+    if (!check.checked || input.value.trim() !== 'RESET') {
+        alert('Bitte Häkchen setzen UND "RESET" eingeben.');
+        return false;
+    }
+    return confirm('⚠️ LETZTE WARNUNG: Wirklich ALLE Daten löschen und das System zurücksetzen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!');
 }
 
 function cmsSslPort() {

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Login – {{ school_name or 'SportOase' }}{% endblock %}
+{% block title %}Login – {{ school_name or 'Buchungssystem' }}{% endblock %}
 
 {% block content %}
 <div class="login-container">
     <div class="login-box">
         <div class="login-logo">
-            <img src="{{ logo_url }}" alt="{{ school_name or 'SportOase' }} Logo">
+            <img src="{{ logo_url }}" alt="{{ school_name or 'Logo' }}">
         </div>
-        <h2>{{ login_title or ('Willkommen im Buchungssystem ' + ('der ' + school_name if school_name else 'der SportOase')) }}</h2>
+        <h2>{{ login_title or ('Willkommen im Buchungssystem' + (' ' + school_name if school_name else '')) }}</h2>
         <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
             {{ login_subtitle or 'Melden Sie sich mit Ihrem IServ-Account an' }}
         </p>

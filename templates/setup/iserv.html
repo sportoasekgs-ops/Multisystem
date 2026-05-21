@@ -64,7 +64,7 @@
         <p style="font-weight:600;color:#166534;margin-bottom:12px;">📖 IServ-Einrichtung (Anleitung)</p>
         <ol style="font-size:0.85rem;color:#166534;line-height:2;padding-left:18px;">
             <li>In IServ: <strong>Verwaltung → System → Single-Sign-On → Neue App erstellen</strong></li>
-            <li>App-Name: <em>SportOase Buchungssystem</em></li>
+            <li>App-Name: <em>{{ school_name or 'Buchungssystem' }}</em></li>
             <li>Redirect-URI eintragen: <code style="background:#dcfce7;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:0.82rem;">{{ request.host_url }}oauth/callback</code></li>
             <li>Scopes aktivieren: <em>openid, profile, email, roles, groups</em></li>
             <li>Client ID und Secret kopieren und hier eintragen</li>

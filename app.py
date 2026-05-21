@@ -18,9 +18,10 @@ app = Flask(__name__)
 def abbreviate_name_filter(name):
     """Kürzt den Nachnamen auf den ersten Buchstaben + Punkt.
     z.B. 'Max Mustermann' → 'Max M.'
+    Leere Namen → '—' (Schüler ohne Namen)
     """
-    if not name:
-        return name
+    if not name or not name.strip():
+        return '—'
     parts = name.strip().split()
     if len(parts) <= 1:
         return name
@@ -250,7 +251,7 @@ def inject_branding():
         branding = get_branding()
     except Exception:
         branding = {
-            'school_name': 'SportOase',
+            'school_name': '',
             'school_subtitle': 'Buchungssystem',
             'primary_color': '#E91E63',
             'secondary_color': '#C2185B',
@@ -715,7 +716,7 @@ def oauth_debug():
     <html lang="de">
     <head>
         <meta charset="UTF-8">
-        <title>OAuth Debug - SportOase</title>
+        <title>OAuth Debug</title>
         <style>
             body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f5f5f5; }
             h1 { color: #333; }
@@ -760,7 +761,7 @@ def oauth_debug():
             <h2>IServ Admin Einstellungen</h2>
             <p>In IServ unter <strong>Verwaltung → System → Single-Sign-On</strong>:</p>
             <ol>
-                <li>Öffnen Sie die SportOase OAuth-App</li>
+                <li>Öffnen Sie die OAuth-App in IServ</li>
                 <li>Unter "Beschränkungen → Auf Scopes beschränken" aktivieren Sie:
                     <ul>
                         <li>✓ OpenID</li>
@@ -1447,13 +1448,25 @@ def book(date_str, period):
             return redirect(url_for('dashboard', date=date_str))
         
         # Sammle Schülerdaten und prüfe Doppelbuchungen
+        names_optional = request.form.get('names_optional') == '1'
         students = []
         for i in range(num_students):
             name = request.form.get(f'student_name_{i}', '').strip()
             klasse = request.form.get(f'student_class_{i}', '').strip()
             
-            if not name or not klasse:
-                flash('Bitte füllen Sie alle Schülerfelder aus.', 'error')
+            if not klasse:
+                flash('Bitte wählen Sie für alle Schüler*innen eine Klasse aus.', 'error')
+                return render_template('book.html', 
+                                     date_str=date_str,
+                                     period=period,
+                                     period_info=period_info,
+                                     period_time=_get_period_dict(period),
+                                     available_spots=available_spots,
+                                     free_modules=get_free_courses(),
+                                     user_name=user_display_name,
+                                     school_classes=get_school_classes_list())
+            if not names_optional and not name:
+                flash('Bitte geben Sie alle Schüler-Namen ein oder aktivieren Sie „Klasse als Gruppe buchen".', 'error')
                 return render_template('book.html', 
                                      date_str=date_str,
                                      period=period,
@@ -1464,19 +1477,20 @@ def book(date_str, period):
                                      user_name=user_display_name,
                                      school_classes=get_school_classes_list())
             
-            # Prüfe auf Doppelbuchung
-            double_booking = check_student_double_booking(name, klasse, date_str, period)
-            if double_booking['is_booked']:
-                flash(f'⚠️ Doppelbuchung verhindert: {double_booking["booking_info"]}', 'error')
-                return render_template('book.html', 
-                                     date_str=date_str,
-                                     period=period,
-                                     period_info=period_info,
-                                     period_time=_get_period_dict(period),
-                                     available_spots=available_spots,
-                                     free_modules=get_free_courses(),
-                                     user_name=user_display_name,
-                                     school_classes=get_school_classes_list())
+            # Doppelbuchungs-Check nur wenn Name angegeben
+            if name:
+                double_booking = check_student_double_booking(name, klasse, date_str, period)
+                if double_booking['is_booked']:
+                    flash(f'⚠️ Doppelbuchung verhindert: {double_booking["booking_info"]}', 'error')
+                    return render_template('book.html', 
+                                         date_str=date_str,
+                                         period=period,
+                                         period_info=period_info,
+                                         period_time=_get_period_dict(period),
+                                         available_spots=available_spots,
+                                         free_modules=get_free_courses(),
+                                         user_name=user_display_name,
+                                         school_classes=get_school_classes_list())
             
             students.append({'name': name, 'klasse': klasse})
         
@@ -1820,20 +1834,25 @@ def edit_my_booking(booking_id):
             return redirect(url_for('edit_my_booking', booking_id=booking_id))
         
         # Sammle Schülerdaten
+        names_optional_edit2 = request.form.get('names_optional') == '1'
         new_students = []
         for i in range(num_students):
             name = request.form.get(f'student_name_{i}', '').strip()
             klasse = request.form.get(f'student_class_{i}', '').strip()
             
-            if not name or not klasse:
-                flash('Bitte füllen Sie alle Schülerfelder aus.', 'error')
+            if not klasse:
+                flash('Bitte wählen Sie für alle Schüler*innen eine Klasse aus.', 'error')
+                return redirect(url_for('edit_my_booking', booking_id=booking_id))
+            if not names_optional_edit2 and not name:
+                flash('Bitte geben Sie alle Schüler-Namen ein oder aktivieren Sie „Klasse als Gruppe buchen".', 'error')
                 return redirect(url_for('edit_my_booking', booking_id=booking_id))
             
-            # Prüfe auf Doppelbuchung (außer bei der aktuellen Buchung)
-            double_booking = check_student_double_booking(name, klasse, booking['date'], booking['period'], exclude_booking_id=booking_id)
-            if double_booking['is_booked']:
-                flash(f'⚠️ Doppelbuchung verhindert: {double_booking["booking_info"]}', 'error')
-                return redirect(url_for('edit_my_booking', booking_id=booking_id))
+            # Doppelbuchungs-Check nur wenn Name angegeben
+            if name:
+                double_booking = check_student_double_booking(name, klasse, booking['date'], booking['period'], exclude_booking_id=booking_id)
+                if double_booking['is_booked']:
+                    flash(f'⚠️ Doppelbuchung verhindert: {double_booking["booking_info"]}', 'error')
+                    return redirect(url_for('edit_my_booking', booking_id=booking_id))
             
             new_students.append({'name': name, 'klasse': klasse})
         
@@ -2266,12 +2285,21 @@ def admin_create_booking():
                                  period_times=get_period_times())
         
         students = []
+        names_optional_admin = request.form.get('names_optional') == '1'
         for i in range(num_students):
             name = request.form.get(f'student_name_{i}', '').strip()
             klasse = request.form.get(f'student_class_{i}', '').strip()
             
-            if not name or not klasse:
-                flash('Bitte füllen Sie alle Schülerfelder aus.', 'error')
+            if not klasse:
+                flash('Bitte wählen Sie für alle Schüler*innen eine Klasse aus.', 'error')
+                users = get_all_users()
+                return render_template('admin_edit_booking.html',
+                                     booking=None,
+                                     users=users,
+                                     free_modules=get_free_courses(),
+                                     period_times=get_period_times())
+            if not names_optional_admin and not name:
+                flash('Bitte geben Sie alle Schüler-Namen ein oder aktivieren Sie „Namen optional".', 'error')
                 users = get_all_users()
                 return render_template('admin_edit_booking.html',
                                      booking=None,
@@ -2407,16 +2435,28 @@ def admin_edit_booking(booking_id):
                                  period_times=get_period_times())
         
         students = []
+        names_optional_edit = request.form.get('names_optional') == '1'
         for i in range(num_students):
             name = request.form.get(f'student_name_{i}', '').strip()
             klasse = request.form.get(f'student_class_{i}', '').strip()
             
-            if not name or not klasse:
-                flash('Bitte füllen Sie alle Schülerfelder aus.', 'error')
+            if not klasse:
+                flash('Bitte wählen Sie für alle Schüler*innen eine Klasse aus.', 'error')
                 users = get_all_users()
-                students = json.loads(booking['students_json']) if booking.get('students_json') else []
+                _old_students = json.loads(booking['students_json']) if booking.get('students_json') else []
                 booking_display = dict(booking)
-                booking_display['students'] = students
+                booking_display['students'] = _old_students
+                return render_template('admin_edit_booking.html',
+                                     booking=booking_display,
+                                     users=users,
+                                     free_modules=get_free_courses(),
+                                     period_times=get_period_times())
+            if not names_optional_edit and not name:
+                flash('Bitte geben Sie alle Schüler-Namen ein oder aktivieren Sie „Namen optional".', 'error')
+                users = get_all_users()
+                _old_students = json.loads(booking['students_json']) if booking.get('students_json') else []
+                booking_display = dict(booking)
+                booking_display['students'] = _old_students
                 return render_template('admin_edit_booking.html',
                                      booking=booking_display,
                                      users=users,
@@ -3147,6 +3187,56 @@ if os.environ.get('FLASK_ENV') == 'production' or not os.environ.get('FLASK_DEBU
         app.logger.info('SportOase Buchungssystem gestartet (Production Mode)')
     except Exception as e:
         print(f"Fehler beim Einrichten des Logging-Handlers: {e}")
+
+@app.route('/admin/factory-reset', methods=['POST'])
+@admin_required
+def factory_reset():
+    """Löscht ALLE Daten und setzt das System auf Werkseinstellungen zurück."""
+    if not validate_csrf_token(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheitstoken.', 'error')
+        return redirect(url_for('admin_cms'))
+
+    confirm_text = request.form.get('confirm_text', '').strip()
+    confirm_check = request.form.get('confirm_check', '')
+
+    if confirm_text != 'RESET' or confirm_check != '1':
+        flash('Bestätigung fehlgeschlagen. Bitte geben Sie "RESET" ein und setzen Sie das Häkchen.', 'error')
+        return redirect(url_for('admin_cms'))
+
+    try:
+        from models import (
+            Booking, User, Notification, BlockedSlot, SlotName,
+            SystemConfig, Period, Course, SchoolClass
+        )
+
+        # Reihenfolge wichtig wegen Fremdschlüssel-Constraints
+        Notification.query.delete()
+        Booking.query.delete()
+        BlockedSlot.query.delete()
+        SlotName.query.delete()
+        User.query.delete()
+        Period.query.delete()
+        Course.query.delete()
+        SchoolClass.query.delete()
+        SystemConfig.query.delete()   # letzt: löscht Konfiguration → Setup-Wizard startet neu
+
+        from database import db as _db
+        _db.session.commit()
+
+        # Session leeren
+        session.clear()
+
+        app.logger.warning("[FACTORY RESET] Alle Daten wurden gelöscht. System zurückgesetzt.")
+        flash('✅ System erfolgreich zurückgesetzt. Bitte Einrichtung neu starten.', 'success')
+        return redirect(url_for('setup.setup_index'))
+
+    except Exception as e:
+        from database import db as _db
+        _db.session.rollback()
+        app.logger.error(f"[FACTORY RESET] Fehler beim Zurücksetzen: {e}")
+        flash(f'Fehler beim Zurücksetzen: {e}', 'error')
+        return redirect(url_for('admin_cms'))
+
 
 if __name__ == '__main__':
     # Starte die Anwendung

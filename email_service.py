@@ -15,6 +15,16 @@ from config import ADMIN_EMAIL
 logger = logging.getLogger(__name__)
 
 
+def _get_app_name():
+    """Gibt den konfigurierten Schulnamen zurück, Fallback: 'Buchungssystem'."""
+    try:
+        from system_config import get_config
+        name = get_config('school_name', '').strip()
+        return name if name else 'Buchungssystem'
+    except Exception:
+        return 'Buchungssystem'
+
+
 # ── Hilfsfunktionen ───────────────────────────────────────────────────────────
 
 def format_date_german(date_str):
@@ -154,7 +164,7 @@ def _footer():
     return f"""
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center;color:#6b7280;font-size:12px;">
             Automatisch generiert am {datetime.now().strftime('%d.%m.%Y um %H:%M Uhr')}<br>
-            SportOase Buchungssystem
+            {_get_app_name()} – Buchungssystem
         </div>"""
 
 
@@ -201,7 +211,7 @@ def create_booking_notification_email(data):
         </div>
     </body></html>"""
 
-    text = f"""Neue Buchung – SportOase
+    text = f"""Neue Buchung – {_get_app_name()}
 Lehrkraft: {teacher} {f"({teacher_class})" if teacher_class else ""}
 Datum: {weekday}, {date}
 Zeit: {period}. Stunde ({period_time} Uhr)
@@ -212,8 +222,21 @@ Schüler*innen ({count}): {', '.join([f"{s['name']} ({s['klasse']})" for s in st
 
 
 def send_booking_notification(data):
+    """Sendet Buchungsbenachrichtigung an Admin. Liest Admin-E-Mail dynamisch aus DB."""
+    try:
+        from system_config import get_config
+        admin_email = (
+            get_config('admin_email', '').strip()
+            or get_config('smtp_user', '').strip()
+            or ADMIN_EMAIL
+        )
+    except Exception:
+        admin_email = ADMIN_EMAIL
+    if not admin_email:
+        logger.warning("[EMAIL] Keine Admin-E-Mail konfiguriert – Buchungsbenachrichtigung nicht gesendet.")
+        return False
     subject, html, text = create_booking_notification_email(data)
-    return send_email(ADMIN_EMAIL, subject, html, text)
+    return send_email(admin_email, subject, html, text)
 
 
 def create_user_confirmation_email(data):
@@ -262,7 +285,7 @@ def create_user_confirmation_email(data):
         </div>
     </body></html>"""
 
-    text = f"""Buchung bestätigt – SportOase
+    text = f"""Buchung bestätigt – {_get_app_name()}
 Deine Buchung wurde erfolgreich gespeichert!
 Lehrkraft: {teacher} {f"({teacher_class})" if teacher_class else ""}
 Datum: {weekday}, {date}
@@ -318,7 +341,7 @@ def send_exclusive_pending_email(email, data):
         </div>
     </body></html>"""
 
-    text = f"""Einzelbuchung angefragt – SportOase
+    text = f"""Einzelbuchung angefragt – {_get_app_name()}
 Deine Buchung wartet auf Freigabe.
 Lehrkraft: {teacher} {f"({teacher_class})" if teacher_class else ""}
 Datum: {weekday}, {date}
@@ -333,7 +356,7 @@ def send_exclusive_approved_email(teacher_email, teacher_name, student_name, dat
     from config import PERIOD_TIMES
     period_time    = PERIOD_TIMES.get(period, "")
     date_formatted = format_date_german(date_str)
-    subject        = "✅ Einzelbuchung genehmigt – SportOase"
+    subject        = f"✅ Einzelbuchung genehmigt – {_get_app_name()}"
 
     html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="margin:0;padding:20px;background:#f3f4f6;">
@@ -359,7 +382,7 @@ def send_exclusive_approved_email(teacher_email, teacher_name, student_name, dat
         </div>
     </body></html>"""
 
-    text = f"""Einzelbuchung genehmigt – SportOase
+    text = f"""Einzelbuchung genehmigt – {_get_app_name()}
 Hallo {teacher_name}!
 Deine exklusive Einzelbuchung wurde genehmigt.
 Datum: {date_formatted}
@@ -384,7 +407,7 @@ def send_exclusive_rejected_email(teacher_email, teacher_name, student_name, dat
             </div>"""
         reason_text = f"\nBegründung:\n{rejection_reason}\n"
 
-    subject = "❌ Einzelbuchung abgelehnt – SportOase"
+    subject = f"❌ Einzelbuchung abgelehnt – {_get_app_name()}"
     html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="margin:0;padding:20px;background:#f3f4f6;">
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1);">
@@ -410,7 +433,7 @@ def send_exclusive_rejected_email(teacher_email, teacher_name, student_name, dat
         </div>
     </body></html>"""
 
-    text = f"""Einzelbuchung abgelehnt – SportOase
+    text = f"""Einzelbuchung abgelehnt – {_get_app_name()}
 Hallo {teacher_name},
 Leider wurde deine exklusive Einzelbuchung abgelehnt.
 Datum: {date_formatted}
@@ -434,7 +457,7 @@ def send_booking_removed_due_to_exclusive(teacher_email, teacher_name, booking_i
     ]) or '<div>Keine Schüler*innen</div>'
     students_list = ", ".join([f"{s.get('name','?')} ({s.get('klasse','?')})" for s in students])
 
-    subject = "⚠️ Buchung storniert – SportOase"
+    subject = f"⚠️ Buchung storniert – {_get_app_name()}"
     html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head>
     <body style="margin:0;padding:20px;background:#f3f4f6;">
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1);">
@@ -464,7 +487,7 @@ def send_booking_removed_due_to_exclusive(teacher_email, teacher_name, booking_i
         </div>
     </body></html>"""
 
-    text = f"""Buchung storniert – SportOase
+    text = f"""Buchung storniert – {_get_app_name()}
 Hallo {teacher_name},
 Deine Buchung wurde automatisch storniert (exklusive Einzelbuchung genehmigt).
 Datum: {date_formatted}

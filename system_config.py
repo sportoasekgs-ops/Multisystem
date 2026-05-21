@@ -82,7 +82,7 @@ def is_setup_complete():
 def get_branding():
     """Gibt alle Branding-Werte zurück (mit Defaults)."""
     return {
-        'school_name': get_config('school_name', 'SportOase'),
+        'school_name': get_config('school_name', ''),
         'school_subtitle': get_config('school_subtitle', 'Buchungssystem'),
         'primary_color': get_config('primary_color', '#E91E63'),
         'secondary_color': get_config('secondary_color', '#C2185B'),

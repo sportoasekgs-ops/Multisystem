@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Buchung - SportOase{% endblock %}
+{% block title %}Buchung – {{ school_name or 'Buchungssystem' }}{% endblock %}
 
 {% block content %}
 <div class="dashboard">
@@ -40,6 +40,20 @@
         </div>
         
         <h3>Schüler*innen</h3>
+
+        <!-- Namen optional Toggle -->
+        <div class="form-group" style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-bottom:1rem;">
+            <label class="checkbox-label" style="cursor:pointer;">
+                <input type="checkbox" id="names_optional" name="names_optional" value="1" onchange="toggleNamesOptional()">
+                <span class="checkbox-text">
+                    <span class="checkbox-icon">👥</span>
+                    <strong>Klasse als Gruppe buchen</strong> – Schüler-Namen optional
+                </span>
+            </label>
+            <p class="hint-text" style="margin-top:6px;">
+                Wenn aktiviert, reicht die Klassenangabe. Namen können leer bleiben.
+            </p>
+        </div>
         
         <!-- Exklusive Buchung - prominente Platzierung -->
         <div class="form-group exclusive-booking-group exclusive-highlight" id="exclusiveBookingGroup">
@@ -47,11 +61,11 @@
                 <input type="checkbox" name="is_exclusive" id="is_exclusive" value="1" onchange="toggleExclusiveMode()">
                 <span class="checkbox-text">
                     <span class="checkbox-icon">🔒</span>
-                    <strong>Exklusive Nutzung der SportOase</strong>
+                    <strong>Exklusive Nutzung {{ ('von ' + school_name) if school_name else 'der Anlage' }}</strong>
                 </span>
             </label>
             <p class="hint-text warning-text">
-                Die gesamte SportOase wird für diesen Zeitslot nur für <strong>einen Schüler</strong> reserviert. 
+                {{ ('Die gesamte ' + school_name) if school_name else 'Die Anlage' }} wird für diesen Zeitslot nur für <strong>einen Schüler</strong> reserviert. 
                 Diese Buchung muss vom Admin freigegeben werden.
             </p>
         </div>
@@ -111,20 +125,41 @@
 // Klassenliste für Schüler*innen-Dropdown
 const schoolClasses = {{ school_classes | tojson | safe }};
 
+// Gibt zurück ob Namen optional sind
+function areNamesOptional() {
+    return document.getElementById('names_optional').checked;
+}
+
+// Namen-optional-Modus umschalten
+function toggleNamesOptional() {
+    const numStudents = parseInt(document.getElementById('num_students').value);
+    const optional = areNamesOptional();
+    for (let i = 0; i < numStudents; i++) {
+        const nameInput = document.getElementById('student_name_' + i);
+        if (nameInput) {
+            if (optional) {
+                nameInput.removeAttribute('required');
+                nameInput.placeholder = 'Name (optional)';
+            } else {
+                nameInput.setAttribute('required', 'required');
+                nameInput.placeholder = 'Name';
+            }
+        }
+    }
+}
+
 // Exklusiv-Modus umschalten
 function toggleExclusiveMode() {
     const exclusiveCheckbox = document.getElementById('is_exclusive');
     const numStudentsSelect = document.getElementById('num_students');
     
     if (exclusiveCheckbox.checked) {
-        // Exklusiv aktiviert: nur 1 Schüler, Auswahl deaktivieren
         numStudentsSelect.value = '1';
         numStudentsSelect.disabled = true;
         numStudentsSelect.style.opacity = '0.6';
         numStudentsSelect.style.cursor = 'not-allowed';
         updateStudentFields();
     } else {
-        // Exklusiv deaktiviert: Auswahl wieder aktivieren
         numStudentsSelect.disabled = false;
         numStudentsSelect.style.opacity = '1';
         numStudentsSelect.style.cursor = 'pointer';
@@ -136,6 +171,7 @@ function updateStudentFields() {
     const container = document.getElementById('studentFields');
     const teacherClass = document.getElementById('teacher_class').value;
     const exclusiveCheckbox = document.getElementById('is_exclusive');
+    const optional = areNamesOptional();
     
     container.innerHTML = '';
     
@@ -158,13 +194,15 @@ function updateStudentFields() {
     for (let i = 0; i < numStudents; i++) {
         const div = document.createElement('div');
         div.className = 'student-item';
+        const nameRequired = optional ? '' : 'required';
+        const namePlaceholder = optional ? 'Name (optional)' : 'Name';
         div.innerHTML = `
             <div class="form-group">
-                <label for="student_name_${i}">Schüler*in ${i + 1} - Name</label>
-                <input type="text" id="student_name_${i}" name="student_name_${i}" required placeholder="Name">
+                <label for="student_name_${i}">Schüler*in ${i + 1} – Name${optional ? ' <span style="color:#6b7280;font-weight:400;font-size:.85em;">(optional)</span>' : ''}</label>
+                <input type="text" id="student_name_${i}" name="student_name_${i}" ${nameRequired} placeholder="${namePlaceholder}">
             </div>
             <div class="form-group">
-                <label for="student_class_${i}">Schüler*in ${i + 1} - Klasse</label>
+                <label for="student_class_${i}">Schüler*in ${i + 1} – Klasse</label>
                 <select id="student_class_${i}" name="student_class_${i}" required>
                     ${getClassOptions(teacherClass)}
                 </select>
@@ -178,8 +216,6 @@ function updateStudentFields() {
 document.getElementById('teacher_class').addEventListener('change', function() {
     const teacherClass = this.value;
     const numStudents = parseInt(document.getElementById('num_students').value);
-    
-    // Setze alle Schüler-Klassen auf die Lehrer-Klasse
     for (let i = 0; i < numStudents; i++) {
         const studentClassSelect = document.getElementById('student_class_' + i);
         if (studentClassSelect && teacherClass) {

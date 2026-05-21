@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{% if booking %}Buchung bearbeiten{% else %}Neue Buchung{% endif %} - Admin - SportOase{% endblock %}
+{% block title %}{% if booking %}Buchung bearbeiten{% else %}Neue Buchung{% endif %} – Admin – {{ school_name or 'Buchungssystem' }}{% endblock %}
 
 {% block content %}
 <div class="booking-form">
@@ -67,6 +67,17 @@
             </select>
         </div>
         
+        <!-- Namen optional Toggle -->
+        <div class="form-group" style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-bottom:1rem;">
+            <label class="checkbox-label" style="cursor:pointer;">
+                <input type="checkbox" id="names_optional" name="names_optional" value="1" onchange="toggleNamesOptional()">
+                <span class="checkbox-text">
+                    <span class="checkbox-icon">👥</span>
+                    <strong>Namen optional</strong> – Klasse als Gruppe buchen
+                </span>
+            </label>
+        </div>
+
         <div id="studentFields">
             <!-- Wird dynamisch mit JavaScript gefüllt -->
         </div>
@@ -97,9 +108,39 @@ const existingStudents = {{ booking.students|tojson }};
 const existingStudents = null;
 {% endif %}
 
+// Vorauswahl: Namen-optional aktivieren wenn bestehende Buchung leere Namen hat
+(function() {
+    const hasEmptyNames = existingStudents && existingStudents.some(s => !s.name || s.name === '—');
+    if (hasEmptyNames) {
+        document.getElementById('names_optional').checked = true;
+    }
+})();
+
+function areNamesOptional() {
+    return document.getElementById('names_optional').checked;
+}
+
+function toggleNamesOptional() {
+    const numStudents = parseInt(document.getElementById('num_students').value);
+    const optional = areNamesOptional();
+    for (let i = 0; i < numStudents; i++) {
+        const nameInput = document.getElementById('student_name_' + i);
+        if (nameInput) {
+            if (optional) {
+                nameInput.removeAttribute('required');
+                nameInput.placeholder = 'Name (optional)';
+            } else {
+                nameInput.setAttribute('required', 'required');
+                nameInput.placeholder = 'Vor- und Nachname';
+            }
+        }
+    }
+}
+
 function updateStudentFields() {
     const numStudents = parseInt(document.getElementById('num_students').value);
     const container = document.getElementById('studentFields');
+    const optional = areNamesOptional();
     container.innerHTML = '';
     
     for (let i = 0; i < numStudents; i++) {
@@ -111,20 +152,24 @@ function updateStudentFields() {
         
         if (existingStudents && i < existingStudents.length) {
             studentName = existingStudents[i].name || '';
+            if (studentName === '—') studentName = '';
             studentClass = existingStudents[i].klasse || '';
         }
+
+        const nameRequired = optional ? '' : 'required';
+        const namePlaceholder = optional ? 'Name (optional)' : 'Vor- und Nachname';
         
         div.innerHTML = `
             <h4>Schüler*in ${i + 1}</h4>
             <div class="form-group">
-                <label for="student_name_${i}">Name:</label>
+                <label for="student_name_${i}">Name${optional ? ' <span style="color:#6b7280;font-weight:400;font-size:.85em;">(optional)</span>' : ''}:</label>
                 <input type="text" id="student_name_${i}" name="student_name_${i}" 
-                       value="${studentName}" required>
+                       value="${studentName}" ${nameRequired} placeholder="${namePlaceholder}">
             </div>
             <div class="form-group">
                 <label for="student_class_${i}">Klasse:</label>
                 <input type="text" id="student_class_${i}" name="student_class_${i}" 
-                       value="${studentClass}" required>
+                       value="${studentClass}" required placeholder="z.B. 5a">
             </div>
         `;
         container.appendChild(div);
