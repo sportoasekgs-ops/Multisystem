@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Werksreset – Admin – SportOase{% endblock %}
+
+{% block content %}
+<style>
+.reset-page { max-width: 700px; margin: 0 auto; padding: 2rem 1rem; }
+.reset-header { margin-bottom: 2rem; }
+.reset-header h2 { font-size: 1.6rem; font-weight: 700; margin: 0 0 .4rem 0; }
+.reset-header p  { color: var(--text-secondary); margin: 0; }
+
+.danger-banner {
+    background: #fff5f5;
+    border: 2px solid #fc8181;
+    border-radius: 12px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+.danger-icon { font-size: 2rem; flex-shrink: 0; line-height: 1; }
+.danger-text h4 { margin: 0 0 .3rem 0; font-size: 1rem; color: #c53030; }
+.danger-text p  { margin: 0; font-size: .875rem; color: #742a2a; }
+
+.reset-cards { display: grid; gap: 1.5rem; margin-bottom: 2rem; }
+@media (min-width: 600px) { .reset-cards { grid-template-columns: 1fr 1fr; } }
+
+.reset-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+    position: relative;
+}
+.reset-card:hover { border-color: #fc8181; }
+.reset-card.selected { border-color: #e53e3e; box-shadow: 0 0 0 3px rgba(229,62,62,.15); }
+.reset-card input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
+.reset-card-icon { font-size: 2rem; margin-bottom: .75rem; }
+.reset-card h3 { font-size: 1rem; font-weight: 700; margin: 0 0 .5rem 0; }
+.reset-card p  { font-size: .83rem; color: var(--text-secondary); margin: 0 0 .75rem 0; line-height: 1.5; }
+.reset-card ul { margin: 0; padding-left: 1.1rem; font-size: .82rem; color: var(--text-secondary); line-height: 1.7; }
+
+.reset-card-bookings h3 { color: #d97706; }
+.reset-card-bookings.selected { border-color: #d97706; box-shadow: 0 0 0 3px rgba(217,119,6,.15); }
+.reset-card-bookings:hover { border-color: #d97706; }
+
+.reset-card-full h3 { color: #c53030; }
+
+.selected-indicator {
+    position: absolute;
+    top: .75rem; right: .75rem;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg-card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem;
+    transition: all .15s;
+}
+.reset-card.selected .selected-indicator {
+    background: #e53e3e;
+    border-color: #e53e3e;
+    color: #fff;
+}
+.reset-card-bookings.selected .selected-indicator {
+    background: #d97706;
+    border-color: #d97706;
+}
+
+.confirm-box {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.confirm-box label { display: block; font-size: .9rem; font-weight: 600; margin-bottom: .6rem; }
+.confirm-box small { color: var(--text-secondary); font-size: .82rem; }
+.confirm-input {
+    width: 100%;
+    padding: .7rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: monospace;
+    letter-spacing: .1em;
+    box-sizing: border-box;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    margin-top: .5rem;
+    transition: border-color .15s;
+}
+.confirm-input:focus { outline: none; border-color: #e53e3e; }
+
+.btn-reset {
+    background: #e53e3e;
+    color: #fff;
+    border: none;
+    padding: .75rem 1.8rem;
+    border-radius: 8px;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    opacity: .4;
+    pointer-events: none;
+    transition: opacity .15s, background .15s;
+}
+.btn-reset.ready { opacity: 1; pointer-events: auto; }
+.btn-reset.ready:hover { background: #c53030; }
+
+.btn-back {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border);
+    padding: .75rem 1.4rem;
+    border-radius: 8px;
+    font-size: .9rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color .15s;
+}
+.btn-back:hover { border-color: var(--primary); color: var(--primary); }
+
+.action-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+</style>
+
+<div class="reset-page">
+    <div class="reset-header">
+        <h2>🔴 Werksreset</h2>
+        <p>Daten löschen und neu starten</p>
+    </div>
+
+    <div class="danger-banner">
+        <div class="danger-icon">⚠️</div>
+        <div class="danger-text">
+            <h4>Achtung – diese Aktion kann nicht rückgängig gemacht werden!</h4>
+            <p>Gelöschte Buchungen, Benutzer und Einstellungen können nicht wiederhergestellt werden. Nur fortfahren, wenn Sie sich absolut sicher sind.</p>
+        </div>
+    </div>
+
+    <form method="POST" id="resetForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="mode" id="modeInput" value="">
+
+        <!-- Modus-Auswahl -->
+        <div class="reset-cards">
+            <!-- Nur Buchungen -->
+            <div class="reset-card reset-card-bookings" id="card-bookings" onclick="selectMode('bookings')">
+                <div class="selected-indicator" id="ind-bookings"></div>
+                <input type="radio" name="_mode_radio" value="bookings">
+                <div class="reset-card-icon">🗑️</div>
+                <h3>Buchungsdaten löschen</h3>
+                <p>Nur operative Daten werden gelöscht. Benutzer, Stunden, Kurse und Einstellungen bleiben erhalten.</p>
+                <ul>
+                    <li>Alle Buchungen</li>
+                    <li>Alle gesperrten Slots</li>
+                    <li>Alle Benachrichtigungen</li>
+                </ul>
+            </div>
+
+            <!-- Vollständig -->
+            <div class="reset-card reset-card-full" id="card-full" onclick="selectMode('full')">
+                <div class="selected-indicator" id="ind-full"></div>
+                <input type="radio" name="_mode_radio" value="full">
+                <div class="reset-card-icon">💣</div>
+                <h3>Vollständiger Werksreset</h3>
+                <p>Alles wird gelöscht. Danach werden die Standardwerte automatisch wiederhergestellt.</p>
+                <ul>
+                    <li>Alle Buchungen & Sperren</li>
+                    <li>Alle Benutzer (außer lokalem Admin)</li>
+                    <li>Alle Einstellungen & CMS-Texte</li>
+                    <li>Stunden, Kurse & Schulklassen → Standardwerte</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Bestätigung -->
+        <div class="confirm-box">
+            <label for="confirmInput">
+                Zur Bestätigung bitte <strong>RESET</strong> eintippen:
+                <small>(Großbuchstaben, kein Leerzeichen)</small>
+            </label>
+            <input type="text" id="confirmInput" name="confirmation"
+                   class="confirm-input" placeholder="RESET"
+                   autocomplete="off" oninput="checkReady()" onpaste="return false">
+        </div>
+
+        <div class="action-row">
+            <button type="submit" class="btn-reset" id="submitBtn">🔴 Jetzt zurücksetzen</button>
+            <a href="{{ url_for('admin') }}" class="btn-back">← Abbrechen</a>
+        </div>
+    </form>
+</div>
+
+<script>
+let selectedMode = '';
+
+function selectMode(mode) {
+    selectedMode = mode;
+    document.getElementById('modeInput').value = mode;
+
+    document.getElementById('card-bookings').classList.toggle('selected', mode === 'bookings');
+    document.getElementById('card-full').classList.toggle('selected', mode === 'full');
+    document.getElementById('ind-bookings').textContent = mode === 'bookings' ? '✓' : '';
+    document.getElementById('ind-full').textContent = mode === 'full' ? '✓' : '';
+
+    checkReady();
+}
+
+function checkReady() {
+    const confirmed = document.getElementById('confirmInput').value.trim() === 'RESET';
+    const modeSet = selectedMode !== '';
+    const btn = document.getElementById('submitBtn');
+    btn.classList.toggle('ready', confirmed && modeSet);
+}
+
+document.getElementById('resetForm').addEventListener('submit', function(e) {
+    if (!selectedMode || document.getElementById('confirmInput').value.trim() !== 'RESET') {
+        e.preventDefault();
+        alert('Bitte wählen Sie einen Reset-Modus und bestätigen Sie mit "RESET".');
+    }
+});
+</script>
+{% endblock %}

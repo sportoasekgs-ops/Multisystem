@@ -83,7 +83,7 @@
                         </li>
                         <li>
                             <span class="feature-icon">📝</span> Einfache
-                            Buchung für 1-5 Schüler*innen
+                            Buchung für 1-{{ max_students }} Schüler*innen
                         </li>
                         <li>
                             <span class="feature-icon">🔒</span> Datenschutz:
@@ -589,14 +589,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for period in range(1, 7) %}
+                    {% for slot_idx in range(week_overview[0].schedule|length) %}
+                    {% set p_num = week_overview[0].schedule[slot_idx].period %}
                     <tr>
-                        <td><strong>{{ period }}.</strong></td>
+                        <td><strong>{{ p_num }}.</strong></td>
                         {% for day in week_overview %}
                         <td
-                            class="{% if day.is_today %}today-column{% endif %} {% if day.schedule[period-1].blocked %}period-blocked{% elif day.schedule[period-1].is_exclusive %}period-exclusive{% elif day.schedule[period-1].is_weekend %}period-past{% elif day.schedule[period-1].is_past %}period-past{% else %}period-{{ day.schedule[period-1].type }}{% endif %} {% if day.schedule[period-1].can_book %}clickable-slot{% endif %}"
+                            class="{% if day.is_today %}today-column{% endif %} {% if day.schedule[slot_idx].blocked %}period-blocked{% elif day.schedule[slot_idx].is_exclusive %}period-exclusive{% elif day.schedule[slot_idx].is_weekend %}period-past{% elif day.schedule[slot_idx].is_past %}period-past{% else %}period-{{ day.schedule[slot_idx].type }}{% endif %} {% if day.schedule[slot_idx].can_book %}clickable-slot{% endif %}"
                         >
-                            {% if day.schedule[period-1].is_exclusive %}
+                            {% if day.schedule[slot_idx].is_exclusive %}
                             <!-- Exklusiver Slot - Einzelangebot -->
                             <div class="period-header exclusive-header">
                                 <div class="slot-detail">
@@ -606,7 +607,7 @@
                             </div>
                             <div class="exclusive-info">
                                 {% set exc_booking =
-                                day.schedule[period-1].exclusive_booking %} {%
+                                day.schedule[slot_idx].exclusive_booking %} {%
                                 set can_see_exc = (user_role == 'admin') or
                                 (exc_booking.teacher_id == current_user_id) %}
                                 {% if can_see_exc %}
@@ -623,11 +624,11 @@
                                 >
                                 {% endif %}
                             </div>
-                            {% elif day.schedule[period-1].blocked %}
+                            {% elif day.schedule[slot_idx].blocked %}
                             <div class="period-header blocked-header">
-                                <span class="blocked-icon">{{ day.schedule[period-1].blocked_icon }}</span>
+                                <span class="blocked-icon">{{ day.schedule[slot_idx].blocked_icon }}</span>
                                 <div class="slot-detail">
-                                    {{ day.schedule[period-1].blocked_reason }}
+                                    {{ day.schedule[slot_idx].blocked_reason }}
                                 </div>
                             </div>
                             {% if user_role == 'admin' %}
@@ -649,7 +650,7 @@
                                     <input
                                         type="hidden"
                                         name="period"
-                                        value="{{ period }}"
+                                        value="{{ p_num }}"
                                     />
                                     <button
                                         type="submit"
@@ -660,7 +661,7 @@
                                 </form>
                             </div>
                             {% endif %} {% else %} {% set slot =
-                            day.schedule[period-1] %} {% set label = slot.label
+                            day.schedule[slot_idx] %} {% set label = slot.label
                             %} {% set course_class = 'course-frei' %} {% set
                             course_icon = '⭐' %} {% set course_tag = 'Flexibel'
                             %} {% if slot.type == 'fest' %} {% if 'Wochenstart'
@@ -742,17 +743,17 @@
                                         >
                                         {% elif slot.can_book %}
                                         <span class="availability-text"
-                                            >{{ slot.total_students }}/5
+                                            >{{ slot.total_students }}/{{ max_students }}
                                             gebucht</span
                                         >
                                         {% elif slot.available == 0 and not
                                         slot.is_past %}
                                         <span class="full-text"
-                                            >Ausgebucht (5/5)</span
+                                            >Ausgebucht ({{ max_students }}/{{ max_students }})</span
                                         >
                                         {% else %}
                                         <span class="status-text"
-                                            >{{ slot.total_students }}/5
+                                            >{{ slot.total_students }}/{{ max_students }}
                                             gebucht</span
                                         >
                                         {% endif %}
@@ -761,9 +762,9 @@
 
                                 {% if slot.can_book %}
                                 <a
-                                    href="{{ url_for('book', date_str=day.date, period=period) }}"
+                                    href="{{ url_for('book', date_str=day.date, period=p_num) }}"
                                     class="book-btn"
-                                    data-book-url="{{ url_for('book', date_str=day.date, period=period) }}"
+                                    data-book-url="{{ url_for('book', date_str=day.date, period=p_num) }}"
                                 >
                                     📝 Jetzt buchen
                                 </a>
@@ -773,7 +774,7 @@
                                     type="button"
                                     class="slot-block-mini"
                                     title="Sperren"
-                                    onclick="openBlockModal('{{ day.date }}', {{ period }}, '{{ day.name }} {{ day.date_formatted }}')"
+                                    onclick="openBlockModal('{{ day.date }}', {{ p_num }}, '{{ day.name }} {{ day.date_formatted }}')"
                                 >
                                     🔒
                                 </button>

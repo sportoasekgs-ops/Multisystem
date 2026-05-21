@@ -273,6 +273,16 @@ def inject_branding():
     }
     return dict(branding=branding, **branding, **extra)
 
+
+@app.context_processor
+def inject_dynamic_config():
+    """Macht max_students global in allen Templates verfügbar."""
+    try:
+        ms = get_max_students()
+    except Exception:
+        ms = 5
+    return dict(max_students=ms)
+
 # Hilfsfunktion: Zeitzone Europe/Berlin
 def get_berlin_tz():
     """Gibt die Zeitzone Europe/Berlin zurück"""
@@ -856,7 +866,7 @@ def dashboard():
     # Erstelle Stundenplan für den Tag
     from models import is_slot_blocked, get_blocked_slot
     schedule = []
-    for period in range(1, 7):
+    for period in sorted(get_period_times().keys()):
         period_info = get_period_info(weekday, period)
         student_count = count_students_for_period(selected_date_str, period)
         available = get_max_students() - student_count
@@ -969,7 +979,7 @@ def dashboard():
         day_date_str = day_date.strftime('%Y-%m-%d')
         
         day_schedule = []
-        for period in range(1, 7):
+        for period in sorted(get_period_times().keys()):
             info = get_period_info(wd, period)
             key = f"{day_date_str}_{period}"
             period_bookings = bookings_by_date_period.get(key, [])
@@ -1162,7 +1172,8 @@ def dashboard():
                          prev_week_date=prev_week_monday.strftime('%Y-%m-%d'),
                          next_week_date=next_week_monday.strftime('%Y-%m-%d'),
                          monday_date=monday.strftime('%d.%m.%Y'),
-                         friday_date=friday.strftime('%d.%m.%Y'))
+                         friday_date=friday.strftime('%d.%m.%Y'),
+                         max_students=get_max_students())
 
 # Route: Kalenderansicht (Monats-/Jahresübersicht)
 @app.route('/calendar')
@@ -1399,8 +1410,9 @@ def book(date_str, period):
         # Hole Anzahl der Schüler
         num_students = int(request.form.get('num_students', 1))
         
-        if num_students < 1 or num_students > 5:
-            flash('Bitte wählen Sie zwischen 1 und 5 Schülern.', 'error')
+        _max_s = get_max_students()
+        if num_students < 1 or num_students > _max_s:
+            flash(f'Bitte wählen Sie zwischen 1 und {_max_s} Schülern.', 'error')
             return render_template('book.html', 
                                  date_str=date_str,
                                  period=period,
@@ -2194,8 +2206,8 @@ def admin_create_booking():
         teacher_name = request.form.get('teacher_name', '').strip()
         teacher_class = request.form.get('teacher_class', '').strip()
         
-        if not date_str or not teacher_id or not teacher_name or not teacher_class or num_students < 1 or num_students > 5:
-            flash('Bitte füllen Sie alle Pflichtfelder aus und wählen Sie 1-5 Schüler.', 'error')
+        if not date_str or not teacher_id or not teacher_name or not teacher_class or num_students < 1 or num_students > get_max_students():
+            flash(f'Bitte füllen Sie alle Pflichtfelder aus und wählen Sie 1-{get_max_students()} Schüler.', 'error')
             users = get_all_users()
             return render_template('admin_edit_booking.html',
                                  booking=None,
@@ -2325,8 +2337,8 @@ def admin_edit_booking(booking_id):
         teacher_name = request.form.get('teacher_name', '').strip()
         teacher_class = request.form.get('teacher_class', '').strip()
         
-        if not date_str or not teacher_id or not teacher_name or not teacher_class or num_students < 1 or num_students > 5:
-            flash('Bitte füllen Sie alle Pflichtfelder aus und wählen Sie 1-5 Schüler.', 'error')
+        if not date_str or not teacher_id or not teacher_name or not teacher_class or num_students < 1 or num_students > get_max_students():
+            flash(f'Bitte füllen Sie alle Pflichtfelder aus und wählen Sie 1-{get_max_students()} Schüler.', 'error')
             users = get_all_users()
             students = json.loads(booking['students_json']) if booking.get('students_json') else []
             booking_display = dict(booking)
@@ -2700,7 +2712,9 @@ def admin_bulk_block():
         
         return redirect(url_for('admin_bulk_block'))
     
-    return render_template('admin_bulk_block.html', blocked_slots=blocked_slots)
+    return render_template('admin_bulk_block.html',
+                         blocked_slots=blocked_slots,
+                         period_times=get_period_times())
 
 # ============================================================================
 # Notifications & Server-Sent Events (SSE) Routes
@@ -2881,6 +2895,67 @@ def admin_cms_save():
         return redirect(url_for('admin_cms') + '#tab-database')
 
     return redirect(url_for('admin_cms') + f'#tab-{section}')
+
+
+# ── Werksreset ───────────────────────────────────────────────────────────────
+
+@app.route('/admin/factory_reset', methods=['GET', 'POST'])
+@admin_required
+def admin_factory_reset():
+    """Werksreset: Buchungsdaten oder alles löschen."""
+    if request.method == 'POST':
+        if not validate_csrf_token(request.form.get('csrf_token', '')):
+            flash('Ungültiges Sicherheits-Token.', 'error')
+            return redirect(url_for('admin_factory_reset'))
+
+        confirmation = request.form.get('confirmation', '').strip()
+        mode = request.form.get('mode', '')
+
+        if confirmation != 'RESET':
+            flash('Bestätigung falsch – bitte "RESET" eingeben.', 'error')
+            return redirect(url_for('admin_factory_reset'))
+
+        if mode not in ('bookings', 'full'):
+            flash('Ungültiger Reset-Modus.', 'error')
+            return redirect(url_for('admin_factory_reset'))
+
+        try:
+            from models import Booking, BlockedSlot, Notification, User, Period, Course, SchoolClass, SlotName
+            from system_config import SystemConfig
+
+            # Immer löschen: Benachrichtigungen, Buchungen, Sperren
+            Notification.query.delete()
+            Booking.query.delete()
+            BlockedSlot.query.delete()
+
+            if mode == 'full':
+                # Alle Nutzer außer dem lokalen Admin löschen
+                User.query.filter(User.username != 'sportoase').delete()
+                # Alle Konfiguration außer Datenbank-URL löschen
+                SystemConfig.query.filter(SystemConfig.category != 'database').delete()
+                # Kurse, Stunden, Schulklassen, Slot-Namen löschen
+                Course.query.delete()
+                Period.query.delete()
+                SchoolClass.query.delete()
+                SlotName.query.delete()
+
+            db.session.commit()
+
+            if mode == 'full':
+                # Standardwerte neu einsäen
+                from dynamic_config import seed_initial_data
+                seed_initial_data()
+                flash('✅ Vollständiger Werksreset abgeschlossen. Alle Daten gelöscht, Standardwerte wiederhergestellt.', 'success')
+            else:
+                flash('✅ Buchungsdaten erfolgreich gelöscht (Benutzer & Konfiguration bleiben erhalten).', 'success')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Fehler beim Reset: {e}', 'error')
+
+        return redirect(url_for('admin'))
+
+    return render_template('admin_factory_reset.html')
 
 
 # Error-Handler für Production mit Fallback

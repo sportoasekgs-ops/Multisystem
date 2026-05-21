@@ -18,7 +18,7 @@
             <div class="form-group">
                 <label for="period">Stunde:</label>
                 <select id="period" name="period" required onchange="updatePeriodInfo()">
-                    {% for p in range(1, 7) %}
+                    {% for p in period_times.keys()|sort %}
                     <option value="{{ p }}" {% if booking and booking.period == p %}selected{% endif %}>
                         {{ p }}. Stunde ({{ period_times[p].start }} - {{ period_times[p].end }})
                     </option>
@@ -57,9 +57,9 @@
         </div>
         
         <div class="form-group">
-            <label for="num_students">Anzahl Schüler*innen (1-5):</label>
+            <label for="num_students">Anzahl Schüler*innen (1-{{ max_students }}):</label>
             <select id="num_students" name="num_students" onchange="updateStudentFields()" required>
-                {% for i in range(1, 6) %}
+                {% for i in range(1, max_students + 1) %}
                 <option value="{{ i }}" {% if booking and booking.students|length == i %}selected{% endif %}>
                     {{ i }} Schüler*innen
                 </option>

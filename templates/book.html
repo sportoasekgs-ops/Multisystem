@@ -57,13 +57,11 @@
         </div>
         
         <div class="form-group">
-            <label for="num_students">Anzahl Schüler*innen (1-5)</label>
+            <label for="num_students">Anzahl Schüler*innen (1-{{ max_students }})</label>
             <select id="num_students" name="num_students" onchange="updateStudentFields()" required>
-                <option value="1">1 Schüler*in</option>
-                <option value="2">2 Schüler*innen</option>
-                <option value="3">3 Schüler*innen</option>
-                <option value="4">4 Schüler*innen</option>
-                <option value="5">5 Schüler*innen</option>
+                {% for i in range(1, max_students + 1) %}
+                <option value="{{ i }}">{{ i }} Schüler*{% if i == 1 %}in{% else %}innen{% endif %}</option>
+                {% endfor %}
             </select>
         </div>
         
