@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <script>
+        // Theme sofort beim Laden initialisieren, um Flashen zu verhindern
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ school_name or 'SportOase' }} – Buchungssystem{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ favicon_url }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260520h">
+    <meta http-equiv="refresh" content="600">
+
+    <!-- ── Dynamisches Branding aus der Datenbank ── -->
+    <style>
+        :root {
+            --primary: {{ primary_color or '#E91E63' }};
+            --primary-dark: {{ secondary_color or '#C2185B' }};
+            --primary-light: {{ background_color or '#FCE4EC' }};
+            --login-gradient: linear-gradient(135deg, {{ background_color or '#FCE4EC' }} 0%, {{ primary_color or '#E91E63' }} 100%);
+            --primary-rgb: {{ primary_rgb_space or '233 30 99' }};
+            --primary-overlay: rgba({{ primary_rgb or '233, 30, 99' }}, 0.12);
+        }
+    </style>
+
+    <style>
+        /* ===== FOOTER LEGAL ===== */
+        .footer-legal {
+            position: static;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 40px;
+            white-space: nowrap;
+        }
+
+        .footer-legal a {
+            color: #888;
+            font-size: 0.82rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-legal a:hover {
+            color: #333;
+            text-decoration: underline;
+        }
+
+        /* ===== CREDITS BUTTON ===== */
+        .credits-button {
+            position: fixed;
+            bottom: 16px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #ddd;
+            color: #555;
+            font-size: 1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 900;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .credits-button:hover {
+            background: #bbb;
+        }
+
+        /* ===== CREDITS MODAL ===== */
+        .credits-modal {
+            display: none;
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            z-index: 10000;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 20px 24px;
+            min-width: 240px;
+        }
+
+        .credits-content h3 {
+            margin: 0 0 12px 0;
+            font-size: 1rem;
+        }
+
+        .credits-content p {
+            margin: 4px 0;
+            font-size: 0.85rem;
+            color: #444;
+        }
+
+        .credits-close {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .credits-close:hover {
+            color: #333;
+        }
+
+        /* ===== DATENSCHUTZ MODAL ===== */
+        #privacyModal.modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        #privacyModal .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            max-width: 620px;
+            width: 100%;
+            margin: auto;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        #privacyModal .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #eee;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 1;
+        }
+
+        #privacyModal .modal-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: #222 !important;
+        }
+
+        #privacyModal .modal-header button {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: #888;
+            line-height: 1;
+        }
+
+        #privacyModal .modal-header button:hover {
+            color: #333;
+        }
+
+        #privacyModal .modal-body {
+            padding: 20px 24px;
+            font-size: 0.88rem;
+            color: #444 !important;
+            line-height: 1.7;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        #privacyModal .modal-body h4 {
+            margin: 18px 0 6px 0;
+            font-size: 0.9rem;
+            color: #222 !important;
+        }
+
+        #privacyModal .modal-body h4:first-child {
+            margin-top: 0;
+        }
+
+        #privacyModal .modal-body p {
+            margin: 0 0 8px 0;
+            color: #444 !important;
+        }
+
+        #privacyModal .modal-body ul {
+            margin: 4px 0 10px 0;
+            padding-left: 20px;
+        }
+
+        #privacyModal .modal-body li {
+            margin-bottom: 3px;
+            color: #444 !important;
+        }
+
+        #privacyModal .modal-body a {
+            color: #0066cc;
+        }
+    </style>
+</head>
+
+<body>
+
+    {% if session.user_id %}
+    <div class="top-nav">
+        <div class="container">
+            <nav>
+                <a href="{{ url_for('dashboard') }}" class="nav-logo-link"
+                    style="font-weight:700; font-size:1.05rem; text-decoration:none; display:flex; align-items:center; gap:.5rem;">
+                    <img src="{{ logo_url }}" alt="{{ school_name or 'Logo' }}"
+                         style="height:28px; width:28px; border-radius:50%; object-fit:cover; flex-shrink:0;">
+                    <span class="logo-text-desktop">{{ school_name or 'SportOase' }}</span>
+                    <span class="logo-text-mobile" style="display:none;">{{ (school_name or 'SportOase').split(' ')[0] }}</span>
+                </a>
+
+                <!-- Navigation Links Wrapper -->
+                <div class="nav-links-wrapper" id="navLinksWrapper">
+                    <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                    <a href="{{ url_for('meine_buchungen') }}">Meine Buchungen</a>
+
+                    {% if session.user_role == 'admin' %}
+                    <a href="{{ url_for('admin') }}">Admin</a>
+                    {% endif %}
+
+                    <!-- Theme Switch Toggle -->
+                    <label class="theme-switch" title="Design umschalten">
+                        <input type="checkbox" class="theme-switch-input" id="themeSwitch" onchange="toggleTheme()">
+                        <span class="theme-switch-slider"></span>
+                    </label>
+
+                    <div class="user-info">
+                        <span>{{ session.user_name or session.user_email }}</span>
+                        <span class="{% if session.user_role == 'admin' %}admin{% else %}teacher{% endif %}">
+                            {{ session.iserv_group or ('Admin' if session.user_role == 'admin' else 'Lehrkraft') }}
+                        </span>
+                    </div>
+
+                    <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+                </div>
+
+                {% if session.user_role == 'admin' %}
+                <div class="notification-container">
+                    <button class="notification-bell" onclick="toggleNotifications()">🔔
+                        <span id="notificationBadge" class="notification-badge" style="display:none;">0</span>
+                    </button>
+
+                    <div id="notificationDropdown" class="notification-dropdown">
+                        <div class="notification-header">
+                            <h4>Benachrichtigungen</h4>
+                            <button class="mark-all-read" onclick="markAllAsRead()">Alle gelesen</button>
+                        </div>
+                        <div id="notificationList" class="notification-list">
+                            <p>Keine neuen Benachrichtigungen</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Mobile Hamburger Button -->
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menü öffnen" id="mobileMenuBtn">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="message message-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 🔐 Datenschutzerklärung Link -->
+    <div class="footer-legal">
+        <a href="#" onclick="openPrivacyModal(); return false;">
+            🔐 Datenschutzerklärung
+        </a>
+    </div>
+
+    <!-- ❓ Credits Button -->
+    <div class="credits-button" onclick="toggleCredits()">?</div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ===================== CREDITS ===================== -->
+    <div id="creditsModal" class="credits-modal">
+        <div class="credits-content">
+            <span class="credits-close" onclick="toggleCredits()">&times;</span>
+            <h3>Credits</h3>
+            <p><strong>Programmiert in:</strong> Python 3.13.4</p>
+            <p><strong>Security:</strong> Cloudflare SSL</p>
+            <p><strong>Server:</strong> AES-256</p>
+            <p><strong>Handcrafted by:</strong> Mauro Morelli</p>
+        </div>
+    </div>
+
+    <!-- ===================== DATENSCHUTZ ===================== -->
+    <div id="privacyModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 Datenschutzerklärung</h3>
+                <button onclick="closePrivacyModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+
+                <h4>1. Verantwortlicher</h4>
+                <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
+                <p>
+                    Mauro Morelli<br>
+                    Platz Saint-Aubin 1<br>
+                    30982 Pattensen<br>
+                    Deutschland<br>
+                    E-Mail: <a href="mailto:morelli.maurizio@kgs-pattensen.de">morelli.maurizio@kgs-pattensen.de</a><br>
+                    Telefon: 05101 1001610
+                </p>
+
+                <h4>2. Allgemeine Hinweise zur Datenverarbeitung</h4>
+                <p>Der Schutz Ihrer persönlichen Daten ist uns ein besonderes Anliegen. Wir verarbeiten personenbezogene
+                    Daten ausschließlich im Rahmen der gesetzlichen Vorschriften (DSGVO, TTDSG).</p>
+
+                <h4>3. Hosting und Server-Logfiles</h4>
+                <p>Diese Website wird bei Render.com gehostet (Serverstandort: Frankfurt am Main, Deutschland).</p>
+                <p>Beim Aufruf der Website werden automatisch folgende Daten erfasst:</p>
+                <ul>
+                    <li>IP-Adresse</li>
+                    <li>Datum und Uhrzeit der Anfrage</li>
+                    <li>Browsertyp und -version</li>
+                    <li>Betriebssystem</li>
+                    <li>Referrer-URL</li>
+                </ul>
+                <p>Diese Daten dienen der technischen Bereitstellung und Sicherheit der Website und werden nicht mit
+                    anderen Datenquellen zusammengeführt.</p>
+
+                <h4>4. Domain-Registrierung</h4>
+                <p>Die Domain wurde über Namecheap registriert. Eine Verarbeitung personenbezogener Daten kann durch den
+                    Domainanbieter im Rahmen der technischen Verwaltung erfolgen.</p>
+
+                <h4>5. Zugriffsschutz und Sicherheit</h4>
+                <p>Diese Website nutzt:</p>
+                <ul>
+                    <li>HTTPS-Verschlüsselung (SSL/TLS)</li>
+                    <li>Cloudflare SSL-Schutz</li>
+                    <li>CSRF-Schutz</li>
+                    <li>Sichere Passwortspeicherung</li>
+                </ul>
+                <p>Die Datenübertragung erfolgt verschlüsselt.</p>
+
+                <h4>6. Authentifizierung (IServ Single Sign-On)</h4>
+                <p>Zur Anmeldung wird ein Single Sign-On-Verfahren (OAuth 2.0) über IServ verwendet. Dabei werden
+                    folgende Daten verarbeitet:</p>
+                <ul>
+                    <li>Name (automatisch aus IServ übernommen)</li>
+                    <li>ggf. schulbezogene Identifikationsdaten</li>
+                </ul>
+                <p>Die Verarbeitung erfolgt ausschließlich zur Bereitstellung der Buchungsfunktion.</p>
+
+                <h4>7. Buchungssystem und Datenspeicherung</h4>
+                <p>Im Rahmen der Buchung werden folgende Daten verarbeitet:</p>
+                <ul>
+                    <li>Name der Lehrkraft</li>
+                    <li>Klasse</li>
+                    <li>Namen der Schüler*innen (Nur Vornamen und Anfangsbuchstabe des Nachnamens, z.B. Mia S.) (max. 5
+                        pro Buchung)</li>
+                    <li>ggf. Notizen</li>
+                </ul>
+                <p><strong>Besonderheit:</strong></p>
+                <ul>
+                    <li>Schüler*innennamen sind ausschließlich für die buchende Person sichtbar</li>
+                    <li>Keine öffentliche Anzeige personenbezogener Daten</li>
+                </ul>
+                <p>Die Speicherung erfolgt in einer PostgreSQL-Datenbank.</p>
+
+                <h4>8. Zweck der Datenverarbeitung</h4>
+                <p>Die Verarbeitung erfolgt zur:</p>
+                <ul>
+                    <li>Organisation und Verwaltung von Buchungen</li>
+                    <li>Durchführung schulischer Angebote</li>
+                    <li>Kommunikation im Rahmen der Nutzung</li>
+                </ul>
+
+                <h4>9. Rechtsgrundlage</h4>
+                <p>Die Verarbeitung erfolgt gemäß Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) sowie lit. f DSGVO
+                    (berechtigtes Interesse an einem funktionierenden Buchungssystem).</p>
+
+                <h4>10. Speicherdauer</h4>
+                <p>Personenbezogene Daten werden nur so lange gespeichert, wie dies für den jeweiligen Zweck
+                    erforderlich ist.</p>
+
+                <h4>11. Weitergabe von Daten</h4>
+                <p>Eine Weitergabe an Dritte erfolgt nicht, außer:</p>
+                <ul>
+                    <li>an technische Dienstleister (Hosting, Infrastruktur)</li>
+                    <li>wenn gesetzlich erforderlich</li>
+                </ul>
+
+                <h4>12. Ihre Rechte</h4>
+                <p>Sie haben das Recht auf:</p>
+                <ul>
+                    <li>Auskunft über Ihre gespeicherten Daten</li>
+                    <li>Berichtigung unrichtiger Daten</li>
+                    <li>Löschung Ihrer Daten</li>
+                    <li>Einschränkung der Verarbeitung</li>
+                    <li>Widerspruch gegen die Verarbeitung</li>
+                    <li>Datenübertragbarkeit</li>
+                </ul>
+
+                <h4>13. Kontakt bei Datenschutzfragen</h4>
+                <p>Bei Fragen zum Datenschutz wenden Sie sich bitte an:<br>
+                    <a href="mailto:morelli.maurizio@kgs-pattensen.de">morelli.maurizio@kgs-pattensen.de</a>
+                </p>
+
+                <h4>14. Aktualität</h4>
+                <p>Diese Datenschutzerklärung ist aktuell gültig und hat den Stand: Mai 2026.</p>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== SCRIPT ===================== -->
+    <script>
+        // Credits
+        function toggleCredits() {
+            const modal = document.getElementById('creditsModal');
+            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Datenschutz
+        function openPrivacyModal() {
+            document.getElementById("privacyModal").style.display = "flex";
+        }
+
+        // Theme Switch
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Sync checkbox state
+            const switchEl = document.getElementById('themeSwitch');
+            if (switchEl) {
+                switchEl.checked = newTheme === 'dark';
+            }
+        }
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const wrapper = document.getElementById('navLinksWrapper');
+            const btn = document.getElementById('mobileMenuBtn');
+            const isMenuOpen = wrapper.classList.toggle('active');
+            btn.classList.toggle('active');
+            
+            // Close notification dropdown if menu is opened
+            if (isMenuOpen) {
+                const notifications = document.getElementById('notificationDropdown');
+                if (notifications) notifications.style.display = 'none';
+            }
+        }
+
+        // Notifications
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            if (!dropdown) return;
+            
+            const isVisible = dropdown.style.display === 'block';
+            dropdown.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                fetchRecentNotifications();
+                
+                // Close mobile menu if notification dropdown is opened
+                const wrapper = document.getElementById('navLinksWrapper');
+                const btn = document.getElementById('mobileMenuBtn');
+                if (wrapper) wrapper.classList.remove('active');
+                if (btn) btn.classList.remove('active');
+            }
+        }
+
+        function fetchRecentNotifications() {
+            fetch('/api/notifications/recent')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('notificationList');
+                    if (!list) return;
+                    list.innerHTML = '';
+                    
+                    if (data.notifications && data.notifications.length > 0) {
+                        data.notifications.forEach(n => {
+                            const item = document.createElement('div');
+                            item.className = 'notification-item' + (n.is_read ? ' read' : '');
+                            item.innerHTML = `
+                                <div class="notification-content">
+                                    <p class="notification-message">${n.message}</p>
+                                    <span class="notification-time">${n.created_at}</span>
+                                </div>
+                            `;
+                            list.appendChild(item);
+                        });
+                    } else {
+                        list.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-tertiary); font-size: 0.875rem;">Keine Benachrichtigungen</div>';
+                    }
+                })
+                .catch(err => console.error("Error fetching notifications:", err));
+        }
+
+        function markAllAsRead() {
+            fetch('/api/notifications/mark_all_read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ csrf_token: '{{ csrf_token }}' })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateUnreadCount();
+                    fetchRecentNotifications();
+                } else if (data.error) {
+                    console.error("Failed to mark all as read:", data.error);
+                }
+            })
+            .catch(err => console.error("Error marking notifications as read:", err));
+        }
+
+        function updateUnreadCount() {
+            fetch('/api/notifications/unread_count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notificationBadge');
+                    if (!badge) return;
+                    
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                })
+                .catch(err => console.error("Error updating notification count:", err));
+        }
+
+        // Initial loading and polling
+        document.addEventListener("DOMContentLoaded", function () {
+            // Checkbox-Status an aktuellen Theme-Status anpassen
+            const themeSwitch = document.getElementById('themeSwitch');
+            if (themeSwitch) {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                themeSwitch.checked = currentTheme === 'dark';
+            }
+
+            {% if session.user_role == 'admin' %}
+            updateUnreadCount();
+            setInterval(updateUnreadCount, 60000); // check every 60s
+            {% endif %}
+        });
+
+        // Click outside closes modals, menus, and dropdowns
+        document.addEventListener("click", function (e) {
+            const credits = document.getElementById("creditsModal");
+            const privacy = document.getElementById("privacyModal");
+            const notifications = document.getElementById("notificationDropdown");
+            const navLinksWrapper = document.getElementById("navLinksWrapper");
+            const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+
+            if (e.target === credits) credits.style.display = "none";
+            if (e.target === privacy) privacy.style.display = "none";
+            
+            // Close notifications dropdown if clicked outside bell and dropdown
+            if (notifications && notifications.style.display === "block") {
+                const bell = document.querySelector(".notification-bell");
+                if (bell && !bell.contains(e.target) && !notifications.contains(e.target)) {
+                    notifications.style.display = "none";
+                }
+            }
+            
+            // Close mobile menu if clicked outside
+            if (navLinksWrapper && navLinksWrapper.classList.contains("active")) {
+                if (mobileMenuBtn && !mobileMenuBtn.contains(e.target) && !navLinksWrapper.contains(e.target)) {
+                    navLinksWrapper.classList.remove("active");
+                    mobileMenuBtn.classList.remove("active");
+                }
+            }
+        });
+
+        function closePrivacyModal() {
+            document.getElementById("privacyModal").style.display = "none";
+        }
+
+        // Global Toast Notification Helper
+        window.showToast = function(message, type = 'success', duration = 4000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            // Icons based on type
+            let icon = '🔔';
+            if (type === 'success') icon = '✓';
+            else if (type === 'error') icon = '✕';
+            else if (type === 'info') icon = 'ℹ';
+
+            toast.innerHTML = `
+                <span class="toast-icon">${icon}</span>
+                <span class="toast-message">${message}</span>
+                <button type="button" class="toast-close" onclick="this.parentElement.classList.remove('show'); setTimeout(() => this.parentElement.remove(), 400);">&times;</button>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+
+            // Auto remove
+            setTimeout(() => {
+                if (toast && toast.classList.contains('show')) {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 400);
+                }
+            }, duration);
+        };
+    </script>
+
+</body>
+
+</html>

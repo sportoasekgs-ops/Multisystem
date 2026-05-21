@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block title %}Kalender - {{ month_name }} {{ year }}{% endblock %}
+
+{% block content %}
+<div class="calendar-page">
+    <div class="calendar-header">
+        <h2>🗓️ Kalenderübersicht</h2>
+        <p>Wähle einen Tag, um zur Wochenansicht zu springen</p>
+    </div>
+    
+    <div class="calendar-nav">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Zurück zur Wochenansicht</a>
+    </div>
+    
+    <div class="calendar-container">
+        <div class="month-navigation">
+            <a href="{{ url_for('calendar_view', year=prev_year, month=prev_month) }}" class="nav-btn" title="Vorheriger Monat">
+                ◀
+            </a>
+            <div class="month-year-display">
+                <span class="month-name">{{ month_name }}</span>
+                <span class="year">{{ year }}</span>
+            </div>
+            <a href="{{ url_for('calendar_view', year=next_year, month=next_month) }}" class="nav-btn" title="Nächster Monat">
+                ▶
+            </a>
+        </div>
+        
+        <div class="year-quick-nav">
+            {% for m in range(1, 13) %}
+            <a href="{{ url_for('calendar_view', year=year, month=m) }}" 
+               class="month-quick-btn {% if m == month %}active{% endif %}">
+                {{ ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'][m-1] }}
+            </a>
+            {% endfor %}
+        </div>
+        
+        <div class="calendar-grid">
+            <div class="weekday-header">
+                <span>Mo</span>
+                <span>Di</span>
+                <span>Mi</span>
+                <span>Do</span>
+                <span>Fr</span>
+                <span class="weekend">Sa</span>
+                <span class="weekend">So</span>
+            </div>
+            
+            {% for week in weeks %}
+            <div class="calendar-week">
+                {% for day in week %}
+                {% if day is none %}
+                <div class="calendar-day empty"></div>
+                {% else %}
+                <a href="{{ url_for('dashboard', date=day.date) }}" 
+                   class="calendar-day 
+                          {% if day.is_weekend %}weekend{% endif %}
+                          {% if day.is_today %}today{% endif %}
+                          {% if day.is_past and not day.is_today %}past{% endif %}
+                          status-{{ day.status }}">
+                    <span class="day-number">{{ day.day }}</span>
+                    {% if day.status == 'blocked' %}
+                    <span class="day-indicator blocked" title="{{ day.blocked_reason }}">🔒</span>
+                    {% elif day.status == 'partial_blocked' %}
+                    <span class="day-indicator partial" title="{{ day.blocked_reason }}">⚠️</span>
+                    {% elif day.booking_count > 0 %}
+                    <span class="day-indicator bookings">{{ day.booking_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <span class="legend-dot today-dot"></span>
+                <span>Heute</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot free-dot"></span>
+                <span>Frei</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot bookings-dot"></span>
+                <span>Buchungen</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot blocked-dot"></span>
+                <span>Blockiert</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot weekend-dot"></span>
+                <span>Wochenende</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="year-navigation">
+        <h3>Jahresübersicht</h3>
+        <div class="year-buttons">
+            {% for y in range(year - 1, year + 3) %}
+            <a href="{{ url_for('calendar_view', year=y, month=1) }}" 
+               class="year-btn {% if y == year %}active{% endif %}">
+                {{ y }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.calendar-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.calendar-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.calendar-header h2 {
+    color: var(--primary);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.8rem;
+}
+
+.calendar-header p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.calendar-nav {
+    margin-bottom: 1.5rem;
+}
+
+.calendar-container {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.month-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.nav-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+}
+
+.nav-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.1);
+}
+
+.month-year-display {
+    text-align: center;
+    min-width: 180px;
+}
+
+.month-name {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.year {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.year-quick-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.month-quick-btn {
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.month-quick-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.month-quick-btn.active {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+}
+
+.calendar-grid {
+    margin-bottom: 1rem;
+}
+
+.weekday-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.weekday-header .weekend {
+    color: var(--text-tertiary);
+}
+
+.calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    text-decoration: none;
+    color: var(--text-primary);
+    position: relative;
+    transition: all 0.2s;
+    min-height: 50px;
+}
+
+.calendar-day:hover:not(.empty):not(.weekend) {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-md);
+    z-index: 1;
+}
+
+.calendar-day.empty {
+    background: transparent;
+}
+
+.calendar-day.weekend {
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.calendar-day.today {
+    background: var(--primary);
+    color: white;
+    font-weight: 700;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.calendar-day.past:not(.today) {
+    opacity: 0.5;
+}
+
+.calendar-day.status-blocked {
+    background: var(--blocked-bg);
+    color: var(--blocked-text);
+}
+
+.calendar-day.status-partial_blocked {
+    background: linear-gradient(135deg, var(--bg-secondary) 50%, #fff3e0 50%);
+}
+
+.calendar-day.status-has_bookings {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+}
+
+.calendar-day.status-full {
+    background: linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%);
+}
+
+.day-number {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.day-indicator {
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+
+.day-indicator.bookings {
+    background: var(--primary);
+    color: white;
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 600;
+}
+
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+}
+
+.today-dot {
+    background: var(--primary);
+}
+
+.free-dot {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+}
+
+.bookings-dot {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+}
+
+.blocked-dot {
+    background: var(--blocked-bg);
+}
+
+.weekend-dot {
+    background: var(--bg-tertiary);
+}
+
+.year-navigation {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.year-navigation h3 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+}
+
+.year-buttons {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.year-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.year-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.year-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+@media (max-width: 600px) {
+    .calendar-page {
+        padding: 0.5rem;
+    }
+    
+    .calendar-container {
+        padding: 1rem;
+    }
+    
+    .month-navigation {
+        gap: 0.75rem;
+    }
+    
+    .month-name {
+        font-size: 1.2rem;
+    }
+    
+    .month-year-display {
+        min-width: 120px;
+    }
+    
+    .calendar-day {
+        min-height: 40px;
+    }
+    
+    .day-number {
+        font-size: 0.85rem;
+    }
+    
+    .year-quick-nav {
+        gap: 0.25rem;
+    }
+    
+    .month-quick-btn {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .calendar-legend {
+        gap: 0.5rem;
+    }
+    
+    .legend-item {
+        font-size: 0.75rem;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk-Verwaltung - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-page">
+    <div class="admin-header">
+        <h2>Slot-Verwaltung (Bulk)</h2>
+        <p>Sperren oder entsperren Sie mehrere Slots auf einmal</p>
+    </div>
+    
+    <div class="admin-nav">
+        <a href="{{ url_for('admin') }}" class="btn btn-secondary">← Zurück zur Admin-Übersicht</a>
+        <a href="{{ url_for('manage_slots') }}" class="btn btn-secondary">Slot-Namen</a>
+    </div>
+    
+    <!-- Schnell-Setup für Ferien 2026 -->
+    <div class="quick-setup-section" style="margin-bottom: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-radius: 12px; border: 2px solid #ff9800;">
+        <h3 style="margin: 0 0 0.5rem 0; color: #e65100;">🗓️ Niedersachsen Ferien 2026 - Schnell-Setup</h3>
+        <p style="margin: 0 0 1rem 0; color: #bf360c;">Legt automatisch alle Schulferien und Feiertage für 2026 an (Winterferien, Osterferien, Pfingstferien, Sommerferien, Herbstferien, Weihnachtsferien + gesetzliche Feiertage).</p>
+        <form method="POST" action="{{ url_for('admin_setup_holidays_2026') }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit" class="btn" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; font-weight: bold; padding: 0.75rem 1.5rem;">
+                🚀 Alle Ferien 2026 jetzt anlegen
+            </button>
+        </form>
+    </div>
+    
+    <div class="bulk-block-section">
+        <!-- Sperren-Karte -->
+        <div class="bulk-block-card">
+            <h3>🔒 Zeitraum sperren</h3>
+            <p class="card-description">Sperren Sie Slots für Ferien, Fortbildungen etc.</p>
+            <form method="POST" action="{{ url_for('admin_bulk_block') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="action" value="block">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="block_start_date">Von:</label>
+                        <input type="date" id="block_start_date" name="start_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="block_end_date">Bis:</label>
+                        <input type="date" id="block_end_date" name="end_date" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Schnellauswahl:</label>
+                    <div class="reason-icons">
+                        <button type="button" class="reason-icon-btn" data-reason="🎄 Weihnachtsferien" title="Weihnachtsferien">🎄</button>
+                        <button type="button" class="reason-icon-btn" data-reason="☀️ Sommerferien" title="Sommerferien">☀️</button>
+                        <button type="button" class="reason-icon-btn" data-reason="🐣 Osterferien" title="Osterferien">🐣</button>
+                        <button type="button" class="reason-icon-btn" data-reason="🍂 Herbstferien" title="Herbstferien">🍂</button>
+                        <button type="button" class="reason-icon-btn" data-reason="🌸 Pfingstferien" title="Pfingstferien">🌸</button>
+                        <button type="button" class="reason-icon-btn" data-reason="❄️ Winterferien" title="Winterferien">❄️</button>
+                        <button type="button" class="reason-icon-btn" data-reason="🎉 Feiertag" title="Feiertag">🎉</button>
+                        <button type="button" class="reason-icon-btn" data-reason="📚 Fortbildung" title="Fortbildung">📚</button>
+                        <button type="button" class="reason-icon-btn" data-reason="🔧 Wartung" title="Wartung">🔧</button>
+                        <button type="button" class="reason-icon-btn" data-reason="🏃 Sportevent" title="Sportevent">🏃</button>
+                        <button type="button" class="reason-icon-btn" data-reason="💬 Besprechung" title="Besprechung">💬</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="reason">Grund:</label>
+                    <input type="text" id="reason" name="reason" value="Ferien" maxlength="200" 
+                           placeholder="z.B. Weihnachtsferien, Fortbildung">
+                </div>
+                
+                <div class="form-group">
+                    <label>Stunden:</label>
+                    <div class="periods-grid">
+                        {% for i in range(1, 7) %}
+                        <label class="period-checkbox">
+                            <input type="checkbox" name="periods" value="{{ i }}">
+                            <span>{{ i }}.</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <small class="form-hint">Keine Auswahl = alle Stunden</small>
+                </div>
+                
+                <button type="submit" class="btn btn-block btn-full-width">
+                    🔒 Sperren
+                </button>
+            </form>
+        </div>
+        
+        <!-- Entsperren-Karte -->
+        <div class="bulk-block-card bulk-unblock-card">
+            <h3>🔓 Zeitraum entsperren</h3>
+            <p class="card-description">Geben Sie gesperrte Slots wieder frei</p>
+            <form method="POST" action="{{ url_for('admin_bulk_block') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="action" value="unblock">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="unblock_start_date">Von:</label>
+                        <input type="date" id="unblock_start_date" name="start_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="unblock_end_date">Bis:</label>
+                        <input type="date" id="unblock_end_date" name="end_date" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Stunden:</label>
+                    <div class="periods-grid">
+                        {% for i in range(1, 7) %}
+                        <label class="period-checkbox">
+                            <input type="checkbox" name="periods" value="{{ i }}">
+                            <span>{{ i }}.</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <small class="form-hint">Keine Auswahl = alle Stunden</small>
+                </div>
+                
+                <button type="submit" class="btn btn-success btn-full-width">
+                    🔓 Entsperren
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Aktuell gesperrte Slots -->
+    <div class="bulk-block-card blocked-overview">
+        <h3>📋 Aktuell gesperrte Slots ({{ blocked_slots|length }})</h3>
+        {% if blocked_slots %}
+        <div class="blocked-slots-list">
+            <table class="blocked-table">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Stunde</th>
+                        <th>Grund</th>
+                        <th>Aktion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in blocked_slots[:50] %}
+                    <tr>
+                        <td>{{ slot.date }}</td>
+                        <td>{{ slot.period }}.</td>
+                        <td>{{ slot.reason }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_unblock_slot') }}" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="date" value="{{ slot.date }}">
+                                <input type="hidden" name="period" value="{{ slot.period }}">
+                                <button type="submit" class="btn btn-xs btn-success" title="Freigeben">🔓</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if blocked_slots|length > 50 %}
+            <p class="hint">... und {{ blocked_slots|length - 50 }} weitere</p>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="no-data">Keine Slots sind derzeit gesperrt.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const reasonInput = document.getElementById('reason');
+    const iconButtons = document.querySelectorAll('.reason-icon-btn');
+    
+    iconButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            iconButtons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            reasonInput.value = this.dataset.reason;
+        });
+    });
+});
+</script>
+{% endblock %}

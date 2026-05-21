@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}403 - Zugriff verweigert{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <h1>403</h1>
+    <h2>Zugriff verweigert</h2>
+    <p>Sie haben keine Berechtigung, auf diese Seite zuzugreifen.</p>
+    <p>
+        <a href="{{ url_for('dashboard') }}" class="button">Zurück zum Dashboard</a>
+    </p>
+</div>
+
+<style>
+.error-page {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.error-page h1 {
+    font-size: 120px;
+    color: #f59e0b;
+    margin: 0;
+    font-weight: bold;
+}
+
+.error-page h2 {
+    font-size: 32px;
+    color: #333;
+    margin: 20px 0;
+}
+
+.error-page p {
+    font-size: 18px;
+    color: #666;
+    margin: 15px 0;
+}
+
+.error-page .button {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #38bdf8 0%, #2196F3 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.error-page .button:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

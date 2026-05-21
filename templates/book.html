@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Buchung - SportOase{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>Neue Buchung</h2>
+    
+    <div class="booking-info-box">
+        <h3>Buchungsdetails</h3>
+        <p><strong>Datum:</strong> {{ date_str }}</p>
+        <p><strong>Stunde:</strong> {{ period }}. Stunde ({{ period_time.start }} - {{ period_time.end }})</p>
+        <p><strong>Angebot:</strong> 
+            {% if period_info.type == 'fest' %}
+                {{ period_info.label }}
+            {% else %}
+                Freie Wahl (Modul wählbar)
+            {% endif %}
+        </p>
+        <p><strong>Verfügbare Plätze:</strong> {{ available_spots }} / 5</p>
+    </div>
+    
+    <form method="POST" id="bookingForm" class="booking-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        
+        <h3>Ihre Angaben</h3>
+        <div class="form-group">
+            <label for="teacher_name">Ihr Name</label>
+            <input type="text" id="teacher_name" name="teacher_name" required placeholder="z.B. Max Mustermann" value="{{ user_name }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="teacher_class">Ihre Klasse</label>
+            <select id="teacher_class" name="teacher_class" required>
+                <option value="">-- Bitte Klasse wählen --</option>
+                {% for klasse in school_classes %}
+                <option value="{{ klasse }}">{{ klasse }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <h3>Schüler*innen</h3>
+        
+        <!-- Exklusive Buchung - prominente Platzierung -->
+        <div class="form-group exclusive-booking-group exclusive-highlight" id="exclusiveBookingGroup">
+            <label class="checkbox-label exclusive-checkbox">
+                <input type="checkbox" name="is_exclusive" id="is_exclusive" value="1" onchange="toggleExclusiveMode()">
+                <span class="checkbox-text">
+                    <span class="checkbox-icon">🔒</span>
+                    <strong>Exklusive Nutzung der SportOase</strong>
+                </span>
+            </label>
+            <p class="hint-text warning-text">
+                Die gesamte SportOase wird für diesen Zeitslot nur für <strong>einen Schüler</strong> reserviert. 
+                Diese Buchung muss vom Admin freigegeben werden.
+            </p>
+        </div>
+        
+        <div class="form-group">
+            <label for="num_students">Anzahl Schüler*innen (1-5)</label>
+            <select id="num_students" name="num_students" onchange="updateStudentFields()" required>
+                <option value="1">1 Schüler*in</option>
+                <option value="2">2 Schüler*innen</option>
+                <option value="3">3 Schüler*innen</option>
+                <option value="4">4 Schüler*innen</option>
+                <option value="5">5 Schüler*innen</option>
+            </select>
+        </div>
+        
+        <div id="studentFields" class="student-list">
+            <!-- Wird dynamisch mit JavaScript gefüllt -->
+        </div>
+        
+        {% if period_info.type == 'frei' %}
+        <h3>Modul-Auswahl</h3>
+        <div class="form-group">
+            <label for="module">Wählen Sie ein Modul</label>
+            <select id="module" name="module" required>
+                <option value="">-- Bitte wählen --</option>
+                {% for module in free_modules %}
+                <option value="{{ module }}">{{ module }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
+        <h3>Notizen (optional)</h3>
+        <div class="form-group">
+            <label for="notes">Notizen für den Admin</label>
+            <textarea id="notes" name="notes" rows="3" placeholder="z.B. Besonderheiten, Hinweise oder Fragen..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
+            <p class="hint-text">Diese Notizen werden nur dem Admin angezeigt.</p>
+        </div>
+        
+        <div class="form-group email-confirmation-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="send_email_confirmation" id="send_email_confirmation" value="1">
+                <span class="checkbox-text">
+                    <span class="checkbox-icon">📧</span>
+                    E-Mail-Bestätigung erhalten
+                </span>
+            </label>
+            <p class="hint-text">Bestätigung wird an {{ user_email }} gesendet</p>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <a href="{{ url_for('dashboard', date=date_str) }}" class="btn btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn btn-primary">Buchung abschließen</button>
+        </div>
+    </form>
+</div>
+
+<script>
+// Klassenliste für Schüler*innen-Dropdown
+const schoolClasses = {{ school_classes | tojson | safe }};
+
+// Exklusiv-Modus umschalten
+function toggleExclusiveMode() {
+    const exclusiveCheckbox = document.getElementById('is_exclusive');
+    const numStudentsSelect = document.getElementById('num_students');
+    
+    if (exclusiveCheckbox.checked) {
+        // Exklusiv aktiviert: nur 1 Schüler, Auswahl deaktivieren
+        numStudentsSelect.value = '1';
+        numStudentsSelect.disabled = true;
+        numStudentsSelect.style.opacity = '0.6';
+        numStudentsSelect.style.cursor = 'not-allowed';
+        updateStudentFields();
+    } else {
+        // Exklusiv deaktiviert: Auswahl wieder aktivieren
+        numStudentsSelect.disabled = false;
+        numStudentsSelect.style.opacity = '1';
+        numStudentsSelect.style.cursor = 'pointer';
+    }
+}
+
+function updateStudentFields() {
+    const numStudents = parseInt(document.getElementById('num_students').value);
+    const container = document.getElementById('studentFields');
+    const teacherClass = document.getElementById('teacher_class').value;
+    const exclusiveCheckbox = document.getElementById('is_exclusive');
+    
+    container.innerHTML = '';
+    
+    // Wenn mehr als 1 Schüler, deaktiviere Exklusiv-Checkbox
+    if (numStudents > 1 && exclusiveCheckbox.checked) {
+        exclusiveCheckbox.checked = false;
+        toggleExclusiveMode();
+    }
+    
+    // Erstelle Optionen für Klassen-Dropdown mit Vorauswahl der Lehrer-Klasse
+    function getClassOptions(selectedClass) {
+        let options = '<option value="">-- Klasse wählen --</option>';
+        schoolClasses.forEach(function(klasse) {
+            const isSelected = klasse === selectedClass ? 'selected' : '';
+            options += `<option value="${klasse}" ${isSelected}>${klasse}</option>`;
+        });
+        return options;
+    }
+    
+    for (let i = 0; i < numStudents; i++) {
+        const div = document.createElement('div');
+        div.className = 'student-item';
+        div.innerHTML = `
+            <div class="form-group">
+                <label for="student_name_${i}">Schüler*in ${i + 1} - Name</label>
+                <input type="text" id="student_name_${i}" name="student_name_${i}" required placeholder="Name">
+            </div>
+            <div class="form-group">
+                <label for="student_class_${i}">Schüler*in ${i + 1} - Klasse</label>
+                <select id="student_class_${i}" name="student_class_${i}" required>
+                    ${getClassOptions(teacherClass)}
+                </select>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+}
+
+// Wenn Lehrer-Klasse geändert wird, aktualisiere alle Schüler-Klassen
+document.getElementById('teacher_class').addEventListener('change', function() {
+    const teacherClass = this.value;
+    const numStudents = parseInt(document.getElementById('num_students').value);
+    
+    // Setze alle Schüler-Klassen auf die Lehrer-Klasse
+    for (let i = 0; i < numStudents; i++) {
+        const studentClassSelect = document.getElementById('student_class_' + i);
+        if (studentClassSelect && teacherClass) {
+            studentClassSelect.value = teacherClass;
+        }
+    }
+});
+
+// Initialisiere mit 1 Schüler*in
+updateStudentFields();
+</script>
+{% endblock %}

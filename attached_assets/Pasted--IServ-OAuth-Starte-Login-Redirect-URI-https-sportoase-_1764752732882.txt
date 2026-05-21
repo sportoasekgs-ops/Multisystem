@@ -1,0 +1,41 @@
+🔐 IServ OAuth: Starte Login, Redirect URI: https://sportoase.app/oauth/callback
+104.23.199.72 - - [03/Dec/2025:09:04:02 +0000] "GET /login/iserv HTTP/1.1" 302 811 "https://sportoase.app/login" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+======================================================================
+🔐 IServ OAuth Login-Versuch
+   E-Mail: devsl@kgs-pattensen.de
+   UserInfo Keys: ['exp', 'iat', 'iss', 'aud', 'sub', 'nonce', 'email', 'email_verified', 'groups', 'preferred_username', 'name', 'nickname', 'given_name', 'family_name', 'locale', 'roles']
+----------------------------------------------------------------------
+   📋 Komplette UserInfo:
+      exp: 1764756250
+      iat: 1764752650
+      iss: https://kgs-pattensen.de
+      aud: 286_1mfqu3b8ue1w8osg4c4wcco0ocw4884wgwcowo04g44kwsogkk
+      sub: eb586f4b-8866-464d-9d1c-8e7d585e631d
+      nonce: 94kng1DWRhAqPRW3hxGe
+      email: devsl@kgs-pattensen.de
+      email_verified: True
+      groups: {'2235': {'id': 2235, 'uuid': 'd9d43e09-76d1-4f8a-a651-6d2a215a0abc', 'act': 'schulleitung', 'name': 'Schulleitung'}}
+      preferred_username: devsl
+      name: devsl
+      nickname: 
+      given_name: 
+      family_name: devsl
+      locale: de-DE
+      roles: [{'uuid': 'fcb2e561-4e1c-4504-9136-e866eabbb2ec', 'id': 'ROLE_SCHOOL_MANAGEMENT', 'displayName': 'Schulleitung'}, {'uuid': None, 'id': 'ROLE_USER', 'displayName': 'Benutzer'}]
+----------------------------------------------------------------------
+   📋 Raw 'roles' data: [{'uuid': 'fcb2e561-4e1c-4504-9136-e866eabbb2ec', 'id': 'ROLE_SCHOOL_MANAGEMENT', 'displayName': 'Schulleitung'}, {'uuid': None, 'id': 'ROLE_USER', 'displayName': 'Benutzer'}]
+   📋 Raw 'groups' data: {'2235': {'id': 2235, 'uuid': 'd9d43e09-76d1-4f8a-a651-6d2a215a0abc', 'act': 'schulleitung', 'name': 'Schulleitung'}}
+----------------------------------------------------------------------
+   🏷️ Extrahierte Rollen: ['role_school_management', 'role_user']
+   👥 Extrahierte Gruppen: []
+   📊 Kombinierte Mitgliedschaften: ['role_school_management', 'role_user']
+======================================================================
+   ❌ KEIN ZUGANG - Keine erlaubte Rolle/Gruppe gefunden
+   ℹ️ Gefundene Mitgliedschaften: ['role_school_management', 'role_user']
+   ℹ️ Erlaubte Keywords: ['schulleitung', 'lehrer', 'lehrerin', 'teacher', 'mitarbeitende', 'mitarbeiter', 'mitarbeiterin', 'pädagogische mitarbeiter', 'paedagogische mitarbeiter', 'pädagogischer mitarbeiter', 'sozialpädagog', 'sozialpaedagog', 'sozialpädagogin', 'sekretariat', 'verwaltung', 'admins']
+🔐 IServ Login: devsl@kgs-pattensen.de
+   Sub-ID: eb586f4b-8866-464d-9d1c-8e7d585e631d
+   Rolle: None
+   IServ-Gruppe: None
+   UserInfo: {'exp': 1764756250, 'iat': 1764752650, 'iss': 'https://kgs-pattensen.de', 'aud': '286_1mfqu3b8ue1w8osg4c4wcco0ocw4884wgwcowo04g44kwsogkk', 'sub': 'eb586f4b-8866-464d-9d1c-8e7d585e631d', 'nonce': '94kng1DWRhAqPRW3hxGe', 'email': 'devsl@kgs-pattensen.de', 'email_verified': True, 'groups': {'2235': {'id': 2235, 'uuid': 'd9d43e09-76d1-4f8a-a651-6d2a215a0abc', 'act': 'schulleitung', 'name': 'Schulleitung'}}, 'preferred_username': 'devsl', 'name': 'devsl', 'nickname': '', 'given_name': '', 'family_name': 'devsl', 'locale': 'de-DE', 'roles': [{'uuid': 'fcb2e561-4e1c-4504-9136-e866eabbb2ec', 'id': 'ROLE_SCHOOL_MANAGEMENT', 'displayName': 'Schulleitung'}, {'uuid': None, 'id': 'ROLE_USER', 'displayName': 'Benutzer'}]}
+❌ Zugang verweigert für: devsl@kgs-pattensen.de (keine berechtigte Gruppe)

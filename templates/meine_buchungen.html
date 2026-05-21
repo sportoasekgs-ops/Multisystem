@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Meine Buchungen - SportOase{% endblock %}
+
+{% block content %}
+<div class="my-bookings-page">
+    <div class="page-header">
+        <h2>
+            <span class="page-icon">📋</span>
+            {% if is_admin %}Alle Buchungen{% else %}Meine Buchungen{% endif %}
+        </h2>
+        {% if is_admin %}
+        <p class="subtitle">Übersicht aller Buchungen im System</p>
+        {% else %}
+        <p class="subtitle">Hier sehen Sie Ihre gebuchten Termine. Änderungen sind bis 1 Stunde vor dem Termin möglich.</p>
+        {% endif %}
+    </div>
+    
+    {% if bookings %}
+    <div class="bookings-list">
+        {% for booking in bookings %}
+        <div class="booking-card {% if booking.is_past %}booking-past{% endif %} {% if not booking.can_modify %}booking-locked{% endif %}">
+            <div class="booking-header">
+                <div class="booking-date-info">
+                    <span class="booking-weekday">{{ booking.weekday_name }}</span>
+                    <span class="booking-date">{{ booking.date_formatted }}</span>
+                </div>
+                <div class="booking-period">
+                    <span class="period-badge">{{ booking.period }}. Stunde</span>
+                    <span class="period-time">{{ booking.period_time }}</span>
+                </div>
+            </div>
+            
+            <div class="booking-body">
+                <div class="booking-offer">
+                    <span class="offer-label">{{ booking.offer_label }}</span>
+                    <span class="offer-type-badge {% if booking.offer_type == 'fest' %}type-fest{% else %}type-frei{% endif %}">
+                        {{ 'Festes Angebot' if booking.offer_type == 'fest' else 'Freies Modul' }}
+                    </span>
+                </div>
+                
+                {% if is_admin %}
+                <div class="booking-teacher-info">
+                    <span class="teacher-label">Lehrkraft:</span>
+                    <span class="teacher-name">{{ booking.teacher_name }} ({{ booking.teacher_class }})</span>
+                </div>
+                {% endif %}
+                
+                <div class="booking-students">
+                    <span class="students-label">Schüler*innen:</span>
+                    <ul class="students-list">
+                        {% for student in booking.students %}
+                        <li>{{ student.name|abbreviate_name }} ({{ student.klasse }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div class="booking-meta">
+                    <span class="created-at">Gebucht am: {{ booking.created_at_formatted }}</span>
+                </div>
+            </div>
+            
+            <div class="booking-actions">
+                {% if booking.can_modify %}
+                <a href="{{ url_for('edit_my_booking', booking_id=booking.id) }}" class="btn btn-edit">
+                    <span class="btn-icon">✏️</span> Bearbeiten
+                </a>
+                <form method="POST" action="{{ url_for('delete_my_booking', booking_id=booking.id) }}" 
+                      onsubmit="return confirm('Möchten Sie diese Buchung wirklich löschen?');" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-delete">
+                        <span class="btn-icon">🗑️</span> Löschen
+                    </button>
+                </form>
+                {% else %}
+                <span class="locked-info">
+                    {% if booking.is_past %}
+                    <span class="lock-icon">🔒</span> Vergangener Termin
+                    {% else %}
+                    <span class="lock-icon">🔒</span> Keine Änderung mehr möglich (weniger als 1 Stunde vor Termin)
+                    {% endif %}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-bookings">
+        <div class="no-bookings-icon">📭</div>
+        <h3>Keine Buchungen vorhanden</h3>
+        <p>Sie haben noch keine Buchungen. Erstellen Sie eine neue Buchung im Dashboard.</p>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Zum Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

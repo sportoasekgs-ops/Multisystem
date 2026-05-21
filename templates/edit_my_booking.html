@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Buchung bearbeiten - SportOase{% endblock %}
+
+{% block content %}
+<div class="booking-form my-booking-edit">
+    <h2>
+        <span class="page-icon">✏️</span>
+        Buchung bearbeiten
+    </h2>
+    
+    <div class="booking-info-summary">
+        <div class="info-item">
+            <span class="info-label">Datum:</span>
+            <span class="info-value">{{ booking.weekday_name }}, {{ booking.date_formatted }}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Stunde:</span>
+            <span class="info-value">{{ booking.period }}. Stunde ({{ period_times[booking.period].start }} - {{ period_times[booking.period].end }})</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">Angebot:</span>
+            <span class="info-value">{{ booking.offer_label }}</span>
+        </div>
+    </div>
+    
+    <form method="POST" id="editBookingForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        
+        <div class="form-group">
+            <label for="num_students">Anzahl Schüler*innen (1-{{ max_students }}):</label>
+            <select id="num_students" name="num_students" onchange="updateStudentFields()" required>
+                {% for i in range(1, max_students + 1) %}
+                <option value="{{ i }}" {% if booking.students|length == i %}selected{% endif %}>
+                    {{ i }} Schüler*innen
+                </option>
+                {% endfor %}
+            </select>
+            <p class="form-hint">Aktuell {{ available_spots + booking.students|length }} Plätze insgesamt verfügbar für diese Stunde</p>
+        </div>
+        
+        <div id="studentFields">
+        </div>
+        
+        {% if booking.offer_type == 'frei' %}
+        <div class="form-group">
+            <label for="module">Modul wählen:</label>
+            <select id="module" name="module" required>
+                {% for module in free_modules %}
+                <option value="{{ module }}" {% if booking.offer_label == module %}selected{% endif %}>
+                    {{ module }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <span class="btn-icon">💾</span> Änderungen speichern
+            </button>
+            <a href="{{ url_for('meine_buchungen') }}" class="btn btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</div>
+
+<script>
+const existingStudents = {{ booking.students|tojson }};
+const schoolClasses = {{ school_classes|tojson }};
+
+function updateStudentFields() {
+    const numStudents = parseInt(document.getElementById('num_students').value);
+    const container = document.getElementById('studentFields');
+    container.innerHTML = '';
+    
+    for (let i = 0; i < numStudents; i++) {
+        const div = document.createElement('div');
+        div.className = 'student-entry';
+        
+        let studentName = '';
+        let studentClass = '';
+        
+        if (existingStudents && i < existingStudents.length) {
+            studentName = existingStudents[i].name || '';
+            studentClass = existingStudents[i].klasse || '';
+        }
+        
+        let classOptions = schoolClasses.map(c => 
+            `<option value="${c}" ${studentClass === c ? 'selected' : ''}>${c}</option>`
+        ).join('');
+        
+        div.innerHTML = `
+            <h4>Schüler*in ${i + 1}</h4>
+            <div class="form-group">
+                <label for="student_name_${i}">Name:</label>
+                <input type="text" id="student_name_${i}" name="student_name_${i}" 
+                       value="${studentName}" required placeholder="Vorname Nachname">
+            </div>
+            <div class="form-group">
+                <label for="student_class_${i}">Klasse:</label>
+                <select id="student_class_${i}" name="student_class_${i}" required>
+                    <option value="">-- Klasse wählen --</option>
+                    ${classOptions}
+                </select>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+}
+
+updateStudentFields();
+</script>
+{% endblock %}

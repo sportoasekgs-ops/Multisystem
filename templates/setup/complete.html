@@ -1,0 +1,98 @@
+{% extends "setup/wizard_base.html" %}
+{% block title %}Setup abgeschlossen{% endblock %}
+
+{% block extra_styles %}
+<style>
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+@media(max-width:520px) { .summary-grid { grid-template-columns:1fr; } }
+.summary-card {
+    background:#f8f9fa; border-radius:12px; padding:16px 18px;
+    border-left:4px solid var(--primary);
+    display:flex; align-items:flex-start; gap:12px;
+}
+.summary-card .icon { font-size:1.4rem; flex-shrink:0; }
+.summary-card-label { font-size:0.75rem; color:#6c757d; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px; }
+.summary-card-value { font-size:0.9rem; color:#1a1a2e; font-weight:500; word-break:break-all; }
+.summary-card-na { color:#adb5bd; font-style:italic; }
+</style>
+{% endblock %}
+
+{% block card_content %}
+<div class="wizard-card-header">
+    <span class="step-icon">🎉</span>
+    <h2>Einrichtung abgeschlossen!</h2>
+    <p>Ihr Buchungssystem ist konfiguriert und bereit. Überprüfen Sie die Zusammenfassung und starten Sie das System.</p>
+</div>
+
+<div class="wizard-card-body">
+
+    <div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:16px;padding:28px;text-align:center;margin-bottom:28px;color:white;">
+        <div style="font-size:3rem;margin-bottom:12px;">🚀</div>
+        <h3 style="font-size:1.4rem;font-weight:700;margin-bottom:6px;">{{ school_name or 'Ihr System' }} ist bereit!</h3>
+        <p style="opacity:0.85;font-size:0.9rem;">Alle Konfigurationsdaten wurden gespeichert.</p>
+    </div>
+
+    <p style="font-size:0.8rem;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">Konfigurationsübersicht</p>
+
+    <div class="summary-grid">
+        <div class="summary-card">
+            <span class="icon">🏫</span>
+            <div>
+                <div class="summary-card-label">Einrichtung</div>
+                <div class="summary-card-value">{{ school_name or '<span class="summary-card-na">—</span>' }}</div>
+            </div>
+        </div>
+        <div class="summary-card" style="border-left-color:#8b5cf6;">
+            <span class="icon">🎨</span>
+            <div>
+                <div class="summary-card-label">Primärfarbe</div>
+                <div class="summary-card-value" style="display:flex;align-items:center;gap:8px;">
+                    <span style="display:inline-block;width:18px;height:18px;border-radius:4px;background:{{ primary_color }};border:1px solid rgba(0,0,0,0.1);flex-shrink:0;"></span>
+                    {{ primary_color }}
+                </div>
+            </div>
+        </div>
+        <div class="summary-card" style="border-left-color:#0ea5e9;">
+            <span class="icon">📧</span>
+            <div>
+                <div class="summary-card-label">SMTP-Host</div>
+                <div class="summary-card-value">
+                    {% if smtp_host %}{{ smtp_host }}{% else %}<span class="summary-card-na">Nicht konfiguriert</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="summary-card" style="border-left-color:#22c55e;">
+            <span class="icon">🔐</span>
+            <div>
+                <div class="summary-card-label">IServ-Domain</div>
+                <div class="summary-card-value">
+                    {% if iserv_domain %}{{ iserv_domain }}{% else %}<span class="summary-card-na">Nicht konfiguriert</span>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not iserv_domain %}
+    <div class="alert alert-warning">
+        <span>⚠️</span>
+        <span>IServ OAuth ist nicht konfiguriert. Ohne IServ können sich Benutzer nicht anmelden. Sie können dies jederzeit im Admin-Panel nachholen.</span>
+    </div>
+    {% endif %}
+
+    <div class="alert alert-info">
+        <span>ℹ️</span>
+        <span>Nach dem Abschluss können Sie alle Einstellungen im Admin-Panel unter <strong>Einstellungen → Setup-Wizard</strong> erneut bearbeiten.</span>
+    </div>
+
+</div>
+
+<div class="wizard-actions" style="justify-content:space-between;">
+    <a href="{{ url_for('setup.step', step_id=prev_step) }}" class="btn btn-ghost">← Zurück</a>
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-primary btn-lg">
+            ✅ Einrichtung abschließen & zum Login
+        </button>
+    </form>
+</div>
+{% endblock %}

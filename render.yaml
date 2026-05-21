@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: sportoase-buchungssystem
+    runtime: python
+    plan: starter
+    region: frankfurt
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 120 --preload main:app
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sportoase-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: ISERV_CLIENT_ID
+        sync: false
+      - key: ISERV_CLIENT_SECRET
+        sync: false
+      - key: ISERV_DOMAIN
+        value: kgs-pattensen.de
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: GOOGLE_CALENDAR_CREDENTIALS
+        sync: false
+      - key: GOOGLE_CALENDAR_ID
+        value: sportoase.kgs@gmail.com
+
+databases:
+  - name: sportoase-db
+    databaseName: sportoase
+    plan: starter
+    region: frankfurt

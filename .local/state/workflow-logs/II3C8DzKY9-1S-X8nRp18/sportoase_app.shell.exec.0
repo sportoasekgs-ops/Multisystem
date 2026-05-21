@@ -1,0 +1,60 @@
+[2026-05-21 06:49:20 +0000] [2083] [INFO] Starting gunicorn 23.0.0
+[2026-05-21 06:49:20 +0000] [2083] [INFO] Listening at: http://0.0.0.0:5000 (2083)
+[2026-05-21 06:49:20 +0000] [2083] [INFO] Using worker: sync
+[2026-05-21 06:49:20 +0000] [2094] [INFO] Booting worker with pid: 2094
+======================================================================
+⚠️  WARNUNG: IServ OAuth ist NICHT konfiguriert!
+   Fehlende Umgebungsvariablen:
+   - ISERV_CLIENT_ID
+   - ISERV_CLIENT_SECRET
+
+   Bitte konfigurieren Sie diese in den Secrets/Environment Variables:
+   - Auf Render: Dashboard → Environment → Add Environment Variable
+   - Auf Replit: Secrets-Tab (Schloss-Symbol)
+======================================================================
+[2026-05-21 06:49:21,384] INFO in app: SportOase Buchungssystem gestartet (Production Mode)
+[2026-05-21 06:57:45 +0000] [2094] [INFO] Worker reloading: /home/runner/workspace/app.py modified
+[2026-05-21 06:57:45 +0000] [2094] [INFO] Worker exiting (pid: 2094)
+[2026-05-21 06:57:45 +0000] [2491] [INFO] Booting worker with pid: 2491
+======================================================================
+⚠️  WARNUNG: IServ OAuth ist NICHT konfiguriert!
+   Fehlende Umgebungsvariablen:
+   - ISERV_CLIENT_ID
+   - ISERV_CLIENT_SECRET
+
+   Bitte konfigurieren Sie diese in den Secrets/Environment Variables:
+   - Auf Render: Dashboard → Environment → Add Environment Variable
+   - Auf Replit: Secrets-Tab (Schloss-Symbol)
+======================================================================
+[2026-05-21 06:57:46,280] INFO in app: SportOase Buchungssystem gestartet (Production Mode)
+[2026-05-21 06:58:55 +0000] [2491] [INFO] Worker reloading: /home/runner/workspace/app.py modified
+[2026-05-21 06:58:55 +0000] [2491] [INFO] Worker exiting (pid: 2491)
+[2026-05-21 06:58:55 +0000] [2560] [INFO] Booting worker with pid: 2560
+======================================================================
+⚠️  WARNUNG: IServ OAuth ist NICHT konfiguriert!
+   Fehlende Umgebungsvariablen:
+   - ISERV_CLIENT_ID
+   - ISERV_CLIENT_SECRET
+
+   Bitte konfigurieren Sie diese in den Secrets/Environment Variables:
+   - Auf Render: Dashboard → Environment → Add Environment Variable
+   - Auf Replit: Secrets-Tab (Schloss-Symbol)
+======================================================================
+[2026-05-21 06:58:56,242] INFO in app: SportOase Buchungssystem gestartet (Production Mode)
+[2026-05-21 06:58:59 +0000] [2560] [INFO] Worker reloading: /home/runner/workspace/app.py modified
+[2026-05-21 06:58:59 +0000] [2560] [INFO] Worker exiting (pid: 2560)
+[2026-05-21 06:58:59 +0000] [2574] [INFO] Booting worker with pid: 2574
+======================================================================
+⚠️  WARNUNG: IServ OAuth ist NICHT konfiguriert!
+   Fehlende Umgebungsvariablen:
+   - ISERV_CLIENT_ID
+   - ISERV_CLIENT_SECRET
+
+   Bitte konfigurieren Sie diese in den Secrets/Environment Variables:
+   - Auf Render: Dashboard → Environment → Add Environment Variable
+   - Auf Replit: Secrets-Tab (Schloss-Symbol)
+======================================================================
+[2026-05-21 06:58:59,952] INFO in app: SportOase Buchungssystem gestartet (Production Mode)
+[2026-05-21 06:59:10 +0000] [2083] [INFO] Handling signal: term
+[2026-05-21 06:59:10 +0000] [2574] [INFO] Worker exiting (pid: 2574)
+[2026-05-21 06:59:10 +0000] [2083] [INFO] Shutting down: Master

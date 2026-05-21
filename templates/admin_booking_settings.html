@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Buchungs-Einstellungen – Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div style="margin-bottom:1.5rem;">
+        <a href="{{ url_for('admin') }}" style="text-decoration:none;color:#888;font-size:.9rem;">← Admin</a>
+        <h2 style="margin:.25rem 0 0;">⚙️ Buchungs-Einstellungen</h2>
+        <p style="color:#666;margin:.25rem 0 0;">Kapazität und Vorlaufzeit für Buchungen</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat,msg in messages %}
+    <div class="flash-message flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div style="max-width:500px;">
+        <div style="background:#fff;border-radius:12px;padding:2rem;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <div class="form-group" style="margin-bottom:1.5rem;">
+                    <label style="font-weight:600;display:block;margin-bottom:.5rem;">Max. Schüler*innen pro Stunde</label>
+                    <input type="number" name="max_students" value="{{ max_students }}" min="1" max="20" required
+                           style="width:120px;padding:.75rem;border:1px solid #ddd;border-radius:8px;font-size:1.1rem;">
+                    <p style="color:#888;font-size:.85rem;margin:.4rem 0 0;">Maximale Anzahl Schüler*innen, die gleichzeitig in einem Slot gebucht werden können.</p>
+                </div>
+
+                <div class="form-group" style="margin-bottom:2rem;">
+                    <label style="font-weight:600;display:block;margin-bottom:.5rem;">Buchungs-Vorlaufzeit (Minuten)</label>
+                    <input type="number" name="advance_minutes" value="{{ advance_minutes }}" min="0" max="1440" required
+                           style="width:120px;padding:.75rem;border:1px solid #ddd;border-radius:8px;font-size:1.1rem;">
+                    <p style="color:#888;font-size:.85rem;margin:.4rem 0 0;">Buchungen müssen mindestens diese viele Minuten vor Stundenbeginn erfolgen. 0 = jederzeit buchbar.</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="padding:.75rem 2rem;">Speichern</button>
+            </form>
+        </div>
+
+        <div style="background:#e8f5e9;border-radius:12px;padding:1.25rem;margin-top:1.5rem;">
+            <strong>Aktuell aktiv:</strong><br>
+            Max. <strong>{{ max_students }} Schüler*innen</strong> pro Slot &nbsp;|&nbsp; Vorlaufzeit: <strong>{{ advance_minutes }} Minuten</strong>
+        </div>
+    </div>
+</div>
+{% endblock %}

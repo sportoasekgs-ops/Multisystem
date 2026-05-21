@@ -1,0 +1,169 @@
+{% extends "setup/wizard_base.html" %}
+{% block title %}Design & Branding{% endblock %}
+
+{% block extra_styles %}
+<style>
+.color-swatch-grid { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.color-swatch {
+    width:36px; height:36px; border-radius:8px; cursor:pointer;
+    border:2px solid transparent; transition:all 0.2s;
+    flex-shrink:0;
+}
+.color-swatch:hover, .color-swatch.active { border-color:#1a1a2e; transform:scale(1.1); }
+.logo-preview {
+    width:90px; height:90px; border-radius:12px;
+    border:1.5px solid var(--border);
+    object-fit:contain; padding:6px; background:#f8f9fa;
+    display:block; margin-bottom:10px;
+}
+.color-input-row { display:flex; align-items:center; gap:10px; }
+.color-input-row input[type="text"] { flex:1; }
+.color-picker-btn {
+    width:40px; height:40px; border-radius:8px;
+    border:1.5px solid var(--border); cursor:pointer;
+    overflow:hidden; flex-shrink:0; position:relative;
+}
+.color-picker-btn input[type="color"] {
+    position:absolute; inset:-4px; width:calc(100%+8px); height:calc(100%+8px);
+    opacity:0; cursor:pointer;
+}
+</style>
+{% endblock %}
+
+{% block card_content %}
+<div class="wizard-card-header">
+    <span class="step-icon">🎨</span>
+    <h2>Design & Branding</h2>
+    <p>Passen Sie das Erscheinungsbild an Ihre Einrichtung an. Logo, Farben und Hintergrund sind frei konfigurierbar.</p>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="wizard-card-body">
+
+    <!-- Logo -->
+    <p style="font-size:0.8rem;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">Logo</p>
+    <div class="form-row" style="align-items:start;">
+        <div class="form-group">
+            <label class="form-label">Logo hochladen <span class="badge-optional">Optional</span></label>
+            <div class="file-upload-area" id="logo-drop">
+                <input type="file" name="logo_file" accept=".png,.jpg,.jpeg,.svg,.webp" id="logo-input" onchange="previewFile(this,'logo-preview-img')">
+                <div class="file-upload-icon">📁</div>
+                <div class="file-upload-text"><strong>Datei auswählen</strong> oder hierher ziehen<br>PNG, JPG, SVG, WebP</div>
+            </div>
+            <p class="form-hint">Empfohlen: Quadratisch, min. 200×200px</p>
+        </div>
+        <div class="form-group" style="display:flex;flex-direction:column;align-items:center;padding-top:4px;">
+            <label class="form-label" style="width:100%;">Aktuelle Vorschau</label>
+            <img id="logo-preview-img"
+                 src="{{ url_for('static', filename='uploads/' + logo_filename) if logo_filename.startswith('custom') else url_for('static', filename=logo_filename) }}"
+                 onerror="this.src='{{ url_for('static', filename='logo.png') }}'"
+                 class="logo-preview" alt="Logo Vorschau">
+            <span style="font-size:0.78rem;color:#6c757d;">{{ logo_filename }}</span>
+        </div>
+    </div>
+
+    <hr class="section-sep">
+    <p style="font-size:0.8rem;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">Farben</p>
+
+    <!-- Primärfarbe -->
+    <div class="form-group">
+        <label class="form-label">Primärfarbe <span class="req">*</span></label>
+        <div class="color-input-row">
+            <input type="text" id="primary_color_text" name="primary_color" class="form-control"
+                   value="{{ primary_color }}" placeholder="#E91E63"
+                   oninput="syncColor(this,'primary_picker','primary_preview')">
+            <div class="color-picker-btn" id="primary_preview" style="background:{{ primary_color }}">
+                <input type="color" id="primary_picker" value="{{ primary_color }}"
+                       oninput="syncColorPicker(this,'primary_color_text','primary_preview')">
+            </div>
+        </div>
+        <div class="color-swatch-grid">
+            {% for c in ['#E91E63','#C2185B','#9C27B0','#673AB7','#3F51B5','#2196F3','#00BCD4','#009688','#4CAF50','#FF9800','#FF5722','#795548'] %}
+            <div class="color-swatch" style="background:{{ c }}"
+                 onclick="setColor('{{ c }}','primary_color_text','primary_picker','primary_preview')"
+                 title="{{ c }}"></div>
+            {% endfor %}
+        </div>
+        <p class="form-hint">Hauptfarbe für Buttons, Links und Akzente</p>
+    </div>
+
+    <!-- Sekundärfarbe -->
+    <div class="form-group">
+        <label class="form-label">Sekundärfarbe <span class="req">*</span></label>
+        <div class="color-input-row">
+            <input type="text" id="secondary_color_text" name="secondary_color" class="form-control"
+                   value="{{ secondary_color }}" placeholder="#C2185B"
+                   oninput="syncColor(this,'secondary_picker','secondary_preview')">
+            <div class="color-picker-btn" id="secondary_preview" style="background:{{ secondary_color }}">
+                <input type="color" id="secondary_picker" value="{{ secondary_color }}"
+                       oninput="syncColorPicker(this,'secondary_color_text','secondary_preview')">
+            </div>
+        </div>
+        <p class="form-hint">Dunklere Variante der Primärfarbe (für Hover-Effekte)</p>
+    </div>
+
+    <!-- Hintergrundfarbe -->
+    <div class="form-group">
+        <label class="form-label">Login-Hintergrundfarbe <span class="badge-optional">Optional</span></label>
+        <div class="color-input-row">
+            <input type="text" id="bg_color_text" name="background_color" class="form-control"
+                   value="{{ background_color }}" placeholder="#fce4ec"
+                   oninput="syncColor(this,'bg_picker','bg_preview')">
+            <div class="color-picker-btn" id="bg_preview" style="background:{{ background_color }}">
+                <input type="color" id="bg_picker" value="{{ background_color }}"
+                       oninput="syncColorPicker(this,'bg_color_text','bg_preview')">
+            </div>
+        </div>
+        <p class="form-hint">Helle Akzentfarbe für den Login-Hintergrund</p>
+    </div>
+
+    <!-- Favicon -->
+    <hr class="section-sep">
+    <div class="form-group">
+        <label class="form-label">Favicon <span class="badge-optional">Optional</span></label>
+        <div class="file-upload-area">
+            <input type="file" name="favicon_file" accept=".png,.ico,.svg">
+            <div class="file-upload-icon">🌐</div>
+            <div class="file-upload-text"><strong>Favicon auswählen</strong><br>PNG, ICO oder SVG</div>
+        </div>
+        <p class="form-hint">Browser-Tab-Symbol (empfohlen: 32×32px oder 64×64px)</p>
+    </div>
+
+</div>
+<div class="wizard-actions">
+    <a href="{{ url_for('setup.step', step_id=prev_step) }}" class="btn btn-ghost">← Zurück</a>
+    <button type="submit" class="btn btn-primary">Weiter →</button>
+</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function previewFile(input, imgId) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => document.getElementById(imgId).src = e.target.result;
+    reader.readAsDataURL(file);
+}
+function syncColor(textInput, pickerId, previewId) {
+    const val = textInput.value;
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+        document.getElementById(pickerId).value = val;
+        document.getElementById(previewId).style.background = val;
+    }
+}
+function syncColorPicker(picker, textId, previewId) {
+    document.getElementById(textId).value = picker.value;
+    document.getElementById(previewId).style.background = picker.value;
+}
+function setColor(color, textId, pickerId, previewId) {
+    document.getElementById(textId).value = color;
+    document.getElementById(pickerId).value = color;
+    document.getElementById(previewId).style.background = color;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

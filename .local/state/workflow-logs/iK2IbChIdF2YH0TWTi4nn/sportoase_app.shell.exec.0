@@ -1,0 +1,15 @@
+[2026-05-21 06:59:10 +0000] [2596] [INFO] Starting gunicorn 23.0.0
+[2026-05-21 06:59:10 +0000] [2596] [INFO] Listening at: http://0.0.0.0:5000 (2596)
+[2026-05-21 06:59:10 +0000] [2596] [INFO] Using worker: sync
+[2026-05-21 06:59:10 +0000] [2607] [INFO] Booting worker with pid: 2607
+======================================================================
+⚠️  WARNUNG: IServ OAuth ist NICHT konfiguriert!
+   Fehlende Umgebungsvariablen:
+   - ISERV_CLIENT_ID
+   - ISERV_CLIENT_SECRET
+
+   Bitte konfigurieren Sie diese in den Secrets/Environment Variables:
+   - Auf Render: Dashboard → Environment → Add Environment Variable
+   - Auf Replit: Secrets-Tab (Schloss-Symbol)
+======================================================================
+[2026-05-21 06:59:11,221] INFO in app: SportOase Buchungssystem gestartet (Production Mode)

@@ -1,0 +1,49 @@
+{% extends "setup/wizard_base.html" %}
+{% block title %}Willkommen{% endblock %}
+
+{% block card_content %}
+<div class="wizard-card-header">
+    <span class="step-icon">👋</span>
+    <h2>Willkommen beim Einrichtungs-Assistenten</h2>
+    <p>In wenigen Schritten richten Sie Ihr Buchungssystem vollständig ein. Die Konfiguration wird sicher in der Datenbank gespeichert.</p>
+</div>
+
+<div class="wizard-card-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px;">
+        <div style="background:#fce4ec;border-radius:12px;padding:20px;border-left:4px solid #E91E63;">
+            <div style="font-size:1.6rem;margin-bottom:8px;">🏫</div>
+            <strong style="display:block;margin-bottom:4px;color:#1a1a2e;">Allgemeine Daten</strong>
+            <span style="font-size:0.83rem;color:#6c757d;">Schulname, Kontakt, Adresse und rechtliche Texte</span>
+        </div>
+        <div style="background:#f3e8ff;border-radius:12px;padding:20px;border-left:4px solid #8b5cf6;">
+            <div style="font-size:1.6rem;margin-bottom:8px;">🎨</div>
+            <strong style="display:block;margin-bottom:4px;color:#1a1a2e;">Design & Branding</strong>
+            <span style="font-size:0.83rem;color:#6c757d;">Logo, Farben und individuelles Erscheinungsbild</span>
+        </div>
+        <div style="background:#e0f2fe;border-radius:12px;padding:20px;border-left:4px solid #0ea5e9;">
+            <div style="font-size:1.6rem;margin-bottom:8px;">📧</div>
+            <strong style="display:block;margin-bottom:4px;color:#1a1a2e;">E-Mail / SMTP</strong>
+            <span style="font-size:0.83rem;color:#6c757d;">E-Mail-Server für Buchungsbestätigungen (optional)</span>
+        </div>
+        <div style="background:#dcfce7;border-radius:12px;padding:20px;border-left:4px solid #22c55e;">
+            <div style="font-size:1.6rem;margin-bottom:8px;">🔐</div>
+            <strong style="display:block;margin-bottom:4px;color:#1a1a2e;">IServ OAuth</strong>
+            <span style="font-size:0.83rem;color:#6c757d;">Single Sign-On mit IServ für Lehrer-Login (optional)</span>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <span>ℹ️</span>
+        <span>Alle Einstellungen können jederzeit im Admin-Panel nachträglich geändert werden. Optionale Schritte können übersprungen werden.</span>
+    </div>
+</div>
+
+<div class="wizard-actions" style="justify-content:flex-end;">
+    <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-primary btn-lg">
+            Einrichtung starten →
+        </button>
+    </form>
+</div>
+{% endblock %}

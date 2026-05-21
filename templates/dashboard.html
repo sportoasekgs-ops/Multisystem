@@ -1,0 +1,1200 @@
+{% extends "base.html" %} {% block title %}Dashboard - SportOase{% endblock %}
+{% block content %}
+<div class="dashboard">
+    <!-- Unified Header Cards -->
+    <div class="dashboard-top-section">
+        <div class="dashboard-card dashboard-card-title">
+            <span class="card-icon">📅</span>
+            <span class="card-text">Buchungsübersicht SportOASE</span>
+        </div>
+        
+        <div class="dashboard-card dashboard-card-date">
+            <span class="card-icon">📆</span>
+            <form method="GET" action="{{ url_for('dashboard') }}" class="date-form-inline">
+                <span class="card-text">Datum:</span>
+                <input type="date" id="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()" class="date-input-inline">
+            </form>
+            <a href="{{ url_for('calendar_view', year=selected_date.year, month=selected_date.month) }}" class="calendar-btn" title="Kalenderansicht öffnen">
+                🗓️
+            </a>
+        </div>
+    </div>
+
+    <!-- Gebrauchsanleitung & FAQ (aufklappbar) -->
+    <details class="help-section">
+        <summary class="help-toggle">
+            <span class="help-icon">📖</span>
+            <span>Anleitung & FAQ</span>
+            <span class="toggle-arrow">▼</span>
+        </summary>
+        <div class="help-content">
+            <div class="help-grid">
+                <!-- Schnellanleitung -->
+                <div class="help-card">
+                    <h4>🚀 Schnellanleitung</h4>
+                    <ol class="help-steps">
+                        <li>
+                            <strong>Slot auswählen:</strong> Klicke auf "Buchen"
+                            bei einem freien Slot
+                        </li>
+                        <li>
+                            <strong>Daten eingeben:</strong> Dein Name wird
+                            automatisch eingetragen - nur Klasse und
+                            Schüler*innen-Daten eintragen
+                        </li>
+                        <li>
+                            <strong>Modul wählen:</strong> Bei "Freie Wahl" ein
+                            Modul auswählen
+                        </li>
+                        <li>
+                            <strong>Notiz hinterlassen:</strong> Du kannst
+                            optional eine Notiz hinterlassen, die nur für Mauro
+                            sichtbar ist
+                        </li>
+                        <li>
+                            <strong>Absenden:</strong> "Buchung abschließen"
+                            klicken
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- Funktionen -->
+                <div class="help-card">
+                    <h4>✨ Funktionen</h4>
+                    <ul class="feature-list">
+                        <li>
+                            <span class="feature-icon">📅</span> Wochenübersicht
+                            mit allen Slots
+                        </li>
+                        <li>
+                            <span class="feature-icon">📝</span> Einfache
+                            Buchung für 1-5 Schüler*innen
+                        </li>
+                        <li>
+                            <span class="feature-icon">🔒</span> Datenschutz:
+                            Schüler*innen-Namen nur für eigene Buchungen
+                            sichtbar
+                        </li>
+                        <li>
+                            <span class="feature-icon">⏰</span> Buchung bis 60
+                            Min. vor Beginn möglich
+                        </li>
+                        <li>
+                            <span class="feature-icon">🚫</span> Automatische
+                            Doppelbuchungs-Prüfung
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- FAQ -->
+                <div class="help-card">
+                    <h4>❓ Häufige Fragen</h4>
+                    <div class="faq-item">
+                        <strong>Was bedeuten die Farben?</strong>
+                        <p>
+                            Grün = Feste Angebote, Blau = Freie Wahl (Modul
+                            wählbar)
+                        </p>
+                    </div>
+                    <div class="faq-item">
+                        <strong>Wie viele Schüler*innen pro Slot?</strong>
+                        <p>Maximal 5 Schüler*innen pro Stunde insgesamt</p>
+                    </div>
+                    <div class="faq-item">
+                        <strong>Wird mein Name automatisch eingetragen?</strong>
+                        <p>
+                            Ja! Dein Name wird aus deinem IServ-Login automatisch
+                            übernommen.
+                        </p>
+                    </div>
+                    <div class="faq-item">
+                        <strong
+                            >Kann ich eine Buchung bearbeiten /
+                            stornieren?</strong
+                        >
+                        <p>
+                            Ja, in der Buchungsübersicht oben bearbeiten oder
+                            zum löschen auf den Papierkorb klicken
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Einzelbuchung -->
+                <div class="help-card help-card-exclusive">
+                    <h4>⭐ Einzelbuchung (Exklusiv-Slot)</h4>
+                    <p class="exclusive-intro">
+                        In besonderen Fällen kann ein Slot exklusiv für eine*n
+                        einzelne*n Schüler*in reserviert werden.
+                    </p>
+                    <div class="exclusive-info-list">
+                        <div class="exclusive-step">
+                            <span class="step-icon">1️⃣</span>
+                            <span
+                                >Wähle beim Buchen
+                                <strong>nur 1 Schüler*in</strong> aus</span
+                            >
+                        </div>
+                        <div class="exclusive-step">
+                            <span class="step-icon">2️⃣</span>
+                            <span
+                                >Aktiviere die Checkbox
+                                <strong>"Exklusive Einzelbuchung"</strong></span
+                            >
+                        </div>
+                        <div class="exclusive-step">
+                            <span class="step-icon">3️⃣</span>
+                            <span
+                                >Deine Anfrage wird an <strong>Mauro</strong> zur
+                                Freigabe gesendet</span
+                            >
+                        </div>
+                        <div class="exclusive-step">
+                            <span class="step-icon">4️⃣</span>
+                            <span
+                                >Du erhältst eine <strong>E-Mail</strong> bei
+                                Genehmigung/Ablehnung</span
+                            >
+                        </div>
+                    </div>
+                    <p class="exclusive-note">
+                        <strong>Hinweis:</strong> Genehmigte Einzelbuchungen
+                        blockieren den gesamten Slot – keine weiteren Buchungen
+                        möglich.
+                    </p>
+                </div>
+
+                <!-- Slot-Typen -->
+                <div class="help-card">
+                    <h4>📋 Angebots-Typen</h4>
+                    <div class="slot-type-info">
+                        <div class="slot-type">
+                            <span class="type-badge type-fest">Fest</span>
+                            <span
+                                >Vorgegebenes Angebot (z.B.
+                                Koordinationszirkel)</span
+                            >
+                        </div>
+                        <div class="slot-type">
+                            <span class="type-badge type-frei">Frei</span>
+                            <span
+                                >Modul wählbar: Aktivierung, Entspannung,
+                                Konflikt-Reset</span
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Angebotsbeschreibungen -->
+                <div class="help-card help-card-full">
+                    <h4>📚 Angebotsbeschreibungen</h4>
+                    <div class="offer-descriptions-grid">
+                        <div class="offer-desc">
+                            <strong>☀️ WOCHENSTART-AKTIV</strong>
+                            <p>
+                                Aktiver Start in die Woche mit Bewegungs- und
+                                Energieübungen, um wach und motiviert in den
+                                Montag zu gehen.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>⭐ FREIE WAHL</strong>
+                            <p>
+                                Offene Stunde: Die Lehrkräfte wählen selbst eine
+                                passende Beschäftigung – Rückzug, Spielen,
+                                kreative Angebote oder ruhige Aufgaben.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>👥 SOZIALTRAINING / GRUPPENRESET</strong>
+                            <p>
+                                Gemeinsame Übungen für Teamfähigkeit,
+                                Rücksichtnahme und ein positives Miteinander.
+                                Stärkt Klassenklima und soziale Kompetenzen.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>🥊 KONFLIKT-RESET & DEESKALATION</strong>
+                            <p>
+                                Training für Selbstkontrolle und Konfliktlösung
+                                mit kontrollierten Box-Übungen zum Stressabbau.
+                                Danach ruhige Reflexion und
+                                Deeskalationsstrategien.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>🛡️ KONFLIKT-RESET</strong>
+                            <p>
+                                Kurze Einheit zur Beruhigung: Box-Übungen zur
+                                Energieableitung, anschließend Techniken für
+                                Ruhe, Klarheit und Selbstbeherrschung.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>🌬️ ATEM & REFLEXION</strong>
+                            <p>
+                                Ruhige Atemübungen und kurze Reflexionsphasen
+                                zur Stressreduktion, Selbstwahrnehmung und
+                                inneren Balance.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>⚡ AKTIVIERUNG MINI-FITNESS</strong>
+                            <p>
+                                Kurze Fitness- und Bewegungsübungen, um den
+                                Kreislauf anzuregen, überschüssige Energie
+                                abzubauen und Konzentration zu stärken.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>🎯 KOORDINATIONSZIRKEL</strong>
+                            <p>
+                                Übungen an verschiedenen Stationen für
+                                Gleichgewicht, Feinmotorik, Körperkontrolle und
+                                Konzentration.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>🏃 MOTORIK-PARCOURS</strong>
+                            <p>
+                                Bewegungsparcours mit Balancieren, Springen und
+                                Klettern – fördert Koordination, Mut, Kraft und
+                                Motorik.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>🤸 TURNEN + BALANCE</strong>
+                            <p>
+                                Turn- und Balanceübungen zur Förderung von
+                                Körpergefühl, Stabilität und Gleichgewicht.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>🍃 RUHEZONE / ENTSPANNUNG</strong>
+                            <p>
+                                Sanfte Entspannungsangebote wie leise Spiele,
+                                Ruheübungen oder geführte Entspannung – ideal
+                                zum Runterkommen.
+                            </p>
+                        </div>
+                        <div class="offer-desc">
+                            <strong>🧘 BODYSCAN LIGHT</strong>
+                            <p>
+                                Geführte, leichte Körperwahrnehmungsübung zur
+                                Entspannung. Hilft Stress abzubauen und Ruhe zu
+                                finden.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sicherheitsstandards -->
+                <div class="help-card">
+                    <h4>🔐 Sicherheit & Datenschutz</h4>
+                    <ul class="feature-list">
+                        <li>
+                            <span class="feature-icon">🔑</span> IServ Single
+                            Sign-On (OAuth 2.0)
+                        </li>
+                        <li>
+                            <span class="feature-icon">🔒</span>
+                            HTTPS-Verschlüsselung
+                        </li>
+                        <li>
+                            <span class="feature-icon">🛡️</span> CSRF-Schutz für
+                            alle Formulare
+                        </li>
+                        <li>
+                            <span class="feature-icon">👁️</span> Datenschutz:
+                            Schüler*innen-Namen nur für Ersteller sichtbar
+                        </li>
+                        <li>
+                            <span class="feature-icon">🔏</span> Sichere
+                            Passwort-Speicherung
+                        </li>
+                        <li>
+                            <span class="feature-icon">📊</span> PostgreSQL
+                            Datenbank
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Danksagung -->
+                <div class="help-card help-card-full">
+                    <h4>🙏 Danksagung</h4>
+                    <div class="thanks-content">
+                        <p>
+                            Ich möchte mich herzlich bei allen bedanken, die zur
+                            Umsetzung des Sportoasen-Projekts beigetragen haben.
+                        </p>
+
+                        <p>
+                            Ein besonderer Dank gilt der
+                            <strong>Schulleitung</strong>, insbesondere
+                            <strong>Mirjam Gerull</strong>, für das große
+                            Vertrauen, die stetige Unterstützung und die
+                            Offenheit, sowie die unzähligen Wühlereien durch
+                            Warenkörbe, dieses Projekt möglich zu machen. Ihre
+                            Bereitschaft, neue Wege zu gehen, hat den Grundstein
+                            für die erfolgreiche Umsetzung gelegt. Auch dem
+                            <strong>Sekretariat</strong>,
+                            <strong>Roland</strong> und den Hausmeistern
+                            <strong>Benni</strong> und <strong>Sascha</strong>,
+                            für die logistische Meisterleistung bei der Annahme
+                            und Weiterleitung meiner Pakete.
+                        </p>
+
+                        <p>
+                            Mein Dank richtet sich ebenso an die
+                            <strong>Sozialpädagog*innen</strong>, vor allem an
+                            <strong>Susanne Farkhar</strong>, die mit der OASE
+                            nicht nur die Basis geschaffen hat, sondern mir auch
+                            die Freiheit gegeben hat, meine Kreativität und mein
+                            Konzept mit Leben, Struktur und Wirkung zu füllen.
+                            Ohne diese Grundlage wäre vieles nicht denkbar
+                            gewesen.
+                        </p>
+
+                        <p>
+                            Ebenso danke ich den <strong>Lehrkräften</strong>,
+                            insbesondere dem <strong>Fachbereich Sport</strong>,
+                            für wertvollen Input, konstruktive Kritik und die
+                            kontinuierliche Unterstützung in allen Phasen des
+                            Projekts. Eure Perspektiven und eure Bereitschaft
+                            zur Zusammenarbeit haben das Projekt entscheidend
+                            bereichert.
+                        </p>
+
+                        <p>
+                            Des Weiteren möchte ich mich bei der
+                            <strong
+                                >Klosterkammer und der
+                                Lotto-Sport-Stiftung</strong
+                            >
+                            bedanken. Durch ihre Förderung und Unterstützung
+                            konnte das Projekt in dieser Qualität und mit dieser
+                            Wirkung umgesetzt werden.
+                        </p>
+
+                        <p>
+                            Ein großes Dankeschön geht außerdem an die
+                            <strong
+                                >Schülerinnen und Schüler des
+                                Freiday-Projekts</strong
+                            >
+                            insbesondere <strong>Azad</strong>,
+                            <strong>Hezha</strong>, <strong>Modi</strong> und
+                            <strong>Mats</strong>, sowie an alle weiteren
+                            engagierten Jugendlichen, die beim Aufbau, der
+                            Ideenfindung und der Umsetzung der Vision geholfen
+                            haben. Ihr habt mit eurem Einsatz und eurer Energie
+                            maßgeblich dazu beigetragen, dass die Sportoase zu
+                            dem geworden ist, was sie heute ist.
+                        </p>
+                        <p>
+                            Und zu guter Letzt danke ich <strong>Kemal</strong>,
+                            unserem IT Experten,der bei der technischen
+                            Umsetzung und Unterstützung tatkräftig an meiner
+                            Seite stand.
+                        </p>
+
+                        <p>
+                            <strong
+                                >Vielen Dank an euch alle – für Vertrauen,
+                                Zusammenarbeit und gemeinsame Gestaltungskraft
+                                ♥️</strong
+                            >
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </details>
+
+    <div class="selected-date-info">
+        <h3>{{ weekday }}, {{ selected_date.strftime('%d.%m.%Y') }}</h3>
+    </div>
+
+    <!-- Dashboard Layout mit Wochenplan und Ticker -->
+    <div class="dashboard-layout">
+        
+        <!-- Links-Panel (Meine Buchungen / Admin Freigaben) -->
+        <div class="dashboard-left-panel">
+            
+            <!-- Admin-Freigaben (nur für Admins) -->
+            {% if user_role == 'admin' %}
+            <div class="dashboard-widget admin-approvals-widget">
+                <div class="widget-header">
+                    <h4>⏳ Offene Anfragen</h4>
+                    <span class="widget-badge badge-warning">{{ pending_approvals|length }}</span>
+                </div>
+                <div class="widget-body">
+                    {% if pending_approvals %}
+                        <div class="widget-list">
+                            {% for pending in pending_approvals %}
+                                <div class="widget-item approval-item">
+                                    <div class="widget-details">
+                                        <div class="booking-time">
+                                            <strong>{{ pending.date_formatted }}</strong> — {{ pending.period }}. Std.
+                                        </div>
+                                        <div class="booking-teacher">von <strong>{{ pending.teacher_name }}</strong></div>
+                                        <div class="booking-offer">{{ pending.offer_label }}</div>
+                                        <div class="booking-students" title="{{ pending.students_str }}">
+                                            Schüler: {{ pending.students_str }}
+                                        </div>
+                                    </div>
+                                    <div class="approval-actions">
+                                        <form method="POST" action="{{ url_for('approve_exclusive', booking_id=pending.id) }}" style="display:inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                                            <button type="submit" class="btn-approve" title="Genehmigen">✓</button>
+                                        </form>
+                                        <button type="button" class="btn-reject" title="Ablehnen" onclick="openRejectDialog({{ pending.id }}, '{{ pending.teacher_name }}', '{{ pending.date_formatted }}')">✕</button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="widget-empty">
+                            <p>Keine ausstehenden Exklusiv-Anfragen.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Meine nächsten Termine -->
+            <div class="dashboard-widget my-bookings-widget">
+                <div class="widget-header">
+                    <h4>📅 Meine Buchungen</h4>
+                    <span class="widget-badge badge-primary">{{ upcoming_bookings|length }}</span>
+                </div>
+                <div class="widget-body">
+                    {% if upcoming_bookings %}
+                        <div class="widget-list">
+                            {% for booking in upcoming_bookings %}
+                                <div class="widget-item booking-item">
+                                    <div class="widget-details">
+                                        <div class="booking-time">
+                                            <strong>{{ booking.date_formatted }}</strong> — {{ booking.period }}. Std.
+                                        </div>
+                                        <div class="booking-offer">
+                                            {{ booking.offer_label }}
+                                            {% if booking.is_exclusive %}
+                                                {% if booking.is_approved %}
+                                                    <span class="badge-status approved" title="Exklusiv-Buchung genehmigt">🔒 Exkl.</span>
+                                                {% else %}
+                                                    <span class="badge-status pending" title="Warte auf Admin-Freigabe">⏳ Wartet</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                        <div class="booking-students" title="{{ booking.students_str }}">
+                                            Schüler: {{ booking.students_str }}
+                                        </div>
+                                    </div>
+                                    <div class="booking-actions">
+                                        <form method="POST" action="{{ url_for('delete_my_booking', booking_id=booking.id) }}" onsubmit="return confirm('Möchten Sie diese Buchung wirklich stornieren?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                                            <button type="submit" class="btn-cancel-booking" title="Stornieren">✕</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="widget-empty">
+                            <p>Keine anstehenden Buchungen.</p>
+                            <span class="widget-hint">Klicke im Wochenplan auf „Jetzt buchen“, um einen Termin zu reservieren.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Wochenübersicht -->
+        <div class="week-overview">
+            <div class="week-header-with-nav">
+            <a
+                href="{{ url_for('dashboard', date=prev_week_date) }}"
+                class="week-nav-arrow"
+                title="Vorherige Woche"
+            >
+                <span class="arrow-icon">❮</span>
+            </a>
+            <div class="week-title-area">
+                <h3 class="week-title">
+                    <span class="week-icon">📊</span>
+                    Wochenplan KW {{ calendar_week }}/{{ calendar_year }}
+                    <span class="week-dates"
+                        >{{ monday_date }} - {{ friday_date }}</span
+                    >
+                </h3>
+                
+                <!-- Kalenderwochen-Schnellwähler -->
+                <div class="week-selector-container">
+                    <button class="week-selector-btn" type="button">Woche wählen</button>
+                    <div class="week-selector-dropdown">
+                        {% for option in week_selector %}
+                            <a href="{{ url_for('dashboard', date=option.date) }}" class="week-option {% if option.is_selected %}selected{% endif %}">
+                                {{ option.label }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <a
+                href="{{ url_for('dashboard', date=next_week_date) }}"
+                class="week-nav-arrow"
+                title="Nächste Woche"
+            >
+                <span class="arrow-icon">❯</span>
+            </a>
+        </div>
+        <div class="week-table-wrapper">
+            <div class="scroll-hint scroll-hint-left" style="display: none">
+                ❮
+            </div>
+            <table class="week-table">
+                <thead>
+                    <tr>
+                        <th>Stunde</th>
+                        {% for day in week_overview %}
+                        <th
+                            class="{% if day.is_today %}today-column{% endif %}"
+                        >
+                            <div
+                                class="week-day-header {% if day.is_today %}today-header{% endif %}"
+                            >
+                                <div class="day-name">{{ day.name }}</div>
+                                <div class="day-date">
+                                    {{ day.date_formatted }}
+                                </div>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for period in range(1, 7) %}
+                    <tr>
+                        <td><strong>{{ period }}.</strong></td>
+                        {% for day in week_overview %}
+                        <td
+                            class="{% if day.is_today %}today-column{% endif %} {% if day.schedule[period-1].blocked %}period-blocked{% elif day.schedule[period-1].is_exclusive %}period-exclusive{% elif day.schedule[period-1].is_weekend %}period-past{% elif day.schedule[period-1].is_past %}period-past{% else %}period-{{ day.schedule[period-1].type }}{% endif %} {% if day.schedule[period-1].can_book %}clickable-slot{% endif %}"
+                        >
+                            {% if day.schedule[period-1].is_exclusive %}
+                            <!-- Exklusiver Slot - Einzelangebot -->
+                            <div class="period-header exclusive-header">
+                                <div class="slot-detail">
+                                    <span class="exclusive-star">⭐</span>
+                                    Einzelangebot
+                                </div>
+                            </div>
+                            <div class="exclusive-info">
+                                {% set exc_booking =
+                                day.schedule[period-1].exclusive_booking %} {%
+                                set can_see_exc = (user_role == 'admin') or
+                                (exc_booking.teacher_id == current_user_id) %}
+                                {% if can_see_exc %}
+                                <span class="exclusive-student"
+                                    >{{ exc_booking.students[0].name|abbreviate_name }} ({{
+                                    exc_booking.students[0].klasse }})</span
+                                >
+                                <span class="exclusive-teacher"
+                                    >von {{ exc_booking.teacher_name }}</span
+                                >
+                                {% else %}
+                                <span class="exclusive-student"
+                                    >Reserviert</span
+                                >
+                                {% endif %}
+                            </div>
+                            {% elif day.schedule[period-1].blocked %}
+                            <div class="period-header blocked-header">
+                                <span class="blocked-icon">{{ day.schedule[period-1].blocked_icon }}</span>
+                                <div class="slot-detail">
+                                    {{ day.schedule[period-1].blocked_reason }}
+                                </div>
+                            </div>
+                            {% if user_role == 'admin' %}
+                            <div class="slot-actions">
+                                <form
+                                    method="POST"
+                                    action="{{ url_for('admin_unblock_slot') }}"
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="{{ csrf_token }}"
+                                    />
+                                    <input
+                                        type="hidden"
+                                        name="date"
+                                        value="{{ day.date }}"
+                                    />
+                                    <input
+                                        type="hidden"
+                                        name="period"
+                                        value="{{ period }}"
+                                    />
+                                    <button
+                                        type="submit"
+                                        class="slot-btn slot-btn-success"
+                                    >
+                                        Freigeben
+                                    </button>
+                                </form>
+                            </div>
+                            {% endif %} {% else %} {% set slot =
+                            day.schedule[period-1] %} {% set label = slot.label
+                            %} {% set course_class = 'course-frei' %} {% set
+                            course_icon = '⭐' %} {% set course_tag = 'Flexibel'
+                            %} {% if slot.type == 'fest' %} {% if 'Wochenstart'
+                            in label %} {% set course_class =
+                            'course-wochenstart' %} {% set course_icon = '☀️' %}
+                            {% set course_tag = 'Energie' %} {% elif 'Konflikt'
+                            in label or 'Deeskalation' in label %} {% set
+                            course_class = 'course-konflikt' %} {% set
+                            course_icon = '🛡️' %} {% set course_tag = 'Reset' %}
+                            {% elif 'Koordination' in label %} {% set
+                            course_class = 'course-koordination' %} {% set
+                            course_icon = '🎯' %} {% set course_tag = 'Fokus' %}
+                            {% elif 'Sozial' in label or 'Gruppen' in label %}
+                            {% set course_class = 'course-sozial' %} {% set
+                            course_icon = '👥' %} {% set course_tag = 'Team' %}
+                            {% elif 'Mini-Fitness' in label or 'Aktivierung' in
+                            label %} {% set course_class = 'course-fitness' %}
+                            {% set course_icon = '⚡' %} {% set course_tag =
+                            'Power' %} {% elif 'Motorik' in label or 'Parcours'
+                            in label %} {% set course_class = 'course-motorik'
+                            %} {% set course_icon = '🏃' %} {% set course_tag =
+                            'Bewegung' %} {% elif 'Turnen' in label or 'Balance'
+                            in label %} {% set course_class = 'course-turnen' %}
+                            {% set course_icon = '🤸' %} {% set course_tag =
+                            'Balance' %} {% elif 'Atem' in label or 'Reflexion'
+                            in label %} {% set course_class = 'course-atem' %}
+                            {% set course_icon = '🌬️' %} {% set course_tag =
+                            'Atem' %} {% elif 'Bodyscan' in label %} {% set
+                            course_class = 'course-bodyscan' %} {% set
+                            course_icon = '🧘' %} {% set course_tag = 'Scan' %}
+                            {% elif 'Ruhe' in label or 'Entspannung' in label %}
+                            {% set course_class = 'course-ruhe' %} {% set
+                            course_icon = '🍃' %} {% set course_tag = 'Ruhe' %}
+                            {% else %} {% set course_class = 'course-default' %}
+                            {% set course_icon = '📋' %} {% set course_tag =
+                            'Fest' %} {% endif %} {% endif %}
+
+                            <div class="slot-card {{ course_class }}">
+                                <div class="slot-course-name">
+                                    {% if slot.type == 'fest' %}{{ label }}{%
+                                    else %}Freie Wahl{% endif %}
+                                </div>
+
+                                {% if slot.pending_exclusive %}
+                                <div class="pending-exclusive-hint">
+                                    <span class="pending-icon">⏳</span>
+                                    <span class="pending-text"
+                                        >Einzelbuchung angefragt</span
+                                    >
+                                </div>
+                                {% endif %} {% if slot.bookings %}
+                                <div class="slot-students-list">
+                                    {% for booking in slot.bookings %} {% set
+                                    can_see = (user_role == 'admin') or
+                                    (booking.teacher_id == current_user_id) %}
+                                    {% for student in booking.students %}
+                                    <span
+                                        class="student-name {% if not can_see %}blurred{% endif %}"
+                                    >
+                                        {% if can_see %}{{ student.name|abbreviate_name }} ({{
+                                        student.klasse }}){% else %}***{% endif
+                                        %}
+                                    </span>
+                                    {% endfor %} {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <div class="slot-footer">
+                                    <span class="course-tag">
+                                        <span class="tag-icon"
+                                            >{{ course_icon }}</span
+                                        >
+                                        {{ course_tag }}
+                                    </span>
+                                    <span class="slot-availability">
+                                        {% if slot.is_exclusive %}
+                                        <span class="exclusive-text"
+                                            >🔒 Exklusiv</span
+                                        >
+                                        {% elif slot.can_book %}
+                                        <span class="availability-text"
+                                            >{{ slot.total_students }}/5
+                                            gebucht</span
+                                        >
+                                        {% elif slot.available == 0 and not
+                                        slot.is_past %}
+                                        <span class="full-text"
+                                            >Ausgebucht (5/5)</span
+                                        >
+                                        {% else %}
+                                        <span class="status-text"
+                                            >{{ slot.total_students }}/5
+                                            gebucht</span
+                                        >
+                                        {% endif %}
+                                    </span>
+                                </div>
+
+                                {% if slot.can_book %}
+                                <a
+                                    href="{{ url_for('book', date_str=day.date, period=period) }}"
+                                    class="book-btn"
+                                    data-book-url="{{ url_for('book', date_str=day.date, period=period) }}"
+                                >
+                                    📝 Jetzt buchen
+                                </a>
+                                {% endif %} {% if user_role == 'admin' and not
+                                slot.is_past %}
+                                <button
+                                    type="button"
+                                    class="slot-block-mini"
+                                    title="Sperren"
+                                    onclick="openBlockModal('{{ day.date }}', {{ period }}, '{{ day.name }} {{ day.date_formatted }}')"
+                                >
+                                    🔒
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="scroll-hint scroll-hint-right">❯</div>
+        </div>
+    </div>
+
+    <!-- Liveticker für blockierte Termine -->
+    <div class="dashboard-ticker">
+        <div class="ticker-header">
+            <h4>🔒 Blockierte Termine</h4>
+            <span class="ticker-badge">{{ upcoming_blocked|length }}</span>
+        </div>
+        <div class="ticker-body">
+            {% if upcoming_blocked %}
+                <div class="ticker-list">
+                    {% for block in upcoming_blocked %}
+                        <div class="ticker-item {% if block.blocked_by_id == current_user_id %}my-blocked-slot{% endif %}">
+                            <div class="ticker-icon">{{ block.icon }}</div>
+                            <div class="ticker-details">
+                                <div class="ticker-time">
+                                    <strong>{{ block.date_formatted }}</strong> — {{ block.period }}. Stunde
+                                </div>
+                                <div class="ticker-reason">{{ block.reason }}</div>
+                                <div class="ticker-author">
+                                    {% if block.blocked_by_id == current_user_id %}
+                                        <span class="author-tag me">von mir</span>
+                                    {% else %}
+                                        <span class="author-tag">von {{ block.blocked_by_name }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if user_role == 'admin' %}
+                            <div class="ticker-action">
+                                <form method="POST" action="{{ url_for('admin_unblock_slot') }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                                    <input type="hidden" name="date" value="{{ block.date }}" />
+                                    <input type="hidden" name="period" value="{{ block.period }}" />
+                                    <button type="submit" class="ticker-unblock-btn" title="Freigeben">✕</button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="ticker-empty">
+                    <p>Keine anstehenden Sperrungen.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+    <!-- Kontakt-Information -->
+    <div class="contact-info-box">
+        <div class="contact-content">
+            <img
+                src="{{ url_for('static', filename='logo.png') }}"
+                alt="SportOase Logo"
+                class="contact-logo"
+            />
+            <div class="contact-text">
+                <p>
+                    Bei dringenden Anliegen bin ich direkt via E-Mail:
+                    <strong>morelli.maurizio@kgs-pattensen.de</strong> und
+                    telefonisch unter:
+                    <strong>0160 5788232</strong> erreichbar.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user_role == 'admin' %}
+<!-- Modal für Slot-Sperrung -->
+<div id="blockModal" class="modal-overlay" style="display: none">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🔒 Slot sperren</h3>
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeBlockModal()"
+            >
+                &times;
+            </button>
+        </div>
+        <form
+            method="POST"
+            action="{{ url_for('admin_block_slot') }}"
+            id="blockForm"
+        >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <input type="hidden" name="date" id="blockDate" />
+            <input type="hidden" name="period" id="blockPeriod" />
+
+            <div class="modal-body">
+                <p class="modal-slot-info" id="blockSlotInfo"></p>
+
+                <div class="form-group">
+                    <label for="blockReason">Grund:</label>
+                    <input
+                        type="text"
+                        name="reason"
+                        id="blockReason"
+                        class="form-control"
+                        placeholder="z.B. Umbau, Beratung, Fortbildung..."
+                        maxlength="50"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label>Icon auswählen:</label>
+                    <div class="icon-picker">
+                        <label class="icon-option">
+                            <input
+                                type="radio"
+                                name="icon"
+                                value="🔧"
+                                checked
+                            />
+                            <span class="icon-display">🔧</span>
+                            <span class="icon-label">Umbau</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="💬" />
+                            <span class="icon-display">💬</span>
+                            <span class="icon-label">Beratung</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="📚" />
+                            <span class="icon-display">📚</span>
+                            <span class="icon-label">Fortbildung</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="🏖️" />
+                            <span class="icon-display">🏖️</span>
+                            <span class="icon-label">Ferien</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="🎉" />
+                            <span class="icon-display">🎉</span>
+                            <span class="icon-label">Event</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="🎓" />
+                            <span class="icon-display">🎓</span>
+                            <span class="icon-label">Prüfung</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="🤒" />
+                            <span class="icon-display">🤒</span>
+                            <span class="icon-label">Ausfall</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="🤝" />
+                            <span class="icon-display">🤝</span>
+                            <span class="icon-label">Konferenz</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="💻" />
+                            <span class="icon-display">💻</span>
+                            <span class="icon-label">IT / PC</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="📞" />
+                            <span class="icon-display">📞</span>
+                            <span class="icon-label">Gespräch</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="🚪" />
+                            <span class="icon-display">🚪</span>
+                            <span class="icon-label">Sperrung</span>
+                        </label>
+                        <label class="icon-option">
+                            <input type="radio" name="icon" value="⚠️" />
+                            <span class="icon-display">⚠️</span>
+                            <span class="icon-label">Sonstiges</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="closeBlockModal()"
+                >
+                    Abbrechen
+                </button>
+                <button type="submit" class="btn btn-danger">
+                    Slot sperren
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openBlockModal(date, period, slotInfo) {
+        document.getElementById("blockDate").value = date;
+        document.getElementById("blockPeriod").value = period;
+        document.getElementById("blockSlotInfo").textContent =
+            slotInfo + ", " + period + ". Stunde";
+        document.getElementById("blockReason").value = "";
+        document.getElementById("blockModal").style.display = "flex";
+    }
+
+    function closeBlockModal() {
+        document.getElementById("blockModal").style.display = "none";
+    }
+
+    document
+        .getElementById("blockModal")
+        .addEventListener("click", function (e) {
+            if (e.target === this) {
+                closeBlockModal();
+            }
+        });
+</script>
+{% endif %}
+
+<!-- Slot-Klick-Handler (für alle Benutzer, Desktop & Mobile) -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Alle buchbaren Slots klickbar machen
+        document.querySelectorAll(".clickable-slot").forEach(function (cell) {
+            // Klick auf die gesamte Zelle
+            cell.addEventListener("click", function (e) {
+                // Ignoriere Klicks auf Buttons, Formulare und den Buchen-Link selbst
+                if (
+                    e.target.tagName === "BUTTON" ||
+                    e.target.closest("button") ||
+                    e.target.tagName === "FORM" ||
+                    e.target.closest("form") ||
+                    e.target.tagName === "A" ||
+                    e.target.closest("a")
+                ) {
+                    return;
+                }
+
+                // Finde den Buchen-Link und navigiere dorthin
+                var bookBtn = cell.querySelector(".book-btn");
+                if (bookBtn) {
+                    var bookUrl =
+                        bookBtn.getAttribute("href") ||
+                        bookBtn.getAttribute("data-book-url");
+                    if (bookUrl) {
+                        window.location.href = bookUrl;
+                    }
+                }
+            });
+        });
+
+        // Hover-Effekt für besseres visuelles Feedback
+        document
+            .querySelectorAll(".clickable-slot .slot-card")
+            .forEach(function (card) {
+                card.style.cursor = "pointer";
+            });
+        
+        // Funktion zum Ablehnen einer Exklusivbuchung mit Begründung (per AJAX)
+        window.openRejectDialog = function(bookingId, teacherName, dateStr) {
+            const reason = prompt("Grund für die Ablehnung der Exklusiv-Buchung von " + teacherName + " am " + dateStr + ":");
+            if (reason === null) return; // Abgebrochen
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/reject_exclusive/' + bookingId;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = reason;
+            form.appendChild(reasonInput);
+            
+            document.body.appendChild(form);
+            
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => { throw new Error(data.message || 'Fehler beim Ablehnen.') });
+                }
+                return response.json();
+            })
+            .then(data => {
+                form.remove();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // Finde das Approval-Item und entferne es mit Animation
+                    const approvalItem = document.querySelector(`.approval-item button[onclick*="openRejectDialog(${bookingId}"]`).closest('.approval-item');
+                    if (approvalItem) {
+                        approvalItem.classList.add('fade-out');
+                        setTimeout(() => {
+                            approvalItem.remove();
+                            // Update badge count
+                            const badge = document.querySelector('.admin-approvals-widget .widget-badge');
+                            if (badge) {
+                                const currentCount = parseInt(badge.textContent) - 1;
+                                badge.textContent = currentCount;
+                                if (currentCount === 0) {
+                                    const body = document.querySelector('.admin-approvals-widget .widget-body');
+                                    body.innerHTML = '<div class="widget-empty"><p>Keine ausstehenden Exklusiv-Anfragen.</p></div>';
+                                }
+                            }
+                        }, 350);
+                    }
+                } else {
+                    showToast(data.message || 'Fehler beim Ablehnen.', 'error');
+                }
+            })
+            .catch(err => {
+                form.remove();
+                console.error(err);
+                showToast(err.message || 'Netzwerkfehler.', 'error');
+            });
+        };
+
+        // AJAX-Handler für Formulare: Freigabe, Stornierung, Genehmigung
+        document.addEventListener('submit', function(e) {
+            const form = e.target;
+            
+            const isUnblock = form.action.includes('/admin/unblock_slot');
+            const isCancel = form.action.includes('/meine-buchungen/loeschen/');
+            const isApprove = form.action.includes('/admin/approve_exclusive/');
+            
+            if (isUnblock || isCancel || isApprove) {
+                e.preventDefault();
+                
+                // Bestätigung für Stornierung
+                if (isCancel && !confirm('Möchten Sie diese Buchung wirklich stornieren?')) {
+                    return;
+                }
+                
+                const formData = new FormData(form);
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => { throw new Error(data.message || 'Aktion fehlgeschlagen.') });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        
+                        if (isUnblock) {
+                            const tickerItem = form.closest('.ticker-item');
+                            if (tickerItem) {
+                                tickerItem.classList.add('fade-out');
+                                setTimeout(() => {
+                                    tickerItem.remove();
+                                    const tickerList = document.querySelector('.ticker-list');
+                                    if (tickerList && tickerList.children.length === 0) {
+                                        tickerList.innerHTML = '<div class="ticker-empty"><p>Keine blockierten Termine in naher Zukunft.</p></div>';
+                                    }
+                                }, 350);
+                            }
+                        } else if (isCancel) {
+                            const bookingItem = form.closest('.booking-item');
+                            if (bookingItem) {
+                                bookingItem.classList.add('fade-out');
+                                setTimeout(() => {
+                                    bookingItem.remove();
+                                    const bookingList = document.querySelector('.my-bookings-widget .widget-list');
+                                    if (bookingList && bookingList.children.length === 0) {
+                                        const widgetBody = document.querySelector('.my-bookings-widget .widget-body');
+                                        widgetBody.innerHTML = '<div class="widget-empty"><p>Keine anstehenden Buchungen.</p><span class="widget-hint">Klicke im Wochenplan auf „Jetzt buchen“, um einen Termin zu reservieren.</span></div>';
+                                    }
+                                    
+                                    // Kurzer Delay für weiches Erlebnis vor dem Neuladen der Tabelle
+                                    setTimeout(() => window.location.reload(), 800);
+                                }, 350);
+                            }
+                        } else if (isApprove) {
+                            const approvalItem = form.closest('.approval-item');
+                            if (approvalItem) {
+                                approvalItem.classList.add('fade-out');
+                                setTimeout(() => {
+                                    approvalItem.remove();
+                                    const badge = document.querySelector('.admin-approvals-widget .widget-badge');
+                                    if (badge) {
+                                        const currentCount = parseInt(badge.textContent) - 1;
+                                        badge.textContent = currentCount;
+                                        if (currentCount === 0) {
+                                            const body = document.querySelector('.admin-approvals-widget .widget-body');
+                                            body.innerHTML = '<div class="widget-empty"><p>Keine ausstehenden Exklusiv-Anfragen.</p></div>';
+                                        }
+                                    }
+                                    
+                                    setTimeout(() => window.location.reload(), 800);
+                                }, 350);
+                            }
+                        }
+                    } else {
+                        showToast(data.message || 'Fehler bei der Aktion.', 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast(err.message || 'Netzwerkfehler.', 'error');
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

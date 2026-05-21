@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Slots verwalten - SportOase Admin{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <h2>Feste Slots verwalten</h2>
+    
+    <p class="info-text">
+        Hier können Sie die Namen der festen Slots umbenennen. Die Standardnamen sind in config.py definiert.
+        Ihre Änderungen werden in der Datenbank gespeichert und überschreiben die Standardnamen.
+    </p>
+    
+    <div class="slots-management">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Wochentag</th>
+                    <th>Stunde</th>
+                    <th>Zeit</th>
+                    <th>Standardname</th>
+                    <th>Aktueller Name</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in fixed_slots %}
+                <tr>
+                    <td><strong>{{ slot.weekday_name }}</strong></td>
+                    <td>{{ slot.period }}.</td>
+                    <td>{{ slot.period_time }}</td>
+                    <td><em>{{ slot.default_label }}</em></td>
+                    <td>
+                        {% if slot.current_label != slot.default_label %}
+                        <strong class="custom-name">{{ slot.current_label }}</strong>
+                        {% else %}
+                        {{ slot.current_label }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-small" 
+                                data-weekday="{{ slot.weekday_code }}" 
+                                data-period="{{ slot.period }}" 
+                                data-label="{{ slot.current_label }}" 
+                                data-weekday-name="{{ slot.weekday_name }}" 
+                                data-period-time="{{ slot.period_time }}"
+                                onclick="openEditModal(this)">
+                            Umbenennen
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="admin-actions">
+        <a href="{{ url_for('admin') }}" class="btn btn-secondary">Zurück zum Admin-Bereich</a>
+    </div>
+</div>
+
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditModal()">&times;</span>
+        <h3>Slot umbenennen</h3>
+        
+        <div id="modalInfo" class="modal-info"></div>
+        
+        <form method="POST" action="{{ url_for('manage_slots') }}">
+            <input type="hidden" id="modal_weekday" name="weekday">
+            <input type="hidden" id="modal_period" name="period">
+            
+            <div class="form-group">
+                <label for="modal_label">Neuer Name:</label>
+                <input type="text" id="modal_label" name="label" required maxlength="200" class="form-control">
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Speichern</button>
+                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.info-text {
+    background: linear-gradient(135deg, #E8F4F8 0%, #F0F9FF 100%);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border-left: 5px solid var(--blue-sky);
+}
+
+.slots-management {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #E0E0E0;
+}
+
+.admin-table th {
+    background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-sky) 100%);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.admin-table tr:hover {
+    background-color: #F8F9FA;
+}
+
+.custom-name {
+    color: var(--green);
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: var(--white);
+    margin: 10% auto;
+    padding: 2rem;
+    border-radius: 15px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-info {
+    background: linear-gradient(135deg, #F0F9F4 0%, #F8FDF9 100%);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--green);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+}
+
+.admin-actions {
+    text-align: center;
+    margin-top: 2rem;
+}
+</style>
+
+<script>
+function openEditModal(button) {
+    const weekday = button.dataset.weekday;
+    const period = button.dataset.period;
+    const currentLabel = button.dataset.label;
+    const weekdayName = button.dataset.weekdayName;
+    const periodTime = button.dataset.periodTime;
+    
+    document.getElementById('modal_weekday').value = weekday;
+    document.getElementById('modal_period').value = period;
+    document.getElementById('modal_label').value = currentLabel;
+    
+    const modalInfo = document.getElementById('modalInfo');
+    const p1 = document.createElement('p');
+    const strong1 = document.createElement('strong');
+    strong1.textContent = 'Wochentag:';
+    p1.appendChild(strong1);
+    p1.appendChild(document.createTextNode(' ' + weekdayName));
+    
+    const p2 = document.createElement('p');
+    const strong2 = document.createElement('strong');
+    strong2.textContent = 'Stunde:';
+    p2.appendChild(strong2);
+    p2.appendChild(document.createTextNode(' ' + period + '. Stunde (' + periodTime + ')'));
+    
+    const p3 = document.createElement('p');
+    const strong3 = document.createElement('strong');
+    strong3.textContent = 'Aktueller Name:';
+    p3.appendChild(strong3);
+    p3.appendChild(document.createTextNode(' ' + currentLabel));
+    
+    modalInfo.innerHTML = '';
+    modalInfo.appendChild(p1);
+    modalInfo.appendChild(p2);
+    modalInfo.appendChild(p3);
+    
+    document.getElementById('editModal').style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    const modal = document.getElementById('editModal');
+    if (event.target == modal) {
+        closeEditModal();
+    }
+}
+</script>
+{% endblock %}

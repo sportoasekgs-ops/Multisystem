@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - SportOase{% endblock %}
+
+{% block content %}
+<div class="admin-panel-modern">
+    <div class="admin-header">
+        <h2><span class="admin-icon">⚙️</span> Admin-Bereich</h2>
+        <p class="admin-subtitle">Verwaltung von Buchungen und Slots</p>
+    </div>
+    
+    <div class="admin-cards">
+        <a href="{{ url_for('meine_buchungen') }}" class="admin-card">
+            <span class="card-icon">📋</span>
+            <span class="card-title">Alle Buchungen</span>
+            <span class="card-desc">Übersicht & Verwaltung</span>
+        </a>
+        <a href="{{ url_for('admin_create_booking') }}" class="admin-card">
+            <span class="card-icon">➕</span>
+            <span class="card-title">Neue Buchung</span>
+            <span class="card-desc">Buchung erstellen</span>
+        </a>
+        <a href="{{ url_for('manage_slots') }}" class="admin-card">
+            <span class="card-icon">📝</span>
+            <span class="card-title">Slot-Namen</span>
+            <span class="card-desc">Angebote umbenennen</span>
+        </a>
+        <a href="{{ url_for('admin_bulk_block') }}" class="admin-card">
+            <span class="card-icon">🔒</span>
+            <span class="card-title">Ferien-Sperrung</span>
+            <span class="card-desc">Bulk-Sperrung</span>
+        </a>
+        <a href="{{ url_for('admin_dyn.periods') }}" class="admin-card">
+            <span class="card-icon">⏱️</span>
+            <span class="card-title">Stunden</span>
+            <span class="card-desc">Unterrichtszeiten</span>
+        </a>
+        <a href="{{ url_for('admin_dyn.courses') }}" class="admin-card">
+            <span class="card-icon">📚</span>
+            <span class="card-title">Kurse & Angebote</span>
+            <span class="card-desc">Feste & freie Module</span>
+        </a>
+        <a href="{{ url_for('admin_dyn.classes') }}" class="admin-card">
+            <span class="card-icon">🏫</span>
+            <span class="card-title">Schulklassen</span>
+            <span class="card-desc">Klassen verwalten</span>
+        </a>
+        <a href="{{ url_for('admin_dyn.booking_settings') }}" class="admin-card">
+            <span class="card-icon">🎛️</span>
+            <span class="card-title">Buchungs-Regeln</span>
+            <span class="card-desc">Kapazität & Vorlaufzeit</span>
+        </a>
+        <a href="{{ url_for('setup.reopen') }}" class="admin-card">
+            <span class="card-icon">⚙️</span>
+            <span class="card-title">Einstellungen</span>
+            <span class="card-desc">System konfigurieren</span>
+        </a>
+    </div>
+    
+    <div class="admin-stats">
+        <div class="stat-card">
+            <span class="stat-number">{{ users|length }}</span>
+            <span class="stat-label">Benutzer</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ bookings|length }}</span>
+            <span class="stat-label">Buchungen</span>
+        </div>
+        {% if pending_exclusive %}
+        <div class="stat-card pending-stat">
+            <span class="stat-number">{{ pending_exclusive|length }}</span>
+            <span class="stat-label">Exklusiv-Anfragen</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if pending_exclusive %}
+    <!-- Ausstehende exklusive Buchungen -->
+    <section class="admin-section-modern pending-exclusive-section">
+        <div class="section-header">
+            <h3><span class="section-icon">⏳</span> Exklusive Buchungen zur Freigabe</h3>
+            <span class="info-hint">Diese Buchungen warten auf Ihre Genehmigung</span>
+        </div>
+        <div class="pending-exclusive-list">
+            {% for booking in pending_exclusive %}
+            <div class="pending-exclusive-card">
+                <div class="pending-info">
+                    <div class="pending-date">
+                        <span class="date-badge">📅 {{ booking.date }}</span>
+                        <span class="period-badge">{{ booking.period }}. Stunde</span>
+                    </div>
+                    <div class="pending-teacher">
+                        <strong>{{ booking.teacher_name }}</strong>
+                        <span>({{ booking.teacher_class }})</span>
+                    </div>
+                    <div class="pending-student">
+                        👤 {% for student in booking.students %}{{ student.name|abbreviate_name }} ({{ student.klasse }}){% endfor %}
+                    </div>
+                    <div class="pending-offer">
+                        {{ booking.offer_label }}
+                    </div>
+                    {% if booking.notes %}
+                    <div class="pending-notes">
+                        📝 {{ booking.notes }}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="pending-actions">
+                    <form method="POST" action="{{ url_for('approve_exclusive', booking_id=booking.id) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn-approve" title="Genehmigen">
+                            ✅ Genehmigen
+                        </button>
+                    </form>
+                    <button type="button" class="btn-reject" title="Ablehnen" onclick="openRejectModal({{ booking.id }}, '{{ booking.teacher_name }}', '{{ booking.date }}')">
+                        ❌ Ablehnen
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+    
+    <!-- Benutzer-Übersicht -->
+    <section class="admin-section-modern">
+        <div class="section-header">
+            <h3><span class="section-icon">👥</span> Registrierte Benutzer</h3>
+            <span class="info-hint">Benutzer werden automatisch via IServ SSO angelegt</span>
+        </div>
+        <div class="users-grid">
+            {% for user in users %}
+            <div class="user-card">
+                <div class="user-avatar {% if user.role == 'admin' %}admin{% endif %}">
+                    {{ user.username[0]|upper }}
+                </div>
+                <div class="user-info">
+                    <div class="user-email">{{ user.email or user.username }}</div>
+                    <span class="role-badge-modern {% if user.role == 'admin' %}admin{% else %}teacher{% endif %}">
+                        {{ 'Admin' if user.role == 'admin' else 'Lehrkraft' }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    
+    <!-- Buchungsübersicht -->
+    <section class="admin-section-modern">
+        <div class="section-header">
+            <h3><span class="section-icon">📅</span> Aktuelle Buchungen</h3>
+            <div class="filter-inline">
+                <form method="GET">
+                    <input type="date" id="filter_date" name="filter_date" value="{{ filter_date }}">
+                    <button type="submit" class="btn-filter">Filtern</button>
+                    {% if filter_date %}
+                    <a href="{{ url_for('admin') }}" class="btn-filter-reset">✕</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        
+        {% if bookings %}
+        <div class="bookings-grid">
+            {% for booking in bookings %}
+            <div class="booking-admin-card">
+                <div class="booking-admin-header">
+                    <div class="booking-date-badge">
+                        <span class="date-day">{{ booking.date[8:10] }}</span>
+                        <span class="date-month">{{ booking.date[5:7] }}</span>
+                    </div>
+                    <div class="booking-time">
+                        <span class="period-num">{{ booking.period }}. Stunde</span>
+                        <span class="offer-name">{{ booking.offer_label }}</span>
+                    </div>
+                </div>
+                <div class="booking-admin-body">
+                    <div class="teacher-info">
+                        <strong>{{ booking.teacher_name }}</strong>
+                        <span class="teacher-class">Klasse {{ booking.teacher_class }}</span>
+                    </div>
+                    <div class="students-info">
+                        <span class="students-count">{{ booking.student_count }} Schüler*innen</span>
+                        <ul class="students-mini-list">
+                            {% for student in booking.students %}
+                            <li>{{ student.name|abbreviate_name }} ({{ student.klasse }})</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% if booking.notes %}
+                    <div class="booking-notes">
+                        <span class="notes-icon">📝</span>
+                        <span class="notes-text">{{ booking.notes }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="booking-admin-actions">
+                    <a href="{{ url_for('admin_edit_booking', booking_id=booking.id) }}" class="btn-action edit">✏️ Bearbeiten</a>
+                    <form method="POST" action="{{ url_for('delete_booking_route', booking_id=booking.id) }}" onsubmit="return confirm('Buchung wirklich löschen?');">
+                        <button type="submit" class="btn-action delete">🗑️ Löschen</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-bookings-admin">
+            <span class="no-icon">📭</span>
+            <p>Keine Buchungen {% if filter_date %}für dieses Datum {% endif %}gefunden.</p>
+            {% if filter_date %}
+            <a href="{{ url_for('admin') }}" class="btn btn-secondary">Filter zurücksetzen</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<!-- Modal für Ablehnung mit Begründung -->
+<div id="rejectModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>❌ Exklusive Buchung ablehnen</h3>
+            <button type="button" class="modal-close" onclick="closeRejectModal()">&times;</button>
+        </div>
+        <form method="POST" id="rejectForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="modal-body">
+                <p class="modal-info" id="rejectInfo"></p>
+                <div class="form-group">
+                    <label for="rejectReason">Begründung (optional):</label>
+                    <textarea name="reason" id="rejectReason" rows="3" placeholder="z.B. Slot wird für andere Aktivität benötigt..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
+                    <p class="hint-text">Die Begründung wird der Lehrkraft in der E-Mail mitgeteilt.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Abbrechen</button>
+                <button type="submit" class="btn btn-danger">Ablehnen & E-Mail senden</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openRejectModal(bookingId, teacherName, date) {
+    document.getElementById('rejectForm').action = '/admin/reject_exclusive/' + bookingId;
+    document.getElementById('rejectInfo').innerHTML = 'Buchung von <strong>' + teacherName + '</strong> am <strong>' + date + '</strong> ablehnen?';
+    document.getElementById('rejectReason').value = '';
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRejectModal();
+    }
+});
+</script>
+{% endblock %}

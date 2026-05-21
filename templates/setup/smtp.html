@@ -1,0 +1,146 @@
+{% extends "setup/wizard_base.html" %}
+{% block title %}E-Mail / SMTP{% endblock %}
+
+{% block card_content %}
+<div class="wizard-card-header">
+    <span class="step-icon">📧</span>
+    <h2>E-Mail / SMTP-Konfiguration</h2>
+    <p>Richten Sie den E-Mail-Server für Buchungsbestätigungen ein. Dieser Schritt ist optional und kann übersprungen werden.</p>
+</div>
+
+<form method="post" id="smtp-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="wizard-card-body">
+
+    <div class="alert alert-info">
+        <span>ℹ️</span>
+        <span>E-Mails werden für Buchungsbestätigungen und Benachrichtigungen benötigt. Ohne SMTP-Konfiguration werden keine E-Mails versendet. Sie können diesen Schritt auch überspringen.</span>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">SMTP-Host</label>
+            <input type="text" name="smtp_host" class="form-control" id="smtp_host"
+                   value="{{ smtp_host }}" placeholder="z.B. mail.schule.de">
+        </div>
+        <div class="form-group">
+            <label class="form-label">SMTP-Port</label>
+            <input type="number" name="smtp_port" class="form-control" id="smtp_port"
+                   value="{{ smtp_port }}" placeholder="587">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">SMTP-Benutzername</label>
+            <input type="text" name="smtp_user" class="form-control" id="smtp_user"
+                   value="{{ smtp_user }}" placeholder="z.B. buchungssystem@schule.de" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label class="form-label">SMTP-Passwort</label>
+            <input type="password" name="smtp_pass" class="form-control" id="smtp_pass"
+                   value="{{ smtp_pass }}" placeholder="••••••••" autocomplete="new-password">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Verschlüsselung</label>
+            <select name="smtp_tls" class="form-control" id="smtp_tls" onchange="updatePort()">
+                <option value="starttls" {% if smtp_tls == 'starttls' %}selected{% endif %}>STARTTLS (Port 587, empfohlen)</option>
+                <option value="ssl" {% if smtp_tls == 'ssl' %}selected{% endif %}>SSL/TLS (Port 465)</option>
+                <option value="none" {% if smtp_tls == 'none' %}selected{% endif %}>Keine (Port 25, unsicher)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Absender-E-Mail</label>
+            <input type="email" name="smtp_from" class="form-control" id="smtp_from"
+                   value="{{ smtp_from }}" placeholder="z.B. buchungssystem@schule.de">
+            <p class="form-hint">Falls leer, wird der SMTP-Benutzername verwendet</p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Admin-E-Mail (Benachrichtigungen)</label>
+        <input type="email" name="admin_email" class="form-control"
+               value="{{ admin_email }}" placeholder="z.B. admin@schule.de">
+        <p class="form-hint">An diese Adresse werden neue Buchungsbenachrichtigungen gesendet</p>
+    </div>
+
+    <hr class="section-sep">
+
+    <!-- Test-Bereich -->
+    <div style="background:#f8f9fa;border-radius:12px;padding:20px;">
+        <p style="font-weight:600;margin-bottom:12px;">🧪 SMTP-Verbindung testen</p>
+        <div style="display:flex;gap:12px;align-items:flex-end;">
+            <div class="form-group" style="flex:1;margin-bottom:0;">
+                <label class="form-label">Test-E-Mail senden an</label>
+                <input type="email" id="test_email" class="form-control"
+                       value="{{ smtp_user }}" placeholder="test@schule.de">
+            </div>
+            <button type="button" class="btn btn-ghost" onclick="testSmtp()" id="test-btn"
+                    style="flex-shrink:0;height:42px;">
+                📨 Testen
+            </button>
+        </div>
+        <div id="smtp-test-result" class="alert" style="margin-top:14px;display:none;"></div>
+    </div>
+
+</div>
+<div class="wizard-actions">
+    <a href="{{ url_for('setup.step', step_id=prev_step) }}" class="btn btn-ghost">← Zurück</a>
+    <div style="display:flex;gap:10px;">
+        <button type="submit" name="action" value="skip" class="btn btn-secondary">Überspringen</button>
+        <button type="submit" name="action" value="save" class="btn btn-primary">Speichern & Weiter →</button>
+    </div>
+</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updatePort() {
+    const tls = document.getElementById('smtp_tls').value;
+    const portField = document.getElementById('smtp_port');
+    if (tls === 'ssl')      portField.value = 465;
+    else if (tls === 'none') portField.value = 25;
+    else                     portField.value = 587;
+}
+
+async function testSmtp() {
+    const btn = document.getElementById('test-btn');
+    const result = document.getElementById('smtp-test-result');
+    btn.textContent = '⏳ Teste...';
+    btn.disabled = true;
+    result.style.display = 'none';
+
+    const payload = {
+        smtp_host: document.getElementById('smtp_host').value,
+        smtp_port: document.getElementById('smtp_port').value,
+        smtp_user: document.getElementById('smtp_user').value,
+        smtp_pass: document.getElementById('smtp_pass').value,
+        smtp_tls:  document.getElementById('smtp_tls').value,
+        test_email: document.getElementById('test_email').value,
+    };
+
+    try {
+        const resp = await fetch('{{ url_for("setup.test_smtp") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-error');
+        result.innerHTML = (data.success ? '✅ ' : '❌ ') + data.message;
+        result.style.display = 'flex';
+    } catch (e) {
+        result.className = 'alert alert-error';
+        result.innerHTML = '❌ Netzwerkfehler: ' + e.message;
+        result.style.display = 'flex';
+    }
+
+    btn.textContent = '📨 Testen';
+    btn.disabled = false;
+}
+</script>
+{% endblock %}

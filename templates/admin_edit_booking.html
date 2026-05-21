@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{% if booking %}Buchung bearbeiten{% else %}Neue Buchung{% endif %} - Admin - SportOase{% endblock %}
+
+{% block content %}
+<div class="booking-form">
+    <h2>{% if booking %}Buchung bearbeiten{% else %}Neue Buchung erstellen{% endif %}</h2>
+    
+    <form method="POST" id="bookingForm">
+        <div class="admin-booking-section">
+            <h3>Buchungsdetails</h3>
+            
+            <div class="form-group">
+                <label for="date">Datum:</label>
+                <input type="date" id="date" name="date" required value="{% if booking %}{{ booking.date }}{% endif %}">
+            </div>
+            
+            <div class="form-group">
+                <label for="period">Stunde:</label>
+                <select id="period" name="period" required onchange="updatePeriodInfo()">
+                    {% for p in range(1, 7) %}
+                    <option value="{{ p }}" {% if booking and booking.period == p %}selected{% endif %}>
+                        {{ p }}. Stunde ({{ period_times[p].start }} - {{ period_times[p].end }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher_id">Lehrkraft (Account):</label>
+                <select id="teacher_id" name="teacher_id" required>
+                    <option value="">-- Bitte wählen --</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if booking and booking.teacher_id == user.id %}selected{% endif %}>
+                        {{ user.email }} ({{ user.role }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="teacher-info-section">
+            <h3>Lehrkraft-Angaben</h3>
+            <div class="form-group">
+                <label for="teacher_name">Name der Lehrkraft:</label>
+                <input type="text" id="teacher_name" name="teacher_name" required 
+                       value="{% if booking %}{{ booking.teacher_name }}{% endif %}"
+                       placeholder="z.B. Max Mustermann">
+            </div>
+            
+            <div class="form-group">
+                <label for="teacher_class">Klasse der Lehrkraft:</label>
+                <input type="text" id="teacher_class" name="teacher_class" required 
+                       value="{% if booking %}{{ booking.teacher_class }}{% endif %}"
+                       placeholder="z.B. 5a">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="num_students">Anzahl Schüler*innen (1-5):</label>
+            <select id="num_students" name="num_students" onchange="updateStudentFields()" required>
+                {% for i in range(1, 6) %}
+                <option value="{{ i }}" {% if booking and booking.students|length == i %}selected{% endif %}>
+                    {{ i }} Schüler*innen
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div id="studentFields">
+            <!-- Wird dynamisch mit JavaScript gefüllt -->
+        </div>
+        
+        <div class="form-group" id="moduleSelection">
+            <label for="module">Modul wählen (nur bei freien Stunden):</label>
+            <select id="module" name="module">
+                <option value="">-- Bitte wählen --</option>
+                {% for module in free_modules %}
+                <option value="{{ module }}" {% if booking and booking.offer_label == module %}selected{% endif %}>
+                    {{ module }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{% if booking %}Änderungen speichern{% else %}Buchung erstellen{% endif %}</button>
+            <a href="{{ url_for('admin') }}" class="btn btn-secondary">Abbrechen</a>
+        </div>
+    </form>
+</div>
+
+<script>
+{% if booking %}
+const existingStudents = {{ booking.students|tojson }};
+{% else %}
+const existingStudents = null;
+{% endif %}
+
+function updateStudentFields() {
+    const numStudents = parseInt(document.getElementById('num_students').value);
+    const container = document.getElementById('studentFields');
+    container.innerHTML = '';
+    
+    for (let i = 0; i < numStudents; i++) {
+        const div = document.createElement('div');
+        div.className = 'student-entry';
+        
+        let studentName = '';
+        let studentClass = '';
+        
+        if (existingStudents && i < existingStudents.length) {
+            studentName = existingStudents[i].name || '';
+            studentClass = existingStudents[i].klasse || '';
+        }
+        
+        div.innerHTML = `
+            <h4>Schüler*in ${i + 1}</h4>
+            <div class="form-group">
+                <label for="student_name_${i}">Name:</label>
+                <input type="text" id="student_name_${i}" name="student_name_${i}" 
+                       value="${studentName}" required>
+            </div>
+            <div class="form-group">
+                <label for="student_class_${i}">Klasse:</label>
+                <input type="text" id="student_class_${i}" name="student_class_${i}" 
+                       value="${studentClass}" required>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+}
+
+function updatePeriodInfo() {
+    // Placeholder für zukünftige Funktionalität
+    // Könnte zeigen, ob die Stunde "fest" oder "frei" ist
+}
+
+// Initialisiere
+updateStudentFields();
+</script>
+{% endblock %}

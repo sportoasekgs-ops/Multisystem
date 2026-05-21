@@ -1,0 +1,46 @@
+modules = ["python-3.11", "web"]
+[agent]
+expertMode = true
+integrations = ["google-mail:1.0.0", "resend:1.0.0"]
+stack = "FLASK_VANILLA_JS"
+
+[nix]
+channel = "stable-25_05"
+packages = ["grpc", "openssl", "postgresql"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "SportOase App"
+
+[[workflows.workflow]]
+name = "SportOase App"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = ".pythonlibs/bin/gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["gunicorn", "--bind", "0.0.0.0:5000", "main:app"]
+
+[userenv]
+
+[userenv.production]
+DATABASE_URL = "postgresql://spo_a64y_user:FIqd0edcwgE8PwNGDbyEz8d2JxNw4r5f@dpb-d4b1h1sNghox73znvd8g-a.frankfurt-postgres.render.com/spo_a64y"

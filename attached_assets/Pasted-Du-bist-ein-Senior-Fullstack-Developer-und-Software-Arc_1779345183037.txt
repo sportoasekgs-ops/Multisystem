@@ -1,0 +1,316 @@
+Du bist ein Senior Fullstack Developer und Software-Architekt.
+
+Ich habe ein bestehendes Buchungssystem für eine Schule/Sportoase. Aktuell ist vieles hardcoded und speziell auf meine Einrichtung angepasst. Das System soll jetzt vollständig mandantenfähig (multi-tenant) und individuell konfigurierbar werden, damit ich es auch bei anderen Schulen oder Einrichtungen installieren kann.
+
+Ziel:
+Erstelle eine saubere Architektur und implementiere einen vollständigen Setup-/Admin-Modus, damit jede neue Schule oder Einrichtung das System individuell konfigurieren kann, ohne Code ändern zu müssen.
+
+Folgende Punkte müssen umgesetzt werden:
+
+# 1. Setup-Assistent / Initial Setup
+
+Beim ersten Start soll automatisch ein Setup-Wizard erscheinen.
+
+Dieser Wizard soll Schritt für Schritt durch die Einrichtung führen.
+
+Folgende Dinge müssen vollständig konfigurierbar sein:
+
+## Allgemeine Daten
+
+* Schulname / Firmenname
+* Ansprechpartner
+* Verantwortlicher
+* E-Mail-Adresse
+* Telefonnummer
+* Adresse
+* Impressum
+* Datenschutz
+* Footer-Kontaktdaten
+
+## Branding
+
+* Logo Upload
+* Favicon Upload
+* Hintergrundbild
+* Primärfarbe
+* Sekundärfarbe
+* Individuelles Farbschema
+
+## Datenbank-Konfiguration
+
+Die Datenbank darf NICHT hardcoded sein.
+
+Admin soll im Setup eingeben können:
+
+* Datenbanktyp
+
+  * MySQL
+  * MariaDB
+  * PostgreSQL
+* Datenbank-Host
+* Datenbank-Port
+* Datenbank-Name
+* Datenbank-Benutzer
+* Datenbank-Passwort
+
+Zusätzlich:
+
+* Verbindung testen Button
+* Automatische Erstellung der Tabellen/Migrationen
+* Fehleranzeige bei falschen Zugangsdaten
+* Speicherung der Konfiguration in ENV oder sicherer Config
+
+Optional:
+
+* SQLite für lokale Testumgebungen
+
+## SMTP / Mail
+
+* SMTP Host
+* SMTP Port
+* SMTP Benutzer
+* SMTP Passwort
+* TLS/SSL Auswahl
+* Testmail senden Button
+
+## Sprache & Region
+
+* Sprache
+* Zeitzone
+* Datumsformat
+
+---
+
+# 2. IServ OAuth / SSO Integration
+
+Aktuell sind IServ Client-ID und Client-Secret hardcoded.
+
+Das muss vollständig dynamisch werden.
+
+Admin soll pro Schule konfigurieren können:
+
+* IServ Domain
+* Client ID
+* Client Secret
+* Redirect URL
+* OAuth Endpoints
+* Rollenmapping
+* Login aktiv/inaktiv
+
+Beispiele:
+
+* Lehrer → Lehrerrolle
+* Mitarbeiter → Mitarbeiterrolle
+* Admin → Schuladmin
+
+Wichtig:
+
+* Jede Schule kann ihre eigene IServ-Instanz verwenden
+* Secrets verschlüsselt speichern
+* Sichere OAuth-Implementierung
+* Token Refresh Handling
+* Fehlerbehandlung bei Login-Problemen
+
+---
+
+# 3. Dynamische Stunden / Slots
+
+Aktuell sind Stunden hardcoded (1.–6. Stunde).
+
+Das muss vollständig dynamisch werden.
+
+Admin soll:
+
+* unbegrenzt viele Slots anlegen können
+* Slots umbenennen können
+* Uhrzeiten definieren können
+* Reihenfolge ändern können
+* Slots aktiv/deaktivieren können
+
+Beispiele:
+
+* 1. Stunde
+* 2. Stunde
+* Mittag
+* AG-Zeit
+* Abendkurs
+
+Es darf keinerlei hardcoded Begrenzung geben.
+
+---
+
+# 4. Dynamische Kurse / Angebote
+
+Neue Kurse sollen im Adminbereich erstellt werden können.
+
+Pro Kurs:
+
+* Name
+* Beschreibung
+* Farbe
+* Maximale Teilnehmerzahl
+* Verantwortlicher
+* Raum
+* Kategorie
+* Aktiv/Inaktiv
+* Bild/Icon
+
+Kurse dürfen NICHT mehr hardcoded sein.
+
+---
+
+# 5. CMS-Funktion für Inhalte
+
+Alle Inhalte sollen editierbar werden.
+
+Besonders:
+
+* FAQ
+* Anleitung
+* Hilfeseiten
+* Startseiten-Texte
+* Hinweise
+* Footer
+* Infoboxen
+
+Optional:
+
+* Rich Text Editor
+* Markdown
+* Mehrsprachigkeit
+
+---
+
+# 6. Individuelles Branding
+
+Jede Schule soll:
+
+* eigenes Logo nutzen
+* eigenes Favicon nutzen
+* eigene Farben definieren
+* eigenes Hintergrundbild hochladen
+
+Das Frontend soll automatisch das jeweilige Branding laden.
+
+---
+
+# 7. Rollen & Rechte
+
+Es soll ein vollständiges Rollen- und Rechtesystem geben.
+
+Rollen:
+
+* Superadmin
+* Schuladmin
+* Lehrer
+* Mitarbeiter
+* Nutzer/Schüler
+
+Rechte granular steuerbar.
+
+---
+
+# 8. Multi-Tenant Architektur
+
+Das System soll mehrere Schulen parallel unterstützen.
+
+Wichtig:
+
+* getrennte Daten
+* getrennte Benutzer
+* getrennte Brandingdaten
+* getrennte Kurse
+* getrennte Einstellungen
+* getrennte IServ-Konfigurationen
+
+Optional:
+
+* Subdomain pro Schule
+* schule-a.domain.de
+* schule-b.domain.de
+
+---
+
+# 9. Testmodus / Sandbox Modus
+
+Ich benötige zusätzlich einen vollständigen Testmodus.
+
+Folgende Funktionen werden benötigt:
+
+## Testumgebung
+
+* Demo-/Sandbox-Modus
+* Testdaten automatisch generieren
+* Fake Benutzer
+* Fake Buchungen
+* Fake Kurse
+
+## Sicheres Testen
+
+Im Testmodus:
+
+* keine echten Mails senden
+* keine echten IServ-Logins ausführen
+* keine produktiven Daten verändern
+* keine echten APIs verwenden
+
+## Umschaltbar
+
+Admin soll:
+
+* zwischen Produktion und Testmodus wechseln können
+* erkennen können, ob aktuell Testmodus aktiv ist
+
+## Zusätzliche Funktionen
+
+* Reset der Testdaten
+* Datenbank-Reset
+* Demo-Schule automatisch anlegen
+* Beispielkurse automatisch erstellen
+
+Optional:
+
+* Docker-Testumgebung
+* Seed-System
+* Mock OAuth Login
+
+---
+
+# 10. Technische Anforderungen
+
+Bitte:
+
+* moderne modulare Architektur
+* keine hardcoded Werte
+* Konfiguration aus Datenbank oder Config-Dateien
+* skalierbar
+* wartbar
+* migrationsfähig
+* sichere Speicherung sensibler Daten
+* verschlüsselte Secrets
+* saubere API-Struktur
+* Logging & Error Handling
+
+---
+
+# Bitte erstelle:
+
+1. Gesamtarchitektur
+2. Datenbankstruktur
+3. Multi-Tenant Konzept
+4. Setup-Wizard Ablauf
+5. Adminpanel-Konzept
+6. Rollen-/Rechtesystem
+7. API-Struktur
+8. Datenbanktabellen
+9. Sicherheitskonzept
+10. Testmodus-Konzept
+11. IServ OAuth Integration
+12. Beispielcode für kritische Bereiche
+13. ENV-/Config-System
+14. Deployment-Konzept
+15. Docker-Setup
+16. Backup-/Restore-Konzept
+
+Wichtig:
+Das Ziel ist ein vollständig white-label-fähiges, professionelles Buchungssystem für mehrere Schulen und Einrichtungen mit Setup-Assistent, dynamischer Konfiguration, IServ-Anbindung und integriertem Testmodus.

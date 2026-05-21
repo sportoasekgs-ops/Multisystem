@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Seite nicht gefunden{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <h1>404</h1>
+    <h2>Seite nicht gefunden</h2>
+    <p>Die von Ihnen gesuchte Seite konnte leider nicht gefunden werden.</p>
+    <p>
+        <a href="{{ url_for('dashboard') }}" class="button">Zurück zum Dashboard</a>
+    </p>
+</div>
+
+<style>
+.error-page {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.error-page h1 {
+    font-size: 120px;
+    color: #38bdf8;
+    margin: 0;
+    font-weight: bold;
+}
+
+.error-page h2 {
+    font-size: 32px;
+    color: #333;
+    margin: 20px 0;
+}
+
+.error-page p {
+    font-size: 18px;
+    color: #666;
+    margin: 15px 0;
+}
+
+.error-page .button {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #38bdf8 0%, #2196F3 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.error-page .button:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

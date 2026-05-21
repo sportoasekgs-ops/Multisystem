@@ -1,0 +1,87 @@
+{% extends "setup/wizard_base.html" %}
+{% block title %}Allgemeine Daten{% endblock %}
+
+{% block card_content %}
+<div class="wizard-card-header">
+    <span class="step-icon">🏫</span>
+    <h2>Allgemeine Daten</h2>
+    <p>Geben Sie die grundlegenden Informationen Ihrer Einrichtung ein. Diese erscheinen im Footer, auf der Login-Seite und in E-Mails.</p>
+</div>
+
+<form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="wizard-card-body">
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Einrichtungsname <span class="req">*</span></label>
+            <input type="text" name="school_name" class="form-control"
+                   value="{{ school_name }}" placeholder="z.B. SportOase KGS Pattensen" required>
+            <p class="form-hint">Erscheint auf der Login-Seite und im Browser-Tab</p>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Untertitel <span class="badge-optional">Optional</span></label>
+            <input type="text" name="school_subtitle" class="form-control"
+                   value="{{ school_subtitle }}" placeholder="z.B. Buchungssystem">
+        </div>
+    </div>
+
+    <hr class="section-sep">
+    <p style="font-size:0.8rem;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;">Kontaktdaten</p>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Ansprechpartner <span class="badge-optional">Optional</span></label>
+            <input type="text" name="contact_name" class="form-control"
+                   value="{{ contact_name }}" placeholder="z.B. Max Mustermann">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Kontakt-E-Mail <span class="badge-optional">Optional</span></label>
+            <input type="email" name="contact_email" class="form-control"
+                   value="{{ contact_email }}" placeholder="z.B. info@schule.de">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Telefonnummer <span class="badge-optional">Optional</span></label>
+            <input type="text" name="contact_phone" class="form-control"
+                   value="{{ contact_phone }}" placeholder="z.B. 0511 12345678">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Adresse <span class="badge-optional">Optional</span></label>
+            <input type="text" name="school_address" class="form-control"
+                   value="{{ school_address }}" placeholder="z.B. Musterstraße 1, 12345 Musterstadt">
+        </div>
+    </div>
+
+    <hr class="section-sep">
+    <p style="font-size:0.8rem;font-weight:600;color:#6c757d;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px;">
+        Rechtliche Texte <span class="badge-optional">Optional</span>
+    </p>
+
+    <div class="form-group">
+        <label class="form-label">Impressum</label>
+        <textarea name="imprint_text" class="form-control" rows="3"
+                  placeholder="Angaben gemäß § 5 TMG...">{{ imprint_text }}</textarea>
+        <p class="form-hint">Erscheint im Footer unter „Impressum"</p>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label">Datenschutzerklärung</label>
+        <textarea name="privacy_text" class="form-control" rows="3"
+                  placeholder="Informationen zur Verarbeitung personenbezogener Daten...">{{ privacy_text }}</textarea>
+        <p class="form-hint">Erscheint im Footer unter „Datenschutz"</p>
+    </div>
+
+</div>
+<div class="wizard-actions">
+    {% if prev_step %}
+    <a href="{{ url_for('setup.step', step_id=prev_step) }}" class="btn btn-ghost">← Zurück</a>
+    {% else %}
+    <span></span>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Weiter →</button>
+</div>
+</form>
+{% endblock %}

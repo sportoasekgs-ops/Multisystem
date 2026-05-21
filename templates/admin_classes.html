@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Klassen verwalten – Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+        <div>
+            <a href="{{ url_for('admin') }}" style="text-decoration:none;color:#888;font-size:.9rem;">← Admin</a>
+            <h2 style="margin:.25rem 0 0;">🏫 Schulklassen verwalten</h2>
+            <p style="color:#666;margin:.25rem 0 0;">Klassen die im Buchungsformular auswählbar sind</p>
+        </div>
+        <div style="display:flex;gap:.75rem;">
+            <a href="{{ url_for('admin_dyn.courses') }}" class="btn btn-secondary">📚 Kurse</a>
+            <a href="{{ url_for('admin_dyn.periods') }}" class="btn btn-secondary">⏱️ Stunden</a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat,msg in messages %}
+    <div class="flash-message flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <!-- Klassen-Liste -->
+        <div style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+            <h3 style="margin:0 0 1rem;">Aktuelle Klassen ({{ classes | length }})</h3>
+            {% if classes %}
+            <div style="max-height:500px;overflow-y:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:.9rem;">
+                <thead style="position:sticky;top:0;background:#fff;">
+                    <tr style="background:#fce4ec;color:#c2185b;">
+                        <th style="padding:.6rem .8rem;text-align:left;">Klasse</th>
+                        <th style="padding:.6rem .8rem;text-align:center;">Aktiv</th>
+                        <th style="padding:.6rem .8rem;text-align:right;">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for sc in classes %}
+                <tr style="border-bottom:1px solid #f5f5f5;" id="row-sc-{{ sc.id }}">
+                    <td style="padding:.6rem .8rem;font-weight:600;">{{ sc.name }}</td>
+                    <td style="padding:.6rem .8rem;text-align:center;">
+                        {% if sc.is_active %}<span style="color:#4caf50;">✔</span>{% else %}<span style="color:#ccc;">✖</span>{% endif %}
+                    </td>
+                    <td style="padding:.6rem .8rem;text-align:right;white-space:nowrap;">
+                        <button onclick="toggleEditClass({{ sc.id }})" class="btn btn-secondary" style="padding:.28rem .6rem;font-size:.8rem;">Edit</button>
+                        <form method="POST" action="{{ url_for('admin_dyn.classes_delete', class_id=sc.id) }}" style="display:inline;" onsubmit="return confirm('Klasse {{ sc.name }} löschen?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn" style="background:#f44336;color:#fff;padding:.28rem .6rem;font-size:.8rem;">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr id="edit-sc-{{ sc.id }}" style="display:none;background:#fff8f9;">
+                    <td colspan="3" style="padding:.75rem .8rem;">
+                        <form method="POST" action="{{ url_for('admin_dyn.classes_edit', class_id=sc.id) }}" style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="text" name="name" value="{{ sc.name }}" required style="padding:.4rem;border:1px solid #ddd;border-radius:6px;flex:1;min-width:80px;">
+                            <select name="is_active" style="padding:.4rem;border:1px solid #ddd;border-radius:6px;">
+                                <option value="1" {% if sc.is_active %}selected{% endif %}>Aktiv</option>
+                                <option value="0" {% if not sc.is_active %}selected{% endif %}>Inaktiv</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary" style="padding:.4rem .8rem;font-size:.85rem;">✔</button>
+                            <button type="button" onclick="toggleEditClass({{ sc.id }})" class="btn btn-secondary" style="padding:.4rem .8rem;font-size:.85rem;">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}
+            <p style="color:#888;text-align:center;padding:2rem;">Noch keine Klassen vorhanden.</p>
+            {% endif %}
+        </div>
+
+        <!-- Neue Klasse hinzufügen + Bulk-Import -->
+        <div>
+            <div style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:1.5rem;">
+                <h3 style="margin:0 0 1rem;">➕ Einzelne Klasse</h3>
+                <form method="POST" action="{{ url_for('admin_dyn.classes_add') }}" style="display:flex;gap:.75rem;align-items:flex-end;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <div style="flex:1;">
+                        <label style="font-size:.85rem;color:#666;">Klassenname</label><br>
+                        <input type="text" name="name" required placeholder="z.B. 8a" style="width:100%;padding:.6rem;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Hinzufügen</button>
+                </form>
+            </div>
+
+            <div style="background:#fff8e1;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+                <h3 style="margin:0 0 .5rem;">💡 Hinweis</h3>
+                <p style="color:#666;font-size:.9rem;margin:0;">
+                    Inaktive Klassen werden im Buchungsformular nicht angezeigt, 
+                    aber bleiben in bestehenden Buchungen erhalten.<br><br>
+                    Zum Umbenennen: Klasse bearbeiten (Edit).
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEditClass(id) {
+    const row = document.getElementById('edit-sc-' + id);
+    row.style.display = row.style.display === 'none' ? '' : 'none';
+}
+</script>
+{% endblock %}
