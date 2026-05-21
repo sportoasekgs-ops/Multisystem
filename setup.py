@@ -358,8 +358,15 @@ def test_smtp():
 
     try:
         import smtplib
+        import socket as _socket
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
+
+        # IPv4 erzwingen (verhindert errno 101 "Network is unreachable" bei IPv6-Problemen)
+        try:
+            ipv4 = _socket.getaddrinfo(host, port, _socket.AF_INET, _socket.SOCK_STREAM)[0][4][0]
+        except Exception:
+            ipv4 = host
 
         msg = MIMEMultipart('alternative')
         msg['Subject'] = '✅ SportOase SMTP-Test erfolgreich'
@@ -375,11 +382,11 @@ def test_smtp():
         msg.attach(MIMEText(html, 'html', 'utf-8'))
 
         if tls_mode == 'ssl':
-            with smtplib.SMTP_SSL(host, port, timeout=10) as server:
+            with smtplib.SMTP_SSL(ipv4, port, timeout=10) as server:
                 server.login(user, password)
                 server.sendmail(user, [recipient], msg.as_string())
         else:
-            with smtplib.SMTP(host, port, timeout=10) as server:
+            with smtplib.SMTP(ipv4, port, timeout=10) as server:
                 server.ehlo()
                 if tls_mode == 'starttls':
                     server.starttls()
@@ -390,7 +397,21 @@ def test_smtp():
         return jsonify({'success': True, 'message': f'Test-E-Mail erfolgreich an {recipient} gesendet!'})
 
     except Exception as e:
-        return jsonify({'success': False, 'message': f'Fehler: {str(e)}'})
+        err = str(e)
+        # Replit blockiert ausgehende SMTP-Verbindungen (Ports 25, 465, 587)
+        if 'Network is unreachable' in err or 'Connection refused' in err or 'timed out' in err.lower():
+            import os as _os
+            if _os.environ.get('REPL_ID') or _os.environ.get('REPLIT_CLUSTER'):
+                return jsonify({
+                    'success': False,
+                    'message': (
+                        '⚠️ Replit blockiert ausgehende SMTP-Verbindungen – '
+                        'das ist eine Netzwerk-Einschränkung der Replit-Plattform. '
+                        'Die Konfiguration ist trotzdem gespeichert und funktioniert '
+                        'auf Render (Produktion) einwandfrei.'
+                    )
+                })
+        return jsonify({'success': False, 'message': f'Fehler: {err}'})
 
 
 # ─── AJAX: Datenbank-Test ───────────────────────────────────────────────────

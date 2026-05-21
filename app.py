@@ -3014,8 +3014,7 @@ def admin_factory_reset():
             return redirect(url_for('admin_factory_reset'))
 
         try:
-            from models import Booking, BlockedSlot, Notification, User, Period, Course, SchoolClass, SlotName
-            from system_config import SystemConfig
+            from models import Booking, BlockedSlot, Notification, User, Period, Course, SchoolClass, SlotName, SystemConfig
 
             # Immer löschen: Benachrichtigungen, Buchungen, Sperren
             Notification.query.delete()

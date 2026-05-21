@@ -87,6 +87,13 @@ def send_email(to_email, subject, body_html, body_text=None):
         return False
 
     try:
+        import socket as _socket
+        # IPv4 erzwingen (verhindert "Network is unreachable" bei IPv6-Problemen auf Render/Cloud-Hosts)
+        try:
+            ipv4 = _socket.getaddrinfo(host, port, _socket.AF_INET, _socket.SOCK_STREAM)[0][4][0]
+        except Exception:
+            ipv4 = host
+
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From']    = from_addr
@@ -97,11 +104,11 @@ def send_email(to_email, subject, body_html, body_text=None):
         msg.attach(MIMEText(body_html, 'html', 'utf-8'))
 
         if tls_mode == 'ssl':
-            with smtplib.SMTP_SSL(host, port, timeout=15) as server:
+            with smtplib.SMTP_SSL(ipv4, port, timeout=15) as server:
                 server.login(user, password)
                 server.sendmail(from_addr, [to_email], msg.as_string())
         else:
-            with smtplib.SMTP(host, port, timeout=15) as server:
+            with smtplib.SMTP(ipv4, port, timeout=15) as server:
                 server.ehlo()
                 if tls_mode == 'starttls':
                     server.starttls()
