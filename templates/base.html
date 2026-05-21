@@ -243,6 +243,9 @@
                         <span class="{% if session.user_role == 'admin' %}admin{% else %}teacher{% endif %}">
                             {{ session.iserv_group or ('Admin' if session.user_role == 'admin' else 'Lehrkraft') }}
                         </span>
+                        {% if demo_mode %}
+                        <span style="background:#f59e0b;color:#fff;font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.04em;">DEMO</span>
+                        {% endif %}
                     </div>
 
                     <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
@@ -289,11 +292,13 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- 🔐 Datenschutzerklärung Link -->
+    <!-- 🔐 Footer Links -->
     <div class="footer-legal">
-        <a href="#" onclick="openPrivacyModal(); return false;">
-            🔐 Datenschutzerklärung
-        </a>
+        <a href="#" onclick="openPrivacyModal(); return false;">🔐 Datenschutzerklärung</a>
+        {% if cms_imprint_text %}
+        <span style="color:#ccc;margin:0 .4rem;">·</span>
+        <a href="#" onclick="openImprintModal(); return false;">📄 Impressum</a>
+        {% endif %}
     </div>
 
     <!-- ❓ Credits Button -->
@@ -314,6 +319,19 @@
         </div>
     </div>
 
+    <!-- ===================== IMPRESSUM ===================== -->
+    {% if cms_imprint_text %}
+    <div id="imprintModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📄 Impressum</h3>
+                <button onclick="closeImprintModal()">&times;</button>
+            </div>
+            <div class="modal-body">{{ cms_imprint_text | safe }}</div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- ===================== DATENSCHUTZ ===================== -->
     <div id="privacyModal" class="modal-overlay" style="display:none;">
         <div class="modal-content">
@@ -323,6 +341,9 @@
             </div>
 
             <div class="modal-body">
+            {% if cms_privacy_text %}
+                {{ cms_privacy_text | safe }}
+            {% else %}
 
                 <h4>1. Verantwortlicher</h4>
                 <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
@@ -433,6 +454,7 @@
                 <h4>14. Aktualität</h4>
                 <p>Diese Datenschutzerklärung ist aktuell gültig und hat den Stand: Mai 2026.</p>
 
+            {% endif %}
             </div>
         </div>
     </div>
@@ -448,6 +470,16 @@
         // Datenschutz
         function openPrivacyModal() {
             document.getElementById("privacyModal").style.display = "flex";
+        }
+
+        // Impressum
+        function openImprintModal() {
+            const m = document.getElementById("imprintModal");
+            if (m) m.style.display = "flex";
+        }
+        function closeImprintModal() {
+            const m = document.getElementById("imprintModal");
+            if (m) m.style.display = "none";
         }
 
         // Theme Switch

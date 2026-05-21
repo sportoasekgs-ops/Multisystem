@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% block title %}CMS – Inhalte bearbeiten{% endblock %}
+
+{% block content %}
+<style>
+.cms-page { max-width: 860px; margin: 0 auto; padding: 2rem 1rem; }
+.cms-header { margin-bottom: 2rem; }
+.cms-header h2 { font-size: 1.6rem; font-weight: 700; margin: 0 0 .4rem 0; }
+.cms-header p  { color: var(--text-secondary); margin: 0; }
+
+.cms-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.cms-tab  { padding: .5rem 1.1rem; border-radius: 8px; border: 1.5px solid var(--border);
+            background: var(--bg-card); color: var(--text-primary); cursor: pointer;
+            font-size: .9rem; font-weight: 500; text-decoration: none; transition: all .15s; }
+.cms-tab:hover, .cms-tab.active {
+    background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.cms-section { display: none; }
+.cms-section.active { display: block; }
+
+.cms-card { background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 1.8rem; margin-bottom: 1.5rem; }
+.cms-card h3 { font-size: 1rem; font-weight: 600; margin: 0 0 1.2rem 0; color: var(--text-primary); }
+
+.form-group  { margin-bottom: 1.2rem; }
+.form-label  { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .4rem;
+               color: var(--text-secondary); }
+.form-control { width: 100%; padding: .65rem .9rem; border: 1.5px solid var(--border);
+                border-radius: 8px; font-size: .9rem; background: var(--bg-input);
+                color: var(--text-primary); box-sizing: border-box; transition: border-color .15s; }
+.form-control:focus { outline: none; border-color: var(--primary); }
+textarea.form-control { min-height: 130px; resize: vertical; font-family: inherit; line-height: 1.6; }
+
+.form-hint { font-size: .78rem; color: var(--text-tertiary); margin: .3rem 0 0 0; }
+
+.btn-row { display: flex; gap: .8rem; align-items: center; margin-top: 1.5rem; }
+.btn-primary { background: var(--primary); color: #fff; border: none; padding: .65rem 1.4rem;
+               border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+.btn-primary:hover { opacity: .88; }
+.btn-ghost { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border);
+             padding: .65rem 1.2rem; border-radius: 8px; font-size: .9rem; cursor: pointer;
+             text-decoration: none; transition: border-color .15s; }
+.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+.demo-toggle-card { border-left: 4px solid #f59e0b; }
+.demo-badge-preview { display: inline-block; background: #f59e0b; color: #fff;
+                       font-size: .72rem; font-weight: 700; padding: 2px 8px;
+                       border-radius: 12px; margin-left: .5rem; vertical-align: middle; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between;
+              gap: 1rem; flex-wrap: wrap; }
+.toggle-info h4 { margin: 0 0 .3rem 0; font-size: .95rem; }
+.toggle-info p  { margin: 0; font-size: .82rem; color: var(--text-secondary); }
+
+.switch { position: relative; display: inline-block; width: 52px; height: 28px; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; inset: 0; background: #ccc;
+          border-radius: 28px; transition: .3s; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px;
+                 left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: .3s; }
+input:checked + .slider { background: #f59e0b; }
+input:checked + .slider:before { transform: translateX(24px); }
+</style>
+
+<div class="cms-page">
+    <div class="cms-header">
+        <h2>✏️ Inhalte bearbeiten</h2>
+        <p>Login-Texte, Datenschutz, Impressum und Hinweistexte zentral pflegen.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="cms-tabs">
+        <a href="#" class="cms-tab active" onclick="showTab('login'); return false;">🔑 Login</a>
+        <a href="#" class="cms-tab" onclick="showTab('privacy'); return false;">🔐 Datenschutz</a>
+        <a href="#" class="cms-tab" onclick="showTab('imprint'); return false;">📄 Impressum</a>
+        <a href="#" class="cms-tab" onclick="showTab('hints'); return false;">💡 Hinweistexte</a>
+        <a href="#" class="cms-tab" onclick="showTab('demo'); return false;">🧪 Demo-Modus</a>
+        <a href="#" class="cms-tab" onclick="showTab('database'); return false;">🗄️ Datenbank</a>
+    </div>
+
+    <!-- ── LOGIN ─────────────────────────────────────────────────── -->
+    <div id="tab-login" class="cms-section active">
+        <form method="post" action="{{ url_for('admin_cms_save') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="login">
+            <div class="cms-card">
+                <h3>Login-Seite</h3>
+                <div class="form-group">
+                    <label class="form-label">Überschrift auf der Login-Seite</label>
+                    <input type="text" name="login_title" class="form-control"
+                           value="{{ cms.login_title or '' }}"
+                           placeholder="Willkommen im Buchungssystem">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Untertitel / Beschreibungstext</label>
+                    <input type="text" name="login_subtitle" class="form-control"
+                           value="{{ cms.login_subtitle or '' }}"
+                           placeholder="Melden Sie sich mit Ihrem IServ-Account an">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Hinweis-Box unterhalb des Login-Buttons <span style="font-weight:400;">(optional)</span></label>
+                    <textarea name="login_notice" class="form-control" placeholder="z.B. Nur für Lehrkräfte und Mitarbeitende.">{{ cms.login_notice or '' }}</textarea>
+                    <p class="form-hint">Wird als grauer Infoblock unter dem IServ-Button angezeigt. Leer lassen = ausgeblendet.</p>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── DATENSCHUTZ ────────────────────────────────────────────── -->
+    <div id="tab-privacy" class="cms-section">
+        <form method="post" action="{{ url_for('admin_cms_save') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="privacy">
+            <div class="cms-card">
+                <h3>Datenschutzerklärung</h3>
+                <div class="form-group">
+                    <label class="form-label">Vollständiger Text (HTML erlaubt)</label>
+                    <textarea name="privacy_text" class="form-control" style="min-height:320px;"
+                              placeholder="&lt;h4&gt;1. Verantwortlicher&lt;/h4&gt;&#10;&lt;p&gt;...&lt;/p&gt;">{{ cms.privacy_text or '' }}</textarea>
+                    <p class="form-hint">HTML-Tags wie &lt;h4&gt;, &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;a&gt; sind erlaubt.
+                       Leer lassen = Standard-Datenschutztext wird angezeigt.</p>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── IMPRESSUM ──────────────────────────────────────────────── -->
+    <div id="tab-imprint" class="cms-section">
+        <form method="post" action="{{ url_for('admin_cms_save') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="imprint">
+            <div class="cms-card">
+                <h3>Impressum</h3>
+                <div class="form-group">
+                    <label class="form-label">Impressumstext (HTML erlaubt)</label>
+                    <textarea name="imprint_text" class="form-control" style="min-height:280px;"
+                              placeholder="&lt;p&gt;Name der Schule&#10;Musterstraße 1&#10;12345 Musterstadt&lt;/p&gt;">{{ cms.imprint_text or '' }}</textarea>
+                    <p class="form-hint">Leer lassen = kein Impressums-Link im Footer.</p>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── HINWEISTEXTE ───────────────────────────────────────────── -->
+    <div id="tab-hints" class="cms-section">
+        <form method="post" action="{{ url_for('admin_cms_save') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="hints">
+            <div class="cms-card">
+                <h3>Dashboard-Hinweis</h3>
+                <div class="form-group">
+                    <label class="form-label">Info-Text oben im Dashboard <span style="font-weight:400;">(optional)</span></label>
+                    <textarea name="dashboard_notice" class="form-control"
+                              placeholder="z.B. Achtung: In der KW 22 findet kein Sport statt.">{{ cms.dashboard_notice or '' }}</textarea>
+                    <p class="form-hint">Wird als gelbe Info-Box ganz oben im Dashboard angezeigt. Leer = ausgeblendet.</p>
+                </div>
+            </div>
+            <div class="cms-card">
+                <h3>Buchungsformular-Hinweis</h3>
+                <div class="form-group">
+                    <label class="form-label">Hinweis im Buchungsformular <span style="font-weight:400;">(optional)</span></label>
+                    <textarea name="booking_notice" class="form-control"
+                              placeholder="z.B. Bitte nur Schüler aus Ihrem eigenen Klassenverband eintragen.">{{ cms.booking_notice or '' }}</textarea>
+                    <p class="form-hint">Wird im Buchungsformular als Hinweis-Box angezeigt. Leer = ausgeblendet.</p>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── DATENBANK ──────────────────────────────────────────────── -->
+    <div id="tab-database" class="cms-section">
+        <div class="cms-card" style="border-left:4px solid #6366f1;">
+            <h3>🗄️ Datenbank-Verbindung</h3>
+            <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.2rem;">
+                Die Datenbank-URL wird in der lokalen Datei <code>sportoase_local.json</code> gespeichert
+                und beim nächsten Start der App verwendet.
+                <strong>Nach dem Speichern muss die App neu gestartet werden.</strong>
+            </p>
+
+            {% if db_url_masked %}
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.85rem;">
+                ✅ Aktuell konfiguriert: <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;">{{ db_url_masked }}</code>
+            </div>
+            {% else %}
+            <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.85rem;">
+                ⚠️ Keine URL in lokaler Konfiguration – aktuell wird die Umgebungsvariable <code>DATABASE_URL</code> verwendet.
+            </div>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('admin_cms_save') }}" id="db-cms-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="section" value="database">
+                <div class="form-group">
+                    <label class="form-label">Neue Datenbank-URL</label>
+                    <input type="text" name="database_url" class="form-control"
+                           placeholder="postgresql://user:passwort@host:5432/datenbankname"
+                           autocomplete="off" spellcheck="false" id="cms-db-url">
+                    <p class="form-hint">Aus Sicherheitsgründen wird die aktuelle URL nicht angezeigt. Nur ausfüllen wenn du die URL ändern möchtest.</p>
+                </div>
+
+                <div id="cms-db-test-result" class="alert" style="display:none;margin-bottom:1rem;"></div>
+
+                <div class="btn-row">
+                    <button type="button" class="btn-ghost" onclick="testCmsDb()">🔌 Verbindung testen</button>
+                    <button type="submit" class="btn-primary">💾 Speichern & App neu starten</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="cms-card" style="border-left:4px solid #6b7280;">
+            <h3>Hinweise zur Datenbank</h3>
+            <ul style="font-size:.88rem;color:var(--text-secondary);line-height:2;padding-left:1.2rem;">
+                <li>Format: <code>postgresql://BENUTZER:PASSWORT@HOST:PORT/DATENBANKNAME</code></li>
+                <li>Unterstützt: PostgreSQL (Neon, Supabase, Render, Replit Database, eigener Server)</li>
+                <li>Bei <strong>Replit</strong>: Datenbank-URL automatisch als <code>DATABASE_URL</code> verfügbar – kein Eintrag hier nötig</li>
+                <li>Bei <strong>Render</strong>: Interne DB-URL aus dem Render-Dashboard kopieren</li>
+                <li>Die URL wird lokal in <code>sportoase_local.json</code> gespeichert (nicht in der Datenbank)</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ── DEMO-MODUS ─────────────────────────────────────────────── -->
+    <div id="tab-demo" class="cms-section">
+        <div class="cms-card demo-toggle-card">
+            <h3>🧪 Demo-Modus <span class="demo-badge-preview">DEMO</span></h3>
+            <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.5rem;">
+                Im Demo-Modus werden Beispiel-Buchungen angezeigt, E-Mails werden <strong>nicht</strong> versendet
+                und ein oranges Demo-Badge erscheint in der Navigationsleiste.
+                Ideal zum Testen oder Vorführen ohne echte Daten zu verändern.
+            </p>
+            <form method="post" action="{{ url_for('admin_cms_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="section" value="demo">
+                <div class="toggle-row">
+                    <div class="toggle-info">
+                        <h4>Demo-Modus {{ 'ist aktiv' if demo_mode else 'ist deaktiviert' }}</h4>
+                        <p>{{ 'Fake-Buchungen werden angezeigt, E-Mails werden unterdrückt.' if demo_mode else 'Normaler Betrieb. Echte Daten und E-Mails.' }}</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" name="demo_mode_enabled" onchange="this.form.submit()"
+                               {{ 'checked' if demo_mode else '' }}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+        <div class="cms-card" style="border-left:4px solid #6b7280;">
+            <h3>Was passiert im Demo-Modus?</h3>
+            <ul style="font-size:.88rem;color:var(--text-secondary);line-height:2;padding-left:1.2rem;">
+                <li>In der Wochenansicht werden <strong>3 Beispiel-Buchungen</strong> angezeigt</li>
+                <li>Neue Buchungen können <strong>nicht erstellt</strong> werden (Hinweis wird angezeigt)</li>
+                <li>E-Mails werden <strong>nicht verschickt</strong> (nur als Log ausgegeben)</li>
+                <li>Ein <strong>oranges DEMO-Badge</strong> erscheint in der Navigationsleiste</li>
+                <li>Alle bestehenden echten Daten bleiben <strong>unverändert</strong></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(name) {
+    document.querySelectorAll('.cms-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.cms-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+}
+
+async function testCmsDb() {
+    const url = document.getElementById('cms-db-url').value.trim();
+    const result = document.getElementById('cms-db-test-result');
+    if (!url) {
+        result.className = 'alert alert-error';
+        result.innerHTML = '❌ Bitte zuerst eine Datenbank-URL eingeben.';
+        result.style.display = 'flex';
+        return;
+    }
+    result.className = 'alert alert-info';
+    result.innerHTML = '⏳ Verbindung wird getestet...';
+    result.style.display = 'flex';
+    try {
+        const resp = await fetch('/setup/test-db', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({database_url: url})
+        });
+        const data = await resp.json();
+        result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-error');
+        result.innerHTML = (data.success ? '✅ ' : '❌ ') + data.message;
+    } catch (e) {
+        result.className = 'alert alert-error';
+        result.innerHTML = '❌ Netzwerkfehler: ' + e.message;
+    }
+    result.style.display = 'flex';
+}
+</script>
+{% endblock %}

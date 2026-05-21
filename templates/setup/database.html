@@ -1,0 +1,103 @@
+{% extends "setup/wizard_base.html" %}
+{% block title %}Datenbank{% endblock %}
+
+{% block card_content %}
+<div class="wizard-card-header">
+    <span class="step-icon">🗄️</span>
+    <h2>Datenbank-Verbindung</h2>
+    <p>Gib die Adresse deiner PostgreSQL-Datenbank ein. Die URL wird sicher lokal gespeichert und beim nächsten Start verwendet.</p>
+</div>
+
+<form method="post" id="db-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="wizard-card-body">
+
+    {% if db_configured %}
+    <div class="alert alert-success">
+        <span>✅</span>
+        <span>Aktuell konfiguriert: <code style="font-size:.82rem;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;">{{ db_url_masked }}</code><br>
+        Du kannst die URL unten ändern oder diesen Schritt überspringen.</span>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <span>ℹ️</span>
+        <span>Keine Datenbank-URL in der lokalen Konfiguration gefunden. Wird eine URL über <code>DATABASE_URL</code> Umgebungsvariable gesetzt, kann dieser Schritt übersprungen werden.</span>
+    </div>
+    {% endif %}
+
+    <div class="form-group">
+        <label class="form-label">Datenbank-URL <span class="req">*</span></label>
+        <input type="text" name="database_url" class="form-control" id="db_url"
+               placeholder="postgresql://user:passwort@host:5432/datenbankname"
+               autocomplete="off" spellcheck="false">
+        <p class="form-hint">Format: <code>postgresql://BENUTZER:PASSWORT@HOST:PORT/DATENBANKNAME</code><br>
+        Aus Sicherheitsgründen wird die aktuelle URL nicht erneut angezeigt. Nur ausfüllen, wenn du die URL ändern möchtest.</p>
+    </div>
+
+    <div id="db-test-result" class="alert" style="display:none;margin-top:0;margin-bottom:16px;"></div>
+
+    <div style="background:#f8f9fa;border-radius:12px;padding:18px;">
+        <p style="font-weight:600;margin-bottom:10px;font-size:.9rem;">🧪 Verbindung testen</p>
+        <button type="button" class="btn btn-ghost" onclick="testDb()" id="test-btn">
+            🔌 Verbindung testen
+        </button>
+        <p class="form-hint" style="margin-top:8px;">Testet die eingegebene URL, bevor du speicherst.</p>
+    </div>
+
+    <hr class="section-sep">
+
+    <div class="alert alert-warning">
+        <span>⚠️</span>
+        <span><strong>Hinweis:</strong> Nach dem Speichern einer neuen Datenbank-URL muss die App <strong>neu gestartet</strong> werden, damit die Verbindung aktiv wird. Alle bestehenden Tabellen werden beim Start automatisch erstellt.</span>
+    </div>
+
+</div>
+<div class="wizard-actions">
+    <a href="{{ url_for('setup.step', step_id=prev_step) }}" class="btn btn-ghost">← Zurück</a>
+    <div style="display:flex;gap:10px;">
+        <button type="submit" name="action" value="skip" class="btn btn-secondary">Überspringen</button>
+        <button type="submit" name="action" value="save" class="btn btn-primary">Speichern & Weiter →</button>
+    </div>
+</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function testDb() {
+    const btn = document.getElementById('test-btn');
+    const result = document.getElementById('db-test-result');
+    const url = document.getElementById('db_url').value.trim();
+
+    if (!url) {
+        result.className = 'alert alert-error';
+        result.innerHTML = '❌ Bitte zuerst eine Datenbank-URL eingeben.';
+        result.style.display = 'flex';
+        return;
+    }
+
+    btn.textContent = '⏳ Teste...';
+    btn.disabled = true;
+    result.style.display = 'none';
+
+    try {
+        const resp = await fetch('{{ url_for("setup.test_db") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({database_url: url})
+        });
+        const data = await resp.json();
+        result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-error');
+        result.innerHTML = (data.success ? '✅ ' : '❌ ') + data.message;
+        result.style.display = 'flex';
+    } catch (e) {
+        result.className = 'alert alert-error';
+        result.innerHTML = '❌ Netzwerkfehler: ' + e.message;
+        result.style.display = 'flex';
+    }
+
+    btn.textContent = '🔌 Verbindung testen';
+    btn.disabled = false;
+}
+</script>
+{% endblock %}

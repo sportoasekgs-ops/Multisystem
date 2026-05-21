@@ -84,16 +84,14 @@ def inject_csrf_token():
     return dict(csrf_token=generate_csrf_token())
 
 # Datenbank-Konfiguration
-db_uri = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
-
-# Strip whitespace from database URL (in case of accidental spaces)
-if db_uri:
-    db_uri = db_uri.strip()
+# Reihenfolge: lokale Datei (sportoase_local.json) → Env-Var DATABASE_URL
+from local_config import get_database_url, is_database_configured
+db_uri = get_database_url()
 
 if not db_uri:
     raise RuntimeError(
-        "Keine DB-URL gefunden. Bitte DATABASE_URL "
-        "oder SQLALCHEMY_DATABASE_URI setzen."
+        "Keine DB-URL gefunden. Bitte DATABASE_URL setzen "
+        "oder im Setup-Wizard konfigurieren."
     )
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
@@ -129,6 +127,7 @@ from dynamic_config import (
     seed_initial_data,
 )
 from email_service import send_booking_notification
+from demo_mode import is_demo_mode, get_demo_bookings_for_week
 
 # IServ OAuth-Integration initialisieren
 from oauth_config import init_oauth, determine_user_role
@@ -214,6 +213,16 @@ def _resolve_logo_url(filename, default='logo.png'):
 
 
 @app.context_processor
+def inject_demo_mode():
+    """Macht den Demo-Modus-Status in allen Templates verfügbar."""
+    try:
+        demo = is_demo_mode()
+    except Exception:
+        demo = False
+    return dict(demo_mode=demo)
+
+
+@app.context_processor
 def inject_branding():
     """Macht Branding-Variablen in allen Templates verfügbar."""
     try:
@@ -236,6 +245,10 @@ def inject_branding():
         'favicon_url': _resolve_logo_url(branding.get('favicon_filename', 'logo.png')),
         'primary_rgb': primary_rgb_comma,
         'primary_rgb_space': primary_rgb_space,
+        'cms_privacy_text': get_config('cms_privacy_text', ''),
+        'cms_imprint_text': get_config('cms_imprint_text', ''),
+        'dashboard_notice': get_config('dashboard_notice', ''),
+        'booking_notice':   get_config('booking_notice', ''),
     }
     return dict(branding=branding, **branding, **extra)
 
@@ -443,8 +456,14 @@ def iserv_embed_login():
 # Route: Login-Seite (nur IServ-Button)
 @app.route('/login')
 def login():
-    """Login-Seite - zeigt nur IServ-Login-Button"""
-    return render_template('login.html')
+    """Login-Seite - zeigt nur IServ-Login-Button, mit CMS-Texten"""
+    login_title    = get_config('login_title', '')
+    login_subtitle = get_config('login_subtitle', '')
+    login_notice   = get_config('login_notice', '')
+    return render_template('login.html',
+                           login_title=login_title,
+                           login_subtitle=login_subtitle,
+                           login_notice=login_notice)
 
 # Route: IServ SSO Login initiieren
 @app.route('/login/iserv')
@@ -1233,7 +1252,12 @@ def calendar_view(year=None, month=None):
 @login_required
 def book(date_str, period):
     """Seite zum Erstellen einer neuen Buchung"""
-    
+
+    # Im Demo-Modus sind keine echten Buchungen möglich
+    if is_demo_mode():
+        flash('Im Demo-Modus können keine Buchungen erstellt werden.', 'error')
+        return redirect(url_for('dashboard'))
+
     # Hole den Benutzernamen aus der Session für das Formular
     user_display_name = session.get('user_username', '')
     # Falls E-Mail als Username verwendet wird, extrahiere den Namen
@@ -2706,6 +2730,102 @@ def api_mark_all_notifications_read():
     return jsonify({
         'success': success
     })
+
+# ── Admin CMS: Inhalte bearbeiten ────────────────────────────────────────────
+
+@app.route('/admin/cms')
+@admin_required
+def admin_cms():
+    """CMS-Seite für Admin: Login-Texte, Datenschutz, Impressum, Hinweistexte, Demo-Modus"""
+    cms = {
+        'login_title':      get_config('login_title', ''),
+        'login_subtitle':   get_config('login_subtitle', ''),
+        'login_notice':     get_config('login_notice', ''),
+        'privacy_text':     get_config('cms_privacy_text', ''),
+        'imprint_text':     get_config('cms_imprint_text', ''),
+        'dashboard_notice': get_config('dashboard_notice', ''),
+        'booking_notice':   get_config('booking_notice', ''),
+    }
+    # DB-URL für Anzeige (maskiert)
+    from local_config import get_database_url as _get_db_url
+    _raw_db = _get_db_url() or ''
+    _db_masked = ''
+    if _raw_db:
+        try:
+            from urllib.parse import urlparse as _up
+            _p = _up(_raw_db)
+            _db_masked = _raw_db.replace(_p.password, '****') if _p.password else _raw_db
+        except Exception:
+            _db_masked = _raw_db[:20] + '...' if len(_raw_db) > 20 else _raw_db
+    return render_template('admin_cms.html', cms=cms, demo_mode=is_demo_mode(),
+                           db_url_masked=_db_masked)
+
+
+@app.route('/admin/cms/save', methods=['POST'])
+@admin_required
+def admin_cms_save():
+    """Speichert CMS-Inhalte"""
+    if not validate_csrf_token(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheitstoken.', 'error')
+        return redirect(url_for('admin_cms'))
+
+    section = request.form.get('section', '')
+
+    if section == 'login':
+        from system_config import set_configs
+        set_configs({
+            'login_title':    request.form.get('login_title', '').strip(),
+            'login_subtitle': request.form.get('login_subtitle', '').strip(),
+            'login_notice':   request.form.get('login_notice', '').strip(),
+        }, category='cms')
+        flash('Login-Texte gespeichert.', 'success')
+
+    elif section == 'privacy':
+        from system_config import set_config as _sc
+        _sc('cms_privacy_text', request.form.get('privacy_text', '').strip(), category='cms')
+        flash('Datenschutzerklärung gespeichert.', 'success')
+
+    elif section == 'imprint':
+        from system_config import set_config as _sc
+        _sc('cms_imprint_text', request.form.get('imprint_text', '').strip(), category='cms')
+        flash('Impressum gespeichert.', 'success')
+
+    elif section == 'hints':
+        from system_config import set_configs
+        set_configs({
+            'dashboard_notice': request.form.get('dashboard_notice', '').strip(),
+            'booking_notice':   request.form.get('booking_notice', '').strip(),
+        }, category='cms')
+        flash('Hinweistexte gespeichert.', 'success')
+
+    elif section == 'demo':
+        from system_config import set_config as _sc
+        enabled = 'demo_mode_enabled' in request.form
+        _sc('demo_mode', 'true' if enabled else 'false', category='system')
+        flash(f'Demo-Modus {"aktiviert" if enabled else "deaktiviert"}.', 'success')
+
+    elif section == 'database':
+        from local_config import set_database_url
+        db_url = request.form.get('database_url', '').strip()
+        if not db_url:
+            flash('Keine URL eingegeben – Datenbank-Konfiguration unverändert.', 'info')
+            return redirect(url_for('admin_cms') + '#tab-database')
+        # Verbindung testen
+        try:
+            import sqlalchemy as _sa
+            _engine = _sa.create_engine(db_url, connect_args={"connect_timeout": 8})
+            with _engine.connect() as _conn:
+                _conn.execute(_sa.text('SELECT 1'))
+            _engine.dispose()
+        except Exception as e:
+            flash(f'Verbindungstest fehlgeschlagen: {e}', 'error')
+            return redirect(url_for('admin_cms') + '#tab-database')
+        set_database_url(db_url)
+        flash('Datenbank-URL gespeichert. ✅ Bitte starte die App neu, damit die neue Verbindung aktiv wird.', 'success')
+        return redirect(url_for('admin_cms') + '#tab-database')
+
+    return redirect(url_for('admin_cms') + f'#tab-{section}')
+
 
 # Error-Handler für Production mit Fallback
 @app.errorhandler(404)

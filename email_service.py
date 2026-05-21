@@ -86,7 +86,14 @@ def get_resend_credentials():
 
 
 def send_email_resend(to_email, subject, body_html, body_text=None):
-    """Sendet E-Mail über Resend API"""
+    """Sendet E-Mail über Resend API – im Demo-Modus wird nichts verschickt."""
+    try:
+        from demo_mode import is_demo_mode, send_demo_email_log
+        if is_demo_mode():
+            return send_demo_email_log(to_email, subject)
+    except Exception:
+        pass
+
     logger = logging.getLogger(__name__)
 
     logger.info(f"Versuche E-Mail zu senden an: {to_email}")

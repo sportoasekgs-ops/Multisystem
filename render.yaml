@@ -17,20 +17,16 @@ services:
           property: connectionString
       - key: SESSION_SECRET
         generateValue: true
+      # IServ OAuth – manuell im Render-Dashboard eintragen
       - key: ISERV_CLIENT_ID
         sync: false
       - key: ISERV_CLIENT_SECRET
         sync: false
       - key: ISERV_DOMAIN
         value: kgs-pattensen.de
-      - key: SMTP_USER
+      # E-Mail via Resend – API-Key von resend.com eintragen
+      - key: RESEND_API_KEY
         sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: GOOGLE_CALENDAR_CREDENTIALS
-        sync: false
-      - key: GOOGLE_CALENDAR_ID
-        value: sportoase.kgs@gmail.com
 
 databases:
   - name: sportoase-db
