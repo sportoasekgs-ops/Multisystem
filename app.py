@@ -1156,6 +1156,14 @@ def dashboard():
             'is_selected': is_selected
         })
     
+    from system_config import get_config as _gc
+    _dashboard_title = _gc('dashboard_title', '').strip() or 'Buchungsübersicht SportOASE'
+    _help_content    = _gc('help_content', '').strip()
+    _contact_name    = _gc('contact_name', '').strip()
+    _contact_email   = _gc('contact_email', '').strip()
+    _contact_phone   = _gc('contact_phone', '').strip()
+    _contact_text    = _gc('contact_text', '').strip()
+
     return render_template('dashboard.html',
                          week_selector=week_selector,
                          selected_date=selected_date,
@@ -1173,7 +1181,13 @@ def dashboard():
                          next_week_date=next_week_monday.strftime('%Y-%m-%d'),
                          monday_date=monday.strftime('%d.%m.%Y'),
                          friday_date=friday.strftime('%d.%m.%Y'),
-                         max_students=get_max_students())
+                         max_students=get_max_students(),
+                         dashboard_title=_dashboard_title,
+                         help_content=_help_content,
+                         contact_name=_contact_name,
+                         contact_email=_contact_email,
+                         contact_phone=_contact_phone,
+                         contact_text=_contact_text)
 
 # Route: Kalenderansicht (Monats-/Jahresübersicht)
 @app.route('/calendar')
@@ -2815,6 +2829,21 @@ def admin_cms():
         'imprint_text':     get_config('cms_imprint_text', ''),
         'dashboard_notice': get_config('dashboard_notice', ''),
         'booking_notice':   get_config('booking_notice', ''),
+        'dashboard_title':  get_config('dashboard_title', ''),
+        'help_content':     get_config('help_content', ''),
+        'contact_name':     get_config('contact_name', ''),
+        'contact_email':    get_config('contact_email', ''),
+        'contact_phone':    get_config('contact_phone', ''),
+        'contact_text':     get_config('contact_text', ''),
+        'logo_filename':    get_config('logo_filename', 'logo.png'),
+        'favicon_filename': get_config('favicon_filename', 'logo.png'),
+        'primary_color':    get_config('primary_color', '#E91E63'),
+        'smtp_host':        get_config('smtp_host', ''),
+        'smtp_port':        get_config('smtp_port', '587'),
+        'smtp_user':        get_config('smtp_user', ''),
+        'smtp_tls':         get_config('smtp_tls', 'starttls'),
+        'smtp_from':        get_config('smtp_from', ''),
+        'admin_email':      get_config('admin_email', ''),
     }
     # DB-URL für Anzeige (maskiert)
     from local_config import get_database_url as _get_db_url
@@ -2867,6 +2896,71 @@ def admin_cms_save():
             'booking_notice':   request.form.get('booking_notice', '').strip(),
         }, category='cms')
         flash('Hinweistexte gespeichert.', 'success')
+
+    elif section == 'branding':
+        import os as _os
+        from system_config import set_configs as _scs, set_config as _sc2
+        _ALLOWED = {'.png', '.jpg', '.jpeg', '.svg', '.webp'}
+        _os.makedirs(_os.path.join('static', 'uploads'), exist_ok=True)
+
+        logo_filename = get_config('logo_filename', 'logo.png')
+        if 'logo_file' in request.files:
+            f = request.files['logo_file']
+            if f and f.filename:
+                ext = _os.path.splitext(f.filename)[1].lower()
+                if ext in _ALLOWED:
+                    logo_filename = f'custom_logo{ext}'
+                    f.save(_os.path.join('static', 'uploads', logo_filename))
+                else:
+                    flash('Logo: Nur PNG, JPG, SVG oder WebP erlaubt.', 'error')
+
+        favicon_filename = get_config('favicon_filename', 'logo.png')
+        if 'favicon_file' in request.files:
+            f = request.files['favicon_file']
+            if f and f.filename:
+                ext = _os.path.splitext(f.filename)[1].lower()
+                if ext in _ALLOWED:
+                    favicon_filename = f'custom_favicon{ext}'
+                    f.save(_os.path.join('static', 'uploads', favicon_filename))
+                else:
+                    flash('Favicon: Nur PNG, JPG, SVG oder WebP erlaubt.', 'error')
+
+        primary_color = request.form.get('primary_color', '#E91E63').strip()
+        _scs({
+            'logo_filename':    logo_filename,
+            'favicon_filename': favicon_filename,
+            'primary_color':    primary_color,
+        }, category='branding')
+        flash('Branding gespeichert. ✅', 'success')
+
+    elif section == 'dashboard':
+        from system_config import set_configs
+        set_configs({
+            'dashboard_title': request.form.get('dashboard_title', '').strip(),
+            'help_content':    request.form.get('help_content', '').strip(),
+            'contact_name':    request.form.get('contact_name', '').strip(),
+            'contact_email':   request.form.get('contact_email', '').strip(),
+            'contact_phone':   request.form.get('contact_phone', '').strip(),
+            'contact_text':    request.form.get('contact_text', '').strip(),
+        }, category='cms')
+        flash('Dashboard-Inhalte gespeichert.', 'success')
+
+    elif section == 'smtp':
+        from system_config import set_configs
+        set_configs({
+            'smtp_host':   request.form.get('smtp_host', '').strip(),
+            'smtp_port':   request.form.get('smtp_port', '587').strip(),
+            'smtp_user':   request.form.get('smtp_user', '').strip(),
+            'smtp_tls':    request.form.get('smtp_tls', 'starttls').strip(),
+            'smtp_from':   request.form.get('smtp_from', '').strip(),
+            'admin_email': request.form.get('admin_email', '').strip(),
+        }, category='smtp')
+        # Passwort nur speichern wenn ausgefüllt
+        new_pass = request.form.get('smtp_pass', '').strip()
+        if new_pass:
+            from system_config import set_config as _sc
+            _sc('smtp_pass', new_pass, category='smtp')
+        flash('SMTP-Konfiguration gespeichert.', 'success')
 
     elif section == 'demo':
         from system_config import set_config as _sc
@@ -2929,8 +3023,8 @@ def admin_factory_reset():
             BlockedSlot.query.delete()
 
             if mode == 'full':
-                # Alle Nutzer außer dem lokalen Admin löschen
-                User.query.filter(User.username != 'sportoase').delete()
+                # Alle Nutzer löschen (kein hardcodierter Admin mehr)
+                User.query.delete()
                 # Alle Konfiguration außer Datenbank-URL löschen
                 SystemConfig.query.filter(SystemConfig.category != 'database').delete()
                 # Kurse, Stunden, Schulklassen, Slot-Namen löschen
@@ -2945,7 +3039,10 @@ def admin_factory_reset():
                 # Standardwerte neu einsäen
                 from dynamic_config import seed_initial_data
                 seed_initial_data()
-                flash('✅ Vollständiger Werksreset abgeschlossen. Alle Daten gelöscht, Standardwerte wiederhergestellt.', 'success')
+                # Session leeren, da der Admin-User gelöscht wurde
+                session.clear()
+                flash('✅ Vollständiger Werksreset abgeschlossen. Bitte lege jetzt einen neuen Admin-Account an.', 'success')
+                return redirect(url_for('setup.step', step_id='admin'))
             else:
                 flash('✅ Buchungsdaten erfolgreich gelöscht (Benutzer & Konfiguration bleiben erhalten).', 'success')
 

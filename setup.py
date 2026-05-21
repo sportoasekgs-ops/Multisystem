@@ -17,6 +17,7 @@ STEPS = [
     {'id': 'branding', 'title': 'Design & Branding',  'icon': '🎨'},
     {'id': 'smtp',     'title': 'E-Mail / SMTP',      'icon': '📧'},
     {'id': 'iserv',    'title': 'IServ OAuth',         'icon': '🔐'},
+    {'id': 'admin',    'title': 'Admin-Account',       'icon': '👤'},
     {'id': 'complete', 'title': 'Abgeschlossen',       'icon': '✅'},
 ]
 
@@ -170,7 +171,7 @@ def _handle_post(step_id):
         action = request.form.get('action', 'save')
         if action == 'skip':
             flash('IServ-Konfiguration übersprungen. Kann später eingerichtet werden.', 'info')
-            return redirect(url_for('setup.step', step_id='complete'))
+            return redirect(url_for('setup.step', step_id='admin'))
 
         iserv_domain        = request.form.get('iserv_domain', '').strip()
         iserv_client_id     = request.form.get('iserv_client_id', '').strip()
@@ -196,6 +197,54 @@ def _handle_post(step_id):
             os.environ['ADMIN_EMAIL'] = admin_email
 
         flash('IServ-Konfiguration gespeichert. Bitte starte die App neu, damit OAuth aktiv wird.', 'success')
+        return redirect(url_for('setup.step', step_id='admin'))
+
+    elif step_id == 'admin':
+        action = request.form.get('action', 'save')
+        if action == 'skip':
+            flash('Admin-Account übersprungen – bitte stelle sicher, dass ein Admin-Zugang vorhanden ist.', 'info')
+            return redirect(url_for('setup.step', step_id='complete'))
+
+        username = request.form.get('admin_username', '').strip()
+        password = request.form.get('admin_password', '').strip()
+        password2 = request.form.get('admin_password2', '').strip()
+        email = request.form.get('admin_email_local', '').strip()
+
+        if not username or not password:
+            flash('Benutzername und Passwort sind erforderlich.', 'error')
+            return redirect(url_for('setup.step', step_id='admin'))
+
+        if password != password2:
+            flash('Die Passwörter stimmen nicht überein.', 'error')
+            return redirect(url_for('setup.step', step_id='admin'))
+
+        if len(password) < 8:
+            flash('Das Passwort muss mindestens 8 Zeichen lang sein.', 'error')
+            return redirect(url_for('setup.step', step_id='admin'))
+
+        try:
+            from models import User, create_user
+            from database import db
+
+            existing = User.query.filter_by(username=username).first()
+            if existing:
+                existing.set_password(password)
+                existing.role = 'admin'
+                if email:
+                    existing.email = email
+                db.session.commit()
+                flash(f'Admin-Account "{username}" wurde aktualisiert.', 'success')
+            else:
+                user_id = create_user(username, password, 'admin', email or None)
+                if user_id:
+                    flash(f'Admin-Account "{username}" erfolgreich erstellt.', 'success')
+                else:
+                    flash('Fehler beim Erstellen des Admin-Accounts.', 'error')
+                    return redirect(url_for('setup.step', step_id='admin'))
+        except Exception as e:
+            flash(f'Fehler: {e}', 'error')
+            return redirect(url_for('setup.step', step_id='admin'))
+
         return redirect(url_for('setup.step', step_id='complete'))
 
     elif step_id == 'complete':
@@ -264,6 +313,11 @@ def _get_step_config(step_id):
             'iserv_client_secret': get_config('iserv_client_secret', os.environ.get('ISERV_CLIENT_SECRET', '')),
             'iserv_admin_email':   get_config('iserv_admin_email', os.environ.get('ADMIN_EMAIL', '')),
         }
+    elif step_id == 'admin':
+        from models import User
+        admins = User.query.filter_by(role='admin').all()
+        existing_admins = [{'username': u.username, 'email': u.email or ''} for u in admins]
+        return {'existing_admins': existing_admins}
     elif step_id == 'complete':
         return {
             'school_name':     get_config('school_name', 'Ihre Einrichtung'),
@@ -282,11 +336,22 @@ def test_smtp():
     """Sendet eine Test-E-Mail über die eingegebenen SMTP-Daten."""
     data = request.get_json(silent=True) or {}
     host      = data.get('smtp_host', '').strip()
-    port      = int(data.get('smtp_port', 587))
+    port      = int(data.get('smtp_port', 587) or 587)
     user      = data.get('smtp_user', '').strip()
     password  = data.get('smtp_pass', '').strip()
     tls_mode  = data.get('smtp_tls', 'starttls')
-    recipient = data.get('test_email', user).strip()
+    recipient = (data.get('test_email', '') or '').strip() or user
+
+    # Wenn kein Passwort eingegeben, gespeichertes aus DB verwenden
+    if not password and data.get('use_saved_pass'):
+        password = get_config('smtp_pass', '').strip()
+    # Wenn kein Host/User/Port vom Client, aus DB laden
+    if not host:
+        host = get_config('smtp_host', '').strip()
+    if not user:
+        user = get_config('smtp_user', '').strip()
+    if not password:
+        password = get_config('smtp_pass', '').strip()
 
     if not host or not user or not password:
         return jsonify({'success': False, 'message': 'Host, Benutzer und Passwort sind erforderlich.'})

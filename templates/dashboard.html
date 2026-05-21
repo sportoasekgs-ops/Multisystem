@@ -20,7 +20,7 @@
     <div class="dashboard-top-section">
         <div class="dashboard-card dashboard-card-title">
             <span class="card-icon">📅</span>
-            <span class="card-text">Buchungsübersicht SportOASE</span>
+            <span class="card-text">{{ dashboard_title }}</span>
         </div>
         
         <div class="dashboard-card dashboard-card-date">
@@ -43,6 +43,9 @@
             <span class="toggle-arrow">▼</span>
         </summary>
         <div class="help-content">
+        {% if help_content %}
+            {{ help_content | safe }}
+        {% else %}
             <div class="help-grid">
                 <!-- Schnellanleitung -->
                 <div class="help-card">
@@ -422,6 +425,7 @@
                     </div>
                 </div>
             </div>
+        {% endif %}
         </div>
     </details>
 
@@ -848,10 +852,17 @@
             />
             <div class="contact-text">
                 <p>
-                    Bei dringenden Anliegen bin ich direkt via E-Mail:
-                    <strong>morelli.maurizio@kgs-pattensen.de</strong> und
-                    telefonisch unter:
-                    <strong>0160 5788232</strong> erreichbar.
+                    {{ contact_text or 'Bei dringenden Anliegen bin ich direkt erreichbar:' }}
+                    {% if contact_email %}
+                        via E-Mail: <strong><a href="mailto:{{ contact_email }}" style="color:inherit;">{{ contact_email }}</a></strong>
+                        {% if contact_phone %} und telefonisch unter: <strong>{{ contact_phone }}</strong>{% endif %}
+                    {% elif contact_phone %}
+                        telefonisch unter: <strong>{{ contact_phone }}</strong>
+                    {% else %}
+                        via E-Mail: <strong>morelli.maurizio@kgs-pattensen.de</strong> und
+                        telefonisch unter: <strong>0160 5788232</strong>
+                    {% endif %}
+                    {% if contact_name %}<br><small style="opacity:.75;">– {{ contact_name }}</small>{% endif %}
                 </p>
             </div>
         </div>

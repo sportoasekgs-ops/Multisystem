@@ -107,14 +107,12 @@ SportOase Buchungssystem is a web-based booking management system for the school
 
 ## E-Mail Service
 
-E-Mails werden über **Resend** versendet.
+E-Mails werden ausschließlich über **SMTP** versendet (kein Resend).
 
-**In Replit:** Automatisch über Replit Connector
+Konfiguration im Admin-CMS unter dem Tab „SMTP" oder im Setup-Wizard (Schritt „E-Mail / SMTP").
+Alle SMTP-Einstellungen werden in der Datenbank gespeichert und sind auf Replit und Render identisch.
 
-**In Render:** Environment Variables setzen:
-- `RESEND_API_KEY` - Resend API-Key (von resend.com)
-
-Absender: `SportOase <onboarding@resend.dev>` (Resend Test-Adresse, keine Domain-Verifizierung nötig)
+Absender-Adresse wird im SMTP-Tab frei konfiguriert.
 
 ## Deployment
 

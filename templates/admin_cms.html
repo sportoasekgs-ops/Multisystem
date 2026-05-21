@@ -70,11 +70,239 @@ input:checked + .slider:before { transform: translateX(24px); }
     <!-- Tabs -->
     <div class="cms-tabs">
         <a href="#" class="cms-tab active" onclick="showTab('login'); return false;">🔑 Login</a>
+        <a href="#" class="cms-tab" onclick="showTab('dashboard'); return false;">📅 Dashboard</a>
+        <a href="#" class="cms-tab" onclick="showTab('branding'); return false;">🎨 Branding</a>
+        <a href="#" class="cms-tab" onclick="showTab('smtp'); return false;">📧 SMTP</a>
         <a href="#" class="cms-tab" onclick="showTab('privacy'); return false;">🔐 Datenschutz</a>
         <a href="#" class="cms-tab" onclick="showTab('imprint'); return false;">📄 Impressum</a>
         <a href="#" class="cms-tab" onclick="showTab('hints'); return false;">💡 Hinweistexte</a>
         <a href="#" class="cms-tab" onclick="showTab('demo'); return false;">🧪 Demo-Modus</a>
         <a href="#" class="cms-tab" onclick="showTab('database'); return false;">🗄️ Datenbank</a>
+    </div>
+
+    <!-- ── DASHBOARD ────────────────────────────────────────────── -->
+    <div id="tab-dashboard" class="cms-section">
+        <form method="post" action="{{ url_for('admin_cms_save') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="dashboard">
+            <div class="cms-card">
+                <h3>Dashboard-Titel</h3>
+                <div class="form-group">
+                    <label class="form-label">Überschrift in der Dashboard-Kopfzeile</label>
+                    <input type="text" name="dashboard_title" class="form-control"
+                           value="{{ cms.dashboard_title or '' }}"
+                           placeholder="Buchungsübersicht SportOASE">
+                    <p class="form-hint">Leer lassen = Standardtext "Buchungsübersicht SportOASE" wird verwendet.</p>
+                </div>
+            </div>
+            <div class="cms-card">
+                <h3>Anleitung & FAQ (aufklappbarer Bereich)</h3>
+                <div class="form-group">
+                    <label class="form-label">Inhalt des Anleitung-Bereichs (HTML erlaubt)</label>
+                    <textarea name="help_content" class="form-control" style="min-height:400px;font-family:monospace;font-size:.82rem;"
+                              placeholder="&lt;div class=&quot;help-grid&quot;&gt;&#10;  &lt;div class=&quot;help-card&quot;&gt;&#10;    &lt;h4&gt;🚀 Schnellanleitung&lt;/h4&gt;&#10;    ...&#10;  &lt;/div&gt;&#10;&lt;/div&gt;">{{ cms.help_content or '' }}</textarea>
+                    <p class="form-hint">
+                        HTML-Tags sind erlaubt. Leer lassen = der eingebaute Standard-Hilfetext wird angezeigt.<br>
+                        Du kannst die bestehende Struktur mit <code>&lt;div class="help-grid"&gt;</code>, <code>&lt;div class="help-card"&gt;</code> etc. verwenden.
+                    </p>
+                </div>
+            </div>
+            <div class="cms-card">
+                <h3>Kontakt-Box (Footer unter der Wochenübersicht)</h3>
+                <div class="form-group">
+                    <label class="form-label">Name / Ansprechperson</label>
+                    <input type="text" name="contact_name" class="form-control"
+                           value="{{ cms.contact_name or '' }}"
+                           placeholder="z.B. Mauro Morelli">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label">E-Mail-Adresse</label>
+                        <input type="email" name="contact_email" class="form-control"
+                               value="{{ cms.contact_email or '' }}"
+                               placeholder="z.B. morelli.maurizio@kgs-pattensen.de">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telefonnummer</label>
+                        <input type="text" name="contact_phone" class="form-control"
+                               value="{{ cms.contact_phone or '' }}"
+                               placeholder="z.B. 0160 5788232">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Einleitungstext vor den Kontaktdaten</label>
+                    <input type="text" name="contact_text" class="form-control"
+                           value="{{ cms.contact_text or '' }}"
+                           placeholder="z.B. Bei dringenden Anliegen bin ich direkt erreichbar:">
+                    <p class="form-hint">Leer lassen = Standardtext wird verwendet. Logo wird aus dem Branding-Tab genommen.</p>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── BRANDING ─────────────────────────────────────────────── -->
+    <div id="tab-branding" class="cms-section">
+        <form method="post" action="{{ url_for('admin_cms_save') }}"
+              enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="branding">
+
+            <!-- Logo -->
+            <div class="cms-card">
+                <h3>🖼️ Logo</h3>
+                <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.2rem;flex-wrap:wrap;">
+                    <img id="logo-preview"
+                         src="{{ logo_url }}"
+                         alt="Aktuelles Logo"
+                         style="height:64px;width:auto;border-radius:10px;border:1px solid var(--border);background:#f8fafc;padding:6px;object-fit:contain;">
+                    <div>
+                        <p style="margin:0 0 .3rem 0;font-size:.85rem;font-weight:600;color:var(--text-secondary);">Aktuelles Logo</p>
+                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">{{ cms.logo_filename or 'logo.png' }}</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Neues Logo hochladen</label>
+                    <input type="file" name="logo_file" id="logo-file-input"
+                           class="form-control" accept=".png,.jpg,.jpeg,.svg,.webp"
+                           onchange="previewImg(this, 'logo-preview')">
+                    <p class="form-hint">Erlaubt: PNG, JPG, SVG, WebP. Empfohlen: quadratisch oder Querformat, min. 200×200 px.</p>
+                </div>
+            </div>
+
+            <!-- Favicon -->
+            <div class="cms-card">
+                <h3>🔖 Favicon (Browser-Tab-Icon)</h3>
+                <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.2rem;flex-wrap:wrap;">
+                    <img id="favicon-preview"
+                         src="{{ favicon_url }}"
+                         alt="Aktuelles Favicon"
+                         style="height:40px;width:40px;border-radius:6px;border:1px solid var(--border);background:#f8fafc;padding:4px;object-fit:contain;">
+                    <div>
+                        <p style="margin:0 0 .3rem 0;font-size:.85rem;font-weight:600;color:var(--text-secondary);">Aktuelles Favicon</p>
+                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">{{ cms.favicon_filename or 'logo.png' }}</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Neues Favicon hochladen</label>
+                    <input type="file" name="favicon_file" id="favicon-file-input"
+                           class="form-control" accept=".png,.jpg,.jpeg,.svg,.webp"
+                           onchange="previewImg(this, 'favicon-preview')">
+                    <p class="form-hint">Erlaubt: PNG, JPG, SVG, WebP. Empfohlen: quadratisch, mind. 32×32 px.</p>
+                </div>
+            </div>
+
+            <!-- Farbe -->
+            <div class="cms-card">
+                <h3>🎨 Hauptfarbe</h3>
+                <div class="form-group">
+                    <label class="form-label">Primärfarbe (Buttons, Akzente)</label>
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <input type="color" name="primary_color" id="primary-color-pick"
+                               value="{{ cms.primary_color or '#E91E63' }}"
+                               style="width:54px;height:40px;border:1.5px solid var(--border);border-radius:8px;padding:2px;cursor:pointer;background:none;"
+                               oninput="document.getElementById('primary-color-hex').value=this.value">
+                        <input type="text" id="primary-color-hex"
+                               value="{{ cms.primary_color or '#E91E63' }}"
+                               placeholder="#E91E63"
+                               style="width:110px;"
+                               class="form-control"
+                               oninput="syncColor(this, 'primary-color-pick')">
+                        <span style="font-size:.82rem;color:var(--text-tertiary);">Standard: #E91E63 (SportOase Pink)</span>
+                    </div>
+                    <p class="form-hint">Ändert die Akzentfarbe in der gesamten App (Buttons, Links, Kopfzeilen).</p>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Branding speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── SMTP ──────────────────────────────────────────────────── -->
+    <div id="tab-smtp" class="cms-section">
+        <form method="post" action="{{ url_for('admin_cms_save') }}" id="smtp-cms-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="smtp">
+            <div class="cms-card">
+                <h3>SMTP-Konfiguration</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.2rem;">
+                    E-Mails werden ausschließlich über SMTP versendet. Kein Resend oder externes Dienst.
+                </p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label">SMTP-Host</label>
+                        <input type="text" name="smtp_host" id="cms-smtp-host" class="form-control"
+                               value="{{ cms.smtp_host or '' }}" placeholder="z.B. mail.schule.de">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">SMTP-Port</label>
+                        <input type="number" name="smtp_port" id="cms-smtp-port" class="form-control"
+                               value="{{ cms.smtp_port or '587' }}" placeholder="587">
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label">SMTP-Benutzername</label>
+                        <input type="text" name="smtp_user" id="cms-smtp-user" class="form-control"
+                               value="{{ cms.smtp_user or '' }}" placeholder="z.B. buchung@schule.de" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">SMTP-Passwort</label>
+                        <input type="password" name="smtp_pass" id="cms-smtp-pass" class="form-control"
+                               placeholder="{% if cms.smtp_host %}•••••••• (gespeichert){% else %}Passwort eingeben{% endif %}"
+                               autocomplete="new-password">
+                        <p class="form-hint">Leer lassen = bisheriges Passwort bleibt erhalten.</p>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Verschlüsselung</label>
+                        <select name="smtp_tls" id="cms-smtp-tls" class="form-control" onchange="cmsSslPort()">
+                            <option value="starttls" {% if cms.smtp_tls == 'starttls' or not cms.smtp_tls %}selected{% endif %}>STARTTLS (Port 587)</option>
+                            <option value="ssl" {% if cms.smtp_tls == 'ssl' %}selected{% endif %}>SSL/TLS (Port 465)</option>
+                            <option value="none" {% if cms.smtp_tls == 'none' %}selected{% endif %}>Keine (Port 25)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Absender-E-Mail</label>
+                        <input type="email" name="smtp_from" id="cms-smtp-from" class="form-control"
+                               value="{{ cms.smtp_from or '' }}" placeholder="z.B. buchung@schule.de">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Admin-E-Mail (Buchungsbenachrichtigungen gehen an diese Adresse)</label>
+                    <input type="email" name="admin_email" class="form-control"
+                           value="{{ cms.admin_email or '' }}" placeholder="z.B. admin@schule.de">
+                </div>
+            </div>
+
+            <div class="cms-card" style="border-left:4px solid #3b82f6;">
+                <h3>🧪 SMTP-Verbindung testen</h3>
+                <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+                        <label class="form-label">Test-E-Mail senden an</label>
+                        <input type="email" id="cms-test-email" class="form-control"
+                               value="{{ cms.smtp_user or '' }}" placeholder="test@schule.de">
+                    </div>
+                    <button type="button" class="btn-ghost" onclick="testCmsSmtp()" id="cms-smtp-test-btn"
+                            style="height:42px;flex-shrink:0;padding:.65rem 1.2rem;">
+                        📨 Testen
+                    </button>
+                </div>
+                <div id="cms-smtp-test-result" class="alert" style="display:none;margin-top:1rem;"></div>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
     </div>
 
     <!-- ── LOGIN ─────────────────────────────────────────────────── -->
@@ -281,6 +509,55 @@ function showTab(name) {
     event.target.classList.add('active');
 }
 
+function cmsSslPort() {
+    const tls = document.getElementById('cms-smtp-tls').value;
+    const port = document.getElementById('cms-smtp-port');
+    if (tls === 'ssl')       port.value = 465;
+    else if (tls === 'none') port.value = 25;
+    else                     port.value = 587;
+}
+
+async function testCmsSmtp() {
+    const btn    = document.getElementById('cms-smtp-test-btn');
+    const result = document.getElementById('cms-smtp-test-result');
+    btn.textContent = '⏳ Teste...';
+    btn.disabled = true;
+    result.style.display = 'none';
+
+    const payload = {
+        smtp_host:  document.getElementById('cms-smtp-host').value,
+        smtp_port:  document.getElementById('cms-smtp-port').value,
+        smtp_user:  document.getElementById('cms-smtp-user').value,
+        smtp_pass:  document.getElementById('cms-smtp-pass').value,
+        smtp_tls:   document.getElementById('cms-smtp-tls').value,
+        test_email: document.getElementById('cms-test-email').value,
+    };
+
+    // Wenn Passwort leer, aus der gespeicherten Config holen
+    if (!payload.smtp_pass) {
+        payload.use_saved_pass = true;
+    }
+
+    try {
+        const resp = await fetch('{{ url_for("setup.test_smtp") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-error');
+        result.innerHTML = (data.success ? '✅ ' : '❌ ') + data.message;
+        result.style.display = 'flex';
+    } catch (e) {
+        result.className = 'alert alert-error';
+        result.innerHTML = '❌ Netzwerkfehler: ' + e.message;
+        result.style.display = 'flex';
+    }
+
+    btn.textContent = '📨 Testen';
+    btn.disabled = false;
+}
+
 async function testCmsDb() {
     const url = document.getElementById('cms-db-url').value.trim();
     const result = document.getElementById('cms-db-test-result');
@@ -308,5 +585,35 @@ async function testCmsDb() {
     }
     result.style.display = 'flex';
 }
+
+function previewImg(input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => preview.src = e.target.result;
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function syncColor(hexInput, pickerId) {
+    const val = hexInput.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+        document.getElementById(pickerId).value = val;
+    }
+}
+
+// Hash-basiertes Tab-Routing beim Laden
+(function() {
+    const hash = window.location.hash.replace('#tab-', '');
+    const valid = ['login','dashboard','branding','smtp','privacy','imprint','hints','demo','database'];
+    if (valid.includes(hash)) {
+        document.querySelectorAll('.cms-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.cms-tab').forEach(t => t.classList.remove('active'));
+        const sec = document.getElementById('tab-' + hash);
+        if (sec) sec.classList.add('active');
+        const tabs = document.querySelectorAll('.cms-tab');
+        tabs.forEach(t => { if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + hash + "'")) t.classList.add('active'); });
+    }
+})();
 </script>
 {% endblock %}

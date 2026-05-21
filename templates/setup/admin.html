@@ -1,0 +1,98 @@
+{% extends "setup/wizard_base.html" %}
+{% block title %}Admin-Account{% endblock %}
+
+{% block card_content %}
+<div class="wizard-card-header">
+    <span class="step-icon">👤</span>
+    <h2>Admin-Account anlegen</h2>
+    <p>Erstelle einen lokalen Administrator-Account für den Zugang ohne IServ. Dieser Account kann sich unter <code>/login/local</code> einloggen.</p>
+</div>
+
+<form method="post" id="admin-form">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<div class="wizard-card-body">
+
+    {% if existing_admins %}
+    <div class="alert alert-info" style="margin-bottom:1.5rem;">
+        <span>ℹ️</span>
+        <div>
+            <strong>Bestehende Admin-Accounts:</strong>
+            <ul style="margin:.5rem 0 0 0;padding-left:1.2rem;">
+            {% for a in existing_admins %}
+                <li><strong>{{ a.username }}</strong>{% if a.email %} ({{ a.email }}){% endif %}</li>
+            {% endfor %}
+            </ul>
+            <p style="margin:.5rem 0 0 0;font-size:.85rem;">Du kannst ein neues Konto erstellen oder ein bestehendes aktualisieren (gleicher Benutzername).</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info" style="margin-bottom:1.5rem;">
+        <span>ℹ️</span>
+        <span>Noch kein lokaler Admin-Account vorhanden. Bitte einen anlegen oder diesen Schritt überspringen, wenn IServ OAuth konfiguriert ist.</span>
+    </div>
+    {% endif %}
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Benutzername *</label>
+            <input type="text" name="admin_username" class="form-control"
+                   placeholder="z.B. admin" autocomplete="off" required>
+            <p class="form-hint">Nur Buchstaben, Zahlen und Unterstriche</p>
+        </div>
+        <div class="form-group">
+            <label class="form-label">E-Mail-Adresse <span style="font-weight:400;">(optional)</span></label>
+            <input type="email" name="admin_email_local" class="form-control"
+                   placeholder="z.B. admin@schule.de" autocomplete="off">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label">Passwort * <span style="font-weight:400;">(min. 8 Zeichen)</span></label>
+            <input type="password" name="admin_password" id="pw1" class="form-control"
+                   placeholder="••••••••" autocomplete="new-password" required
+                   oninput="checkPw()">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Passwort wiederholen *</label>
+            <input type="password" name="admin_password2" id="pw2" class="form-control"
+                   placeholder="••••••••" autocomplete="new-password" required
+                   oninput="checkPw()">
+            <p class="form-hint" id="pw-hint" style="display:none;color:#e53e3e;">Passwörter stimmen nicht überein.</p>
+        </div>
+    </div>
+
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:1rem 1.2rem;margin-top:1rem;font-size:.85rem;">
+        <strong>🔐 Login-URL für lokale Admins:</strong><br>
+        <code style="background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px;">/login/local</code>
+        – dieser Zugang ist unabhängig von IServ und immer verfügbar.
+    </div>
+
+</div>
+<div class="wizard-actions">
+    <a href="{{ url_for('setup.step', step_id=prev_step) }}" class="btn btn-ghost">← Zurück</a>
+    <div style="display:flex;gap:10px;">
+        <button type="submit" name="action" value="skip" class="btn btn-secondary">Überspringen</button>
+        <button type="submit" name="action" value="save" class="btn btn-primary" id="save-btn">👤 Account erstellen →</button>
+    </div>
+</div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function checkPw() {
+    const pw1 = document.getElementById('pw1').value;
+    const pw2 = document.getElementById('pw2').value;
+    const hint = document.getElementById('pw-hint');
+    const btn = document.getElementById('save-btn');
+    if (pw2.length > 0 && pw1 !== pw2) {
+        hint.style.display = 'block';
+        btn.disabled = true;
+    } else {
+        hint.style.display = 'none';
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

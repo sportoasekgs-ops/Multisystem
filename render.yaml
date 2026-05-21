@@ -24,9 +24,6 @@ services:
         sync: false
       - key: ISERV_DOMAIN
         value: kgs-pattensen.de
-      # E-Mail via Resend – API-Key von resend.com eintragen
-      - key: RESEND_API_KEY
-        sync: false
 
 databases:
   - name: sportoase-db
