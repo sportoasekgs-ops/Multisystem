@@ -103,7 +103,9 @@ def reinit_oauth(app, oauth_instance):
 
 
 def get_admin_email():
-    """Gibt die Admin-E-Mail zurück: DB hat Vorrang, dann Env-Var."""
+    """Gibt die Admin-E-Mail zurück: DB hat Vorrang, dann Env-Var.
+    Gibt leeren String zurück wenn keine Admin-E-Mail konfiguriert ist.
+    """
     try:
         from system_config import get_config
         db_email = get_config('iserv_admin_email', '').strip()
@@ -111,12 +113,17 @@ def get_admin_email():
             return db_email
     except Exception:
         pass
-    return os.environ.get('ADMIN_EMAIL', 'morelli.maurizio@kgs-pattensen.de')
+    return os.environ.get('ADMIN_EMAIL', '').strip()
 
 
 def is_admin_email(email):
-    """Prüft, ob die E-Mail-Adresse dem Admin gehört"""
-    return email and email.lower().strip() == get_admin_email().lower()
+    """Prüft, ob die E-Mail-Adresse dem Admin gehört.
+    Gibt False zurück wenn keine Admin-E-Mail konfiguriert ist.
+    """
+    admin = get_admin_email()
+    if not admin or not email:
+        return False
+    return email.lower().strip() == admin.lower()
 
 
 def extract_roles_from_userinfo(userinfo):

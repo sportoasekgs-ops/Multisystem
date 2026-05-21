@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Dashboard - SportOase{% endblock %}
+{% extends "base.html" %} {% block title %}Dashboard – {{ school_name or 'Buchungssystem' }}{% endblock %}
 {% block content %}
 <div class="dashboard">
 
@@ -66,7 +66,8 @@
                         </li>
                         <li>
                             <strong>Notiz hinterlassen:</strong> Du kannst
-                            optional eine Notiz hinterlassen, die nur für Mauro
+                            optional eine Notiz hinterlassen, die nur für
+                            {{ contact_name or 'den Administrator' }}
                             sichtbar ist
                         </li>
                         <li>
@@ -162,7 +163,7 @@
                         <div class="exclusive-step">
                             <span class="step-icon">3️⃣</span>
                             <span
-                                >Deine Anfrage wird an <strong>Mauro</strong> zur
+                                >Deine Anfrage wird an <strong>{{ contact_name or 'den Administrator' }}</strong> zur
                                 Freigabe gesendet</span
                             >
                         </div>
@@ -852,17 +853,19 @@
             />
             <div class="contact-text">
                 <p>
-                    {{ contact_text or 'Bei dringenden Anliegen bin ich direkt erreichbar:' }}
+                    {% if contact_email or contact_phone %}
+                    {{ contact_text or 'Bei Fragen bin ich direkt erreichbar:' }}
                     {% if contact_email %}
                         via E-Mail: <strong><a href="mailto:{{ contact_email }}" style="color:inherit;">{{ contact_email }}</a></strong>
                         {% if contact_phone %} und telefonisch unter: <strong>{{ contact_phone }}</strong>{% endif %}
                     {% elif contact_phone %}
                         telefonisch unter: <strong>{{ contact_phone }}</strong>
-                    {% else %}
-                        via E-Mail: <strong>morelli.maurizio@kgs-pattensen.de</strong> und
-                        telefonisch unter: <strong>0160 5788232</strong>
                     {% endif %}
                     {% if contact_name %}<br><small style="opacity:.75;">– {{ contact_name }}</small>{% endif %}
+                    {% else %}
+                    {{ contact_text or 'Bei Fragen wende dich bitte an den Administrator.' }}
+                    {% if contact_name %}<br><small style="opacity:.75;">– {{ contact_name }}</small>{% endif %}
+                    {% endif %}
                 </p>
             </div>
         </div>

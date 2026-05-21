@@ -270,6 +270,10 @@ def inject_branding():
         'cms_imprint_text': get_config('cms_imprint_text', ''),
         'dashboard_notice': get_config('dashboard_notice', ''),
         'booking_notice':   get_config('booking_notice', ''),
+        'contact_name':     get_config('contact_name', ''),
+        'contact_email':    get_config('contact_email', ''),
+        'contact_phone':    get_config('contact_phone', ''),
+        'contact_text':     get_config('contact_text', ''),
     }
     return dict(branding=branding, **branding, **extra)
 
@@ -1554,44 +1558,39 @@ def book(date_str, period):
                 }
             )
             
-            # Sende E-Mail-Benachrichtigung an Admin (SMTP)
-            try:
-                send_booking_notification(booking_data)
-            except Exception as e:
-                print(f"E-Mail-Benachrichtigung fehlgeschlagen: {e}")
-            
-            # Sende E-Mail-Bestätigung an Lehrer (nur wenn Checkbox aktiviert)
+            # Sende E-Mails im Hintergrund (verhindert Timeout bei Buchung)
             send_email_confirmation = request.form.get('send_email_confirmation') == '1'
-            
-            # Hole E-Mail direkt aus der Datenbank (zuverlässiger als Session)
             user_id = session.get('user_id')
             user_email = ''
             if user_id:
                 user_data = get_user_by_id(user_id)
                 if user_data:
                     user_email = user_data.get('email', '')
-            
-            print(f"[BUCHUNG] E-Mail-Checkbox aktiviert: {send_email_confirmation}")
-            print(f"[BUCHUNG] User ID: {user_id}")
-            print(f"[BUCHUNG] User E-Mail (aus DB): {user_email}")
-            
-            if send_email_confirmation and user_email:
-                print(f"[BUCHUNG] Versuche E-Mail-Bestätigung an {user_email} zu senden...")
+
+            def _send_emails_background(bd, send_confirm, u_email, exclusive):
+                # Admin-Benachrichtigung
                 try:
-                    if is_exclusive:
-                        # Bei Einzelbuchung: "Buchung steht aus" statt "erfolgreich gebucht"
-                        from email_service import send_exclusive_pending_email
-                        result = send_exclusive_pending_email(user_email, booking_data)
-                        print(f"[BUCHUNG] Einzelbuchung-Pending-E-Mail Ergebnis: {result}")
-                    else:
-                        # Normale Buchung: Standard-Bestätigung
-                        from email_service import send_user_booking_confirmation
-                        result = send_user_booking_confirmation(user_email, booking_data)
-                        print(f"[BUCHUNG] E-Mail-Versand Ergebnis: {result}")
+                    send_booking_notification(bd)
                 except Exception as e:
-                    print(f"[BUCHUNG] Benutzer-E-Mail-Bestätigung fehlgeschlagen: {e}")
-            else:
-                print(f"[BUCHUNG] Keine E-Mail gesendet (Checkbox: {send_email_confirmation}, Email vorhanden: {bool(user_email)})")
+                    print(f"[EMAIL] Admin-Benachrichtigung fehlgeschlagen: {e}")
+                # Lehrer-Bestätigung
+                if send_confirm and u_email:
+                    try:
+                        if exclusive:
+                            from email_service import send_exclusive_pending_email
+                            send_exclusive_pending_email(u_email, bd)
+                        else:
+                            from email_service import send_user_booking_confirmation
+                            send_user_booking_confirmation(u_email, bd)
+                    except Exception as e:
+                        print(f"[EMAIL] Lehrer-Bestätigung fehlgeschlagen: {e}")
+
+            t = threading.Thread(
+                target=_send_emails_background,
+                args=(booking_data, send_email_confirmation, user_email, is_exclusive),
+                daemon=True
+            )
+            t.start()
             
             # Broadcast an SSE-Clients
             if notification_id:
@@ -2094,31 +2093,35 @@ def approve_exclusive(booking_id):
             db.session.commit()
             print(f"[EXCLUSIVE] {removed_count} konfliktierende Buchungen für {date_str} Stunde {period} entfernt")
         
-        # Sende Bestätigungs-E-Mail an den Antragsteller
-        if teacher_email:
-            from email_service import send_exclusive_approved_email
-            send_exclusive_approved_email(
-                teacher_email=teacher_email,
-                teacher_name=teacher_name,
-                student_name=student_name,
-                date_str=date_str,
-                period=period
-            )
-        
-        # Sende Stornierungs-E-Mails an betroffene Lehrer
-        from email_service import send_booking_removed_due_to_exclusive
-        for teacher in affected_teachers:
-            if teacher['email']:
+        # Sende E-Mails im Hintergrund (verhindert Timeout)
+        def _send_approval_emails(t_email, t_name, s_name, d_str, per, affected):
+            if t_email:
                 try:
-                    send_booking_removed_due_to_exclusive(
-                        teacher_email=teacher['email'],
-                        teacher_name=teacher['name'],
-                        booking_info=teacher['booking_info'],
-                        exclusive_info={'teacher': teacher_name, 'student': student_name}
+                    from email_service import send_exclusive_approved_email
+                    send_exclusive_approved_email(
+                        teacher_email=t_email, teacher_name=t_name,
+                        student_name=s_name, date_str=d_str, period=per
                     )
-                    print(f"[EXCLUSIVE] Stornierungs-E-Mail an {teacher['email']} gesendet")
                 except Exception as e:
-                    print(f"[EXCLUSIVE] E-Mail an {teacher['email']} fehlgeschlagen: {e}")
+                    print(f"[EMAIL] Genehmigungs-E-Mail fehlgeschlagen: {e}")
+            from email_service import send_booking_removed_due_to_exclusive
+            for affected_teacher in affected:
+                if affected_teacher['email']:
+                    try:
+                        send_booking_removed_due_to_exclusive(
+                            teacher_email=affected_teacher['email'],
+                            teacher_name=affected_teacher['name'],
+                            booking_info=affected_teacher['booking_info'],
+                            exclusive_info={'teacher': t_name, 'student': s_name}
+                        )
+                    except Exception as e:
+                        print(f"[EMAIL] Stornierungs-E-Mail fehlgeschlagen: {e}")
+
+        threading.Thread(
+            target=_send_approval_emails,
+            args=(teacher_email, teacher_name, student_name, date_str, period, affected_teachers),
+            daemon=True
+        ).start()
         
         if is_ajax:
             return jsonify({'success': True, 'message': 'Exklusive Buchung genehmigt.'})
@@ -2172,17 +2175,23 @@ def reject_exclusive(booking_id):
     
     success = reject_exclusive_booking(booking_id)
     if success:
-        # Sende Ablehnungs-E-Mail
+        # Sende Ablehnungs-E-Mail im Hintergrund (verhindert Timeout)
         if teacher_email:
-            from email_service import send_exclusive_rejected_email
-            send_exclusive_rejected_email(
-                teacher_email=teacher_email,
-                teacher_name=teacher_name,
-                student_name=student_name,
-                date_str=date_str,
-                period=period,
-                rejection_reason=rejection_reason
-            )
+            def _send_rejection(t_email, t_name, s_name, d_str, per, reason):
+                try:
+                    from email_service import send_exclusive_rejected_email
+                    send_exclusive_rejected_email(
+                        teacher_email=t_email, teacher_name=t_name,
+                        student_name=s_name, date_str=d_str, period=per,
+                        rejection_reason=reason
+                    )
+                except Exception as e:
+                    print(f"[EMAIL] Ablehnungs-E-Mail fehlgeschlagen: {e}")
+            threading.Thread(
+                target=_send_rejection,
+                args=(teacher_email, teacher_name, student_name, date_str, period, rejection_reason),
+                daemon=True
+            ).start()
         
         if is_ajax:
             return jsonify({'success': True, 'message': 'Exklusive Buchung erfolgreich abgelehnt.'})
@@ -2843,7 +2852,10 @@ def admin_cms():
         'smtp_user':        get_config('smtp_user', ''),
         'smtp_tls':         get_config('smtp_tls', 'starttls'),
         'smtp_from':        get_config('smtp_from', ''),
-        'admin_email':      get_config('admin_email', ''),
+        'admin_email':        get_config('admin_email', ''),
+        'iserv_admin_email':  get_config('iserv_admin_email', ''),
+        'iserv_domain':       get_config('iserv_domain', ''),
+        'iserv_client_id':    get_config('iserv_client_id', ''),
     }
     # DB-URL für Anzeige (maskiert)
     from local_config import get_database_url as _get_db_url
@@ -2961,6 +2973,30 @@ def admin_cms_save():
             from system_config import set_config as _sc
             _sc('smtp_pass', new_pass, category='smtp')
         flash('SMTP-Konfiguration gespeichert.', 'success')
+
+    elif section == 'iserv':
+        from system_config import set_configs
+        new_admin_email = request.form.get('iserv_admin_email', '').strip()
+        new_domain      = request.form.get('iserv_domain', '').strip()
+        new_client_id   = request.form.get('iserv_client_id', '').strip()
+        set_configs({
+            'iserv_admin_email': new_admin_email,
+            'iserv_domain':      new_domain,
+            'iserv_client_id':   new_client_id,
+        }, category='iserv')
+        # Client-Secret nur speichern wenn ausgefüllt
+        new_secret = request.form.get('iserv_client_secret', '').strip()
+        if new_secret:
+            from system_config import set_config as _sc
+            _sc('iserv_client_secret', new_secret, category='iserv')
+        # Umgebungsvariablen sofort aktualisieren
+        if new_admin_email:
+            os.environ['ADMIN_EMAIL'] = new_admin_email
+        if new_domain:
+            os.environ['ISERV_DOMAIN'] = new_domain
+        if new_client_id:
+            os.environ['ISERV_CLIENT_ID'] = new_client_id
+        flash('IServ-Konfiguration gespeichert. ✅', 'success')
 
     elif section == 'demo':
         from system_config import set_config as _sc

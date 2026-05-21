@@ -76,6 +76,7 @@ input:checked + .slider:before { transform: translateX(24px); }
         <a href="#" class="cms-tab" onclick="showTab('privacy'); return false;">🔐 Datenschutz</a>
         <a href="#" class="cms-tab" onclick="showTab('imprint'); return false;">📄 Impressum</a>
         <a href="#" class="cms-tab" onclick="showTab('hints'); return false;">💡 Hinweistexte</a>
+        <a href="#" class="cms-tab" onclick="showTab('iserv'); return false;">🔐 IServ</a>
         <a href="#" class="cms-tab" onclick="showTab('demo'); return false;">🧪 Demo-Modus</a>
         <a href="#" class="cms-tab" onclick="showTab('database'); return false;">🗄️ Datenbank</a>
     </div>
@@ -413,6 +414,78 @@ input:checked + .slider:before { transform: translateX(24px); }
                     <textarea name="booking_notice" class="form-control"
                               placeholder="z.B. Bitte nur Schüler aus Ihrem eigenen Klassenverband eintragen.">{{ cms.booking_notice or '' }}</textarea>
                     <p class="form-hint">Wird im Buchungsformular als Hinweis-Box angezeigt. Leer = ausgeblendet.</p>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── ISERV ──────────────────────────────────────────────────── -->
+    <div id="tab-iserv" class="cms-section">
+        <form method="post" action="{{ url_for('admin_cms_save') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="iserv">
+            <div class="cms-card" style="border-left:4px solid #7c3aed;">
+                <h3>🔐 IServ OAuth-Konfiguration</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.4rem;">
+                    Einstellungen für das IServ Single Sign-On. Änderungen am Client-Secret oder der Domain
+                    werden erst nach einem App-Neustart vollständig wirksam.
+                </p>
+
+                {% if not cms.iserv_admin_email %}
+                <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:.9rem 1.1rem;margin-bottom:1.4rem;font-size:.88rem;">
+                    ⚠️ <strong>Keine Admin-E-Mail konfiguriert!</strong>
+                    Ohne eine Admin-E-Mail kann sich niemand über IServ als Admin anmelden.
+                    Bitte trage unten deine IServ-E-Mail-Adresse ein.
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label class="form-label">Admin-E-Mail (IServ-Adresse) <span style="color:#E91E63;">*</span></label>
+                    <input type="email" name="iserv_admin_email" class="form-control"
+                           value="{{ cms.iserv_admin_email or '' }}"
+                           placeholder="vorname.nachname@meineschule.de">
+                    <p class="form-hint">
+                        Diese IServ-E-Mail erhält automatisch Admin-Rechte nach dem Login.
+                        Muss exakt mit der E-Mail in IServ übereinstimmen.
+                    </p>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex:1;">
+                        <label class="form-label">IServ-Domain</label>
+                        <div style="display:flex;align-items:center;gap:0;">
+                            <span style="padding:10px 12px;background:#f1f3f5;border:1.5px solid var(--border);border-right:none;border-radius:8px 0 0 8px;font-size:.82rem;color:#6c757d;white-space:nowrap;">https://</span>
+                            <input type="text" name="iserv_domain" class="form-control"
+                                   value="{{ cms.iserv_domain or '' }}"
+                                   placeholder="meineschule.de"
+                                   style="border-radius:0 8px 8px 0;border-left:none;">
+                        </div>
+                        <p class="form-hint">Nur die Domain, ohne https://</p>
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label class="form-label">Client ID</label>
+                        <input type="text" name="iserv_client_id" class="form-control"
+                               value="{{ cms.iserv_client_id or '' }}"
+                               placeholder="abc123..." autocomplete="off">
+                        <p class="form-hint">Aus IServ Admin → Single Sign-On</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Client Secret <span style="font-weight:400;">(nur ausfüllen wenn ändern)</span></label>
+                    <input type="password" name="iserv_client_secret" class="form-control"
+                           value="" placeholder="Leer lassen = unverändert" autocomplete="new-password">
+                    <p class="form-hint">Das aktuelle Secret wird nie angezeigt. Nur ausfüllen wenn du es ändern möchtest.</p>
+                </div>
+
+                <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 18px;font-size:.84rem;color:#166534;">
+                    <strong>📋 Redirect-URI für IServ</strong><br>
+                    In IServ Admin → Single-Sign-On → App bearbeiten diese URL eintragen:<br>
+                    <code style="background:#dcfce7;padding:2px 7px;border-radius:4px;font-family:monospace;">{{ request.host_url }}oauth/callback</code>
                 </div>
             </div>
             <div class="btn-row">

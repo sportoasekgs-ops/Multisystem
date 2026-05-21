@@ -348,12 +348,12 @@
                 <h4>1. Verantwortlicher</h4>
                 <p>Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
                 <p>
-                    Mauro Morelli<br>
-                    Platz Saint-Aubin 1<br>
-                    30982 Pattensen<br>
-                    Deutschland<br>
-                    E-Mail: <a href="mailto:morelli.maurizio@kgs-pattensen.de">morelli.maurizio@kgs-pattensen.de</a><br>
-                    Telefon: 05101 1001610
+                    {% if contact_name %}{{ contact_name }}<br>{% endif %}
+                    {% if contact_email %}E-Mail: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a><br>{% endif %}
+                    {% if contact_phone %}Telefon: {{ contact_phone }}{% endif %}
+                    {% if not contact_name and not contact_email and not contact_phone %}
+                    Die Schule / Einrichtung (bitte Kontaktdaten im Admin-CMS → Dashboard → Kontakt-Box eintragen).
+                    {% endif %}
                 </p>
 
                 <h4>2. Allgemeine Hinweise zur Datenverarbeitung</h4>

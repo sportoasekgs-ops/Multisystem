@@ -49,10 +49,13 @@
     </div>
 
     <div class="form-group">
-        <label class="form-label">Admin-E-Mail <span class="badge-optional">Optional</span></label>
+        <label class="form-label">Admin-E-Mail (IServ-Adresse) <span class="req">*</span></label>
         <input type="email" name="admin_email" class="form-control"
-               value="{{ iserv_admin_email }}" placeholder="z.B. admin@schule.de">
-        <p class="form-hint">Diese E-Mail-Adresse erhält automatisch Admin-Rechte nach dem Login</p>
+               value="{{ iserv_admin_email }}" placeholder="z.B. vorname.nachname@meineschule.de" required>
+        <p class="form-hint">
+            Die IServ-E-Mail-Adresse der Person, die Admin-Zugriff erhält. Nach dem Login mit dieser Adresse wird automatisch die Admin-Rolle vergeben.<br>
+            <strong>Wichtig:</strong> Diese Adresse muss exakt der E-Mail in IServ entsprechen.
+        </p>
     </div>
 
     <hr class="section-sep">
