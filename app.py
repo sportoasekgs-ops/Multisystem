@@ -14,6 +14,33 @@ import threading
 app = Flask(__name__)
 
 # Jinja2-Filter: Nachnamen kürzen (Datenschutz)
+@app.template_filter('course_emoji')
+def course_emoji_filter(label):
+    """Gibt das passende Emoji für einen Kursnamen zurück."""
+    if not label:
+        return '⭐'
+    if 'Wochenstart' in label:
+        return '☀️'
+    if 'Konflikt' in label or 'Deeskalation' in label:
+        return '🛡️'
+    if 'Koordination' in label:
+        return '🎯'
+    if 'Sozial' in label or 'Gruppen' in label:
+        return '👥'
+    if 'Mini-Fitness' in label or 'Aktivierung' in label:
+        return '⚡'
+    if 'Motorik' in label or 'Parcours' in label:
+        return '🏃'
+    if 'Turnen' in label or 'Balance' in label:
+        return '🤸'
+    if 'Atem' in label or 'Reflexion' in label:
+        return '🌬️'
+    if 'Bodyscan' in label:
+        return '🧘'
+    if 'Ruhe' in label or 'Entspannung' in label:
+        return '🍃'
+    return '⭐'
+
 @app.template_filter('abbreviate_name')
 def abbreviate_name_filter(name):
     """Kürzt den Nachnamen auf den ersten Buchstaben + Punkt.
@@ -1594,7 +1621,9 @@ def book(date_str, period):
                                  available_spots=available_spots,
                                  free_modules=get_free_courses(),
                                  user_name=user_display_name,
-                                 school_classes=get_school_classes_list())
+                                 user_email='',
+                                 school_classes=get_school_classes_list(),
+                                 max_students=get_max_students())
         
         # Hole Anzahl der Schüler
         num_students = int(request.form.get('num_students', 1))
@@ -1610,7 +1639,9 @@ def book(date_str, period):
                                  available_spots=available_spots,
                                  free_modules=get_free_courses(),
                                  user_name=user_display_name,
-                                 school_classes=get_school_classes_list())
+                                 user_email='',
+                                 school_classes=get_school_classes_list(),
+                                 max_students=_max_s)
         
         # Prüfe erneut verfügbare Plätze
         if num_students > available_spots:
@@ -1618,51 +1649,51 @@ def book(date_str, period):
             return redirect(url_for('dashboard', date=date_str))
         
         # Sammle Schülerdaten und prüfe Doppelbuchungen
-        names_optional = request.form.get('names_optional') == '1'
+        whole_class = request.form.get('whole_class') == '1'
+        names_optional = request.form.get('names_optional') == '1' or whole_class
         students = []
-        for i in range(num_students):
-            name = request.form.get(f'student_name_{i}', '').strip()
-            klasse = request.form.get(f'student_class_{i}', '').strip()
-            
-            if not klasse:
-                flash('Bitte wählen Sie für alle Schüler*innen eine Klasse aus.', 'error')
-                return render_template('book.html', 
-                                     date_str=date_str,
-                                     period=period,
-                                     period_info=period_info,
-                                     period_time=_get_period_dict(period),
-                                     available_spots=available_spots,
-                                     free_modules=get_free_courses(),
-                                     user_name=user_display_name,
-                                     school_classes=get_school_classes_list())
-            if not names_optional and not name:
-                flash('Bitte geben Sie alle Schüler-Namen ein oder aktivieren Sie „Klasse als Gruppe buchen".', 'error')
-                return render_template('book.html', 
-                                     date_str=date_str,
-                                     period=period,
-                                     period_info=period_info,
-                                     period_time=_get_period_dict(period),
-                                     available_spots=available_spots,
-                                     free_modules=get_free_courses(),
-                                     user_name=user_display_name,
-                                     school_classes=get_school_classes_list())
-            
-            # Doppelbuchungs-Check nur wenn Name angegeben
-            if name:
-                double_booking = check_student_double_booking(name, klasse, date_str, period)
-                if double_booking['is_booked']:
-                    flash(f'⚠️ Doppelbuchung verhindert: {double_booking["booking_info"]}', 'error')
-                    return render_template('book.html', 
-                                         date_str=date_str,
-                                         period=period,
-                                         period_info=period_info,
-                                         period_time=_get_period_dict(period),
-                                         available_spots=available_spots,
-                                         free_modules=get_free_courses(),
-                                         user_name=user_display_name,
-                                         school_classes=get_school_classes_list())
-            
-            students.append({'name': name, 'klasse': klasse})
+
+        def _book_render(**extra):
+            return render_template('book.html',
+                                   date_str=date_str, period=period,
+                                   period_info=period_info,
+                                   period_time=_get_period_dict(period),
+                                   available_spots=available_spots,
+                                   free_modules=get_free_courses(),
+                                   user_name=user_display_name,
+                                   user_email=display_user_email if 'display_user_email' in dir() else '',
+                                   school_classes=get_school_classes_list(),
+                                   max_students=get_max_students(),
+                                   **extra)
+
+        if whole_class:
+            # Ganze Klasse buchen: Slot wird vollständig belegt
+            _max = get_max_students()
+            if _max > available_spots:
+                flash(f'Klassenbuchung nicht möglich – nur noch {available_spots} Plätze frei. Bitte einzelne Schüler*innen eintragen.', 'error')
+                return redirect(url_for('dashboard', date=date_str))
+            num_students = _max
+            for _ in range(num_students):
+                students.append({'name': '', 'klasse': teacher_class})
+        else:
+            for i in range(num_students):
+                name = request.form.get(f'student_name_{i}', '').strip()
+                klasse = request.form.get(f'student_class_{i}', '').strip()
+
+                if not klasse:
+                    flash('Bitte wählen Sie für alle Schüler*innen eine Klasse aus.', 'error')
+                    return _book_render()
+                if not names_optional and not name:
+                    flash('Bitte geben Sie alle Schüler-Namen ein.', 'error')
+                    return _book_render()
+
+                if name:
+                    double_booking = check_student_double_booking(name, klasse, date_str, period)
+                    if double_booking['is_booked']:
+                        flash(f'⚠️ Doppelbuchung verhindert: {double_booking["booking_info"]}', 'error')
+                        return _book_render()
+
+                students.append({'name': name, 'klasse': klasse})
         
         # Hole Modul-Wahl (nur bei freien Stunden)
         if period_info['type'] == 'frei':
@@ -1795,6 +1826,8 @@ def book(date_str, period):
             
             if is_exclusive:
                 flash(f'Exklusive Buchung eingereicht! Die Buchung wartet auf Freigabe durch den Admin. Sie werden per E-Mail benachrichtigt.', 'info')
+            elif whole_class:
+                flash(f'Klassenbuchung erfolgreich! Klasse {teacher_class} für {offer_label} eingetragen. Der Slot ist vollständig belegt.', 'success')
             else:
                 flash(f'Buchung erfolgreich! {len(students)} Schüler für {offer_label} angemeldet.', 'success')
             return redirect(url_for('dashboard', date=date_str))
@@ -1818,7 +1851,8 @@ def book(date_str, period):
                          free_modules=get_free_courses(),
                          user_name=user_display_name,
                          user_email=display_user_email,
-                         school_classes=get_school_classes_list())
+                         school_classes=get_school_classes_list(),
+                         max_students=get_max_students())
 
 # Hilfsfunktion: Prüft ob eine Buchung noch bearbeitet/gelöscht werden kann
 def can_modify_booking(booking_date_str, period):
@@ -3410,6 +3444,50 @@ def factory_reset():
         app.logger.error(f"[FACTORY RESET] Fehler beim Zurücksetzen: {e}")
         flash(f'Fehler beim Zurücksetzen: {e}', 'error')
         return redirect(url_for('admin_cms'))
+
+
+@app.route('/admin/test-resend', methods=['POST'])
+@admin_required
+def admin_test_resend():
+    """Testet die Resend-E-Mail-Konfiguration."""
+    if not validate_csrf_token(request.json.get('csrf_token', '') if request.json else ''):
+        return jsonify({'success': False, 'message': 'Ungültiges CSRF-Token.'}), 403
+
+    data = request.json or {}
+    api_key = data.get('resend_api_key', '').strip()
+    from_addr = data.get('resend_from', '').strip()
+    test_email = data.get('test_email', '').strip()
+
+    if not api_key or not from_addr or not test_email:
+        return jsonify({'success': False, 'message': 'API-Key, Absender-E-Mail und Test-Empfänger sind erforderlich.'})
+
+    try:
+        import urllib.request, urllib.error
+        import json as _json
+        payload = {
+            'from': from_addr,
+            'to': [test_email],
+            'subject': '✅ Resend-Test erfolgreich',
+            'html': '<h2 style="color:#E91E63;">✅ Resend funktioniert!</h2><p>Diese Test-E-Mail wurde erfolgreich über die Resend-API verschickt.</p>',
+        }
+        req = urllib.request.Request(
+            'https://api.resend.com/emails',
+            data=_json.dumps(payload).encode('utf-8'),
+            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            if resp.getcode() in (200, 201):
+                return jsonify({'success': True, 'message': f'Test-E-Mail erfolgreich an {test_email} gesendet!'})
+            return jsonify({'success': False, 'message': f'Resend antwortete mit HTTP {resp.getcode()}.'})
+    except Exception as e:
+        body = ''
+        if hasattr(e, 'read'):
+            try:
+                body = e.read().decode('utf-8', errors='replace')
+            except Exception:
+                pass
+        return jsonify({'success': False, 'message': f'Fehler: {body or str(e)}'})
 
 
 if __name__ == '__main__':

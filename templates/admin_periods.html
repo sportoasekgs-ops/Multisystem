@@ -2,12 +2,143 @@
 {% block title %}Stunden verwalten – Admin{% endblock %}
 
 {% block content %}
-<div class="dashboard">
+<style>
+.periods-page { max-width: 900px; margin: 0 auto; }
+.section-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.5rem;
+}
+.section-card h3 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: .75rem;
+}
+.template-card {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: .9rem 1rem;
+    background: var(--bg-secondary);
+    transition: border-color .15s;
+}
+.template-card:hover { border-color: var(--primary); }
+.template-card.builtin { border-left: 4px solid var(--primary); }
+.template-card.saved   { border-left: 4px solid #6366f1; }
+.template-card .t-name {
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--text-primary);
+    margin-bottom: .2rem;
+}
+.template-card .t-desc {
+    font-size: .78rem;
+    color: var(--text-secondary);
+    margin-bottom: .65rem;
+    line-height: 1.4;
+}
+.template-card .t-meta {
+    font-size: .75rem;
+    color: var(--text-secondary);
+    margin-bottom: .65rem;
+}
+.template-card .t-periods {
+    font-size: .78rem;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border-radius: 6px;
+    padding: .4rem .6rem;
+    margin-bottom: .7rem;
+    line-height: 1.5;
+}
+.template-actions { display: flex; gap: .5rem; }
+.btn-load {
+    flex: 1;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    padding: .45rem .8rem;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+.btn-load:hover { opacity: .85; }
+.btn-delete-tmpl {
+    background: transparent;
+    color: var(--error);
+    border: 1.5px solid var(--error);
+    border-radius: 7px;
+    padding: .45rem .7rem;
+    font-size: .82rem;
+    cursor: pointer;
+    transition: background .15s;
+}
+.btn-delete-tmpl:hover { background: var(--error-bg); }
+.save-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: .75rem;
+    align-items: end;
+}
+@media (max-width: 600px) {
+    .save-form { grid-template-columns: 1fr; }
+}
+.periods-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.periods-table th {
+    background: #fce4ec;
+    color: #c2185b;
+    padding: .65rem 1rem;
+    text-align: left;
+    font-weight: 700;
+}
+.periods-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--border-light); }
+.periods-table tr:last-child td { border-bottom: none; }
+.edit-row { display: none; background: var(--bg-secondary); }
+.edit-row td { padding: .75rem 1rem; }
+.period-number { font-weight: 700; color: var(--primary); }
+.active-dot { color: #4caf50; font-size: 1.1rem; }
+.inactive-dot { color: #ccc; font-size: 1.1rem; }
+.add-form {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+.add-form .form-group { margin: 0; }
+.add-form label { font-size: .8rem; color: var(--text-secondary); display: block; margin-bottom: .25rem; }
+.add-form input { padding: .55rem .7rem; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-primary); font-size: .9rem; }
+.warn-box {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    color: var(--warning-text);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-size: .85rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+</style>
+
+<div class="periods-page">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
         <div>
-            <a href="{{ url_for('admin') }}" style="text-decoration:none;color:#888;font-size:.9rem;">← Admin</a>
+            <a href="{{ url_for('admin') }}" style="text-decoration:none;color:var(--text-secondary);font-size:.9rem;">← Admin</a>
             <h2 style="margin:.25rem 0 0;">⏱️ Stunden verwalten</h2>
-            <p style="color:#666;margin:.25rem 0 0;">Unterrichtszeiten der Stunden bearbeiten</p>
+            <p style="color:var(--text-secondary);margin:.25rem 0 0;">Unterrichtszeiten bearbeiten und Vorlagen nutzen</p>
         </div>
         <a href="{{ url_for('admin_dyn.courses') }}" class="btn btn-secondary">📚 Kurse</a>
     </div>
@@ -18,60 +149,164 @@
     {% endfor %}{% endif %}
     {% endwith %}
 
-    <!-- Stunden-Tabelle -->
-    <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:2rem;">
-        <h3 style="margin:0 0 1rem;">Aktuelle Stunden</h3>
+    <!-- ═══ VORLAGEN ═══════════════════════════════════════════════════════════ -->
+    <div class="section-card">
+        <h3>📋 Vorlagen</h3>
+        <p style="font-size:.85rem;color:var(--text-secondary);margin:-.5rem 0 1rem;">
+            Lade eine fertige Vorlage oder speichere deine aktuellen Stunden als eigene Vorlage.
+            Beim Laden werden alle bisherigen Stunden ersetzt.
+        </p>
+
+        <!-- Eingebaute Vorlagen -->
+        <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
+            Eingebaute Vorlagen
+        </h4>
+        <div class="template-grid" style="margin-bottom:1.25rem;">
+            {% for t in builtin_templates %}
+            <div class="template-card builtin">
+                <div class="t-name">{{ t.name }}</div>
+                <div class="t-desc">{{ t.description }}</div>
+                <div class="t-periods">
+                    {% for p in t.periods %}{{ p.number }}. {{ p.start }}–{{ p.end }}{% if not loop.last %} · {% endif %}{% endfor %}
+                </div>
+                <form method="POST" action="{{ url_for('admin_dyn.periods_templates_load_builtin') }}"
+                      onsubmit="return confirm('Vorlage „{{ t.name }}" laden? Aktuelle Stunden werden ersetzt.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="builtin_id" value="{{ t.id }}">
+                    <button type="submit" class="btn-load" style="width:100%;">⬇️ Laden</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Gespeicherte Vorlagen -->
+        <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
+            Eigene Vorlagen
+        </h4>
+        {% if saved_templates %}
+        <div class="template-grid" style="margin-bottom:1.25rem;">
+            {% for t in saved_templates %}
+            <div class="template-card saved">
+                <div class="t-name">{{ t.name }}</div>
+                {% if t.description %}<div class="t-desc">{{ t.description }}</div>{% endif %}
+                <div class="t-meta">Gespeichert: {{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '–' }}</div>
+                <div class="t-periods">
+                    {% for p in t.get_periods() %}{{ p.number }}. {{ p.start }}–{{ p.end }}{% if not loop.last %} · {% endif %}{% endfor %}
+                </div>
+                <div class="template-actions">
+                    <form method="POST" action="{{ url_for('admin_dyn.periods_templates_load', tmpl_id=t.id) }}" style="flex:1;"
+                          onsubmit="return confirm('Vorlage „{{ t.name }}" laden? Aktuelle Stunden werden ersetzt.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn-load" style="width:100%;">⬇️ Laden</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin_dyn.periods_templates_delete', tmpl_id=t.id) }}"
+                          onsubmit="return confirm('Vorlage „{{ t.name }}" wirklich löschen?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="btn-delete-tmpl">🗑</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p style="font-size:.85rem;color:var(--text-secondary);padding:.5rem 0 1rem;">
+            Noch keine eigenen Vorlagen gespeichert. Konfiguriere deine Stunden und speichere sie als Vorlage.
+        </p>
+        {% endif %}
+
+        <!-- Aktuelle Konfiguration als Vorlage speichern -->
+        <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
+            Aktuelle Stunden als Vorlage speichern
+        </h4>
+        {% if not periods %}
+        <div class="warn-box">⚠️ Noch keine Stunden konfiguriert – zuerst Stunden anlegen, dann speichern.</div>
+        {% else %}
+        <form method="POST" action="{{ url_for('admin_dyn.periods_templates_save') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="save-form">
+                <div class="form-group">
+                    <label style="font-size:.8rem;color:var(--text-secondary);display:block;margin-bottom:.3rem;">Name der Vorlage *</label>
+                    <input type="text" name="template_name" required
+                           placeholder='z.B. "KGS Pattensen Standard"'
+                           style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:.9rem;">
+                </div>
+                <div class="form-group">
+                    <label style="font-size:.8rem;color:var(--text-secondary);display:block;margin-bottom:.3rem;">Beschreibung (optional)</label>
+                    <input type="text" name="template_desc"
+                           placeholder="z.B. Schuljahr 2025/26"
+                           style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:.9rem;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="height:42px;white-space:nowrap;">
+                    💾 Speichern
+                </button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- ═══ AKTUELLE STUNDEN ════════════════════════════════════════════════════ -->
+    <div class="section-card">
+        <h3>📅 Aktuelle Stunden ({{ periods|length }})</h3>
         {% if periods %}
         <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:.95rem;">
+        <table class="periods-table">
             <thead>
-                <tr style="background:#fce4ec;color:#c2185b;">
-                    <th style="padding:.75rem 1rem;text-align:left;border-radius:8px 0 0 8px;">Nr.</th>
-                    <th style="padding:.75rem 1rem;text-align:left;">Bezeichnung</th>
-                    <th style="padding:.75rem 1rem;text-align:left;">Beginn</th>
-                    <th style="padding:.75rem 1rem;text-align:left;">Ende</th>
-                    <th style="padding:.75rem 1rem;text-align:center;">Aktiv</th>
-                    <th style="padding:.75rem 1rem;text-align:right;border-radius:0 8px 8px 0;">Aktionen</th>
+                <tr>
+                    <th>Nr.</th>
+                    <th>Bezeichnung</th>
+                    <th>Beginn</th>
+                    <th>Ende</th>
+                    <th style="text-align:center;">Aktiv</th>
+                    <th style="text-align:right;">Aktionen</th>
                 </tr>
             </thead>
             <tbody>
             {% for p in periods %}
-            <tr style="border-bottom:1px solid #f0f0f0;" id="row-p-{{ p.id }}">
-                <td style="padding:.75rem 1rem;font-weight:700;color:#e91e63;">{{ p.number }}</td>
-                <td style="padding:.75rem 1rem;">{{ p.name }}</td>
-                <td style="padding:.75rem 1rem;font-family:monospace;">{{ p.start_time }}</td>
-                <td style="padding:.75rem 1rem;font-family:monospace;">{{ p.end_time }}</td>
-                <td style="padding:.75rem 1rem;text-align:center;">
-                    {% if p.is_active %}<span style="color:#4caf50;">✔</span>{% else %}<span style="color:#ccc;">✖</span>{% endif %}
+            <tr id="row-p-{{ p.id }}">
+                <td class="period-number">{{ p.number }}</td>
+                <td>{{ p.name }}</td>
+                <td style="font-family:monospace;">{{ p.start_time }}</td>
+                <td style="font-family:monospace;">{{ p.end_time }}</td>
+                <td style="text-align:center;">
+                    {% if p.is_active %}
+                    <span class="active-dot">✔</span>
+                    {% else %}
+                    <span class="inactive-dot">✖</span>
+                    {% endif %}
                 </td>
-                <td style="padding:.75rem 1rem;text-align:right;">
-                    <button onclick="toggleEditPeriod({{ p.id }})" class="btn btn-secondary" style="padding:.35rem .8rem;font-size:.85rem;">Bearbeiten</button>
-                    <form method="POST" action="{{ url_for('admin_dyn.periods_delete', period_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Stunde {{ p.number }} wirklich löschen?');">
+                <td style="text-align:right;">
+                    <button onclick="toggleEditPeriod({{ p.id }})" class="btn btn-secondary" style="padding:.3rem .7rem;font-size:.82rem;">Bearbeiten</button>
+                    <form method="POST" action="{{ url_for('admin_dyn.periods_delete', period_id=p.id) }}" style="display:inline;"
+                          onsubmit="return confirm('Stunde {{ p.number }} wirklich löschen?');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <button type="submit" class="btn" style="background:#f44336;color:#fff;padding:.35rem .8rem;font-size:.85rem;">Löschen</button>
+                        <button type="submit" class="btn" style="background:#f44336;color:#fff;padding:.3rem .7rem;font-size:.82rem;">Löschen</button>
                     </form>
                 </td>
             </tr>
-            <!-- Edit-Zeile -->
-            <tr id="edit-p-{{ p.id }}" style="display:none;background:#fff8f9;">
-                <td colspan="6" style="padding:1rem 1rem;">
-                    <form method="POST" action="{{ url_for('admin_dyn.periods_edit', period_id=p.id) }}" style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
+            <tr id="edit-p-{{ p.id }}" class="edit-row">
+                <td colspan="6">
+                    <form method="POST" action="{{ url_for('admin_dyn.periods_edit', period_id=p.id) }}"
+                          style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <div>
-                            <label style="font-size:.8rem;color:#666;">Bezeichnung</label><br>
-                            <input type="text" name="name" value="{{ p.name }}" required style="padding:.5rem;border:1px solid #ddd;border-radius:6px;font-size:.9rem;">
+                            <label style="font-size:.78rem;color:var(--text-secondary);">Bezeichnung</label><br>
+                            <input type="text" name="name" value="{{ p.name }}" required
+                                   style="padding:.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
                         </div>
                         <div>
-                            <label style="font-size:.8rem;color:#666;">Beginn (HH:MM)</label><br>
-                            <input type="text" name="start_time" value="{{ p.start_time }}" pattern="\d{2}:\d{2}" required style="width:80px;padding:.5rem;border:1px solid #ddd;border-radius:6px;font-size:.9rem;font-family:monospace;">
+                            <label style="font-size:.78rem;color:var(--text-secondary);">Beginn (HH:MM)</label><br>
+                            <input type="text" name="start_time" value="{{ p.start_time }}" pattern="\d{2}:\d{2}" required
+                                   style="width:85px;padding:.5rem;border:1px solid var(--border);border-radius:6px;font-family:monospace;background:var(--bg-input);color:var(--text-primary);">
                         </div>
                         <div>
-                            <label style="font-size:.8rem;color:#666;">Ende (HH:MM)</label><br>
-                            <input type="text" name="end_time" value="{{ p.end_time }}" pattern="\d{2}:\d{2}" required style="width:80px;padding:.5rem;border:1px solid #ddd;border-radius:6px;font-size:.9rem;font-family:monospace;">
+                            <label style="font-size:.78rem;color:var(--text-secondary);">Ende (HH:MM)</label><br>
+                            <input type="text" name="end_time" value="{{ p.end_time }}" pattern="\d{2}:\d{2}" required
+                                   style="width:85px;padding:.5rem;border:1px solid var(--border);border-radius:6px;font-family:monospace;background:var(--bg-input);color:var(--text-primary);">
                         </div>
                         <div>
-                            <label style="font-size:.8rem;color:#666;">Aktiv</label><br>
-                            <select name="is_active" style="padding:.5rem;border:1px solid #ddd;border-radius:6px;font-size:.9rem;">
+                            <label style="font-size:.78rem;color:var(--text-secondary);">Aktiv</label><br>
+                            <select name="is_active"
+                                    style="padding:.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
                                 <option value="1" {% if p.is_active %}selected{% endif %}>Ja</option>
                                 <option value="0" {% if not p.is_active %}selected{% endif %}>Nein</option>
                             </select>
@@ -86,32 +321,34 @@
         </table>
         </div>
         {% else %}
-        <p style="color:#888;text-align:center;padding:2rem;">Noch keine Stunden vorhanden.</p>
+        <p style="color:var(--text-secondary);text-align:center;padding:1.5rem 0;">
+            📋 Noch keine Stunden vorhanden. Lade eine Vorlage oder füge unten eine Stunde hinzu.
+        </p>
         {% endif %}
     </div>
 
-    <!-- Neue Stunde hinzufügen -->
-    <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);">
-        <h3 style="margin:0 0 1rem;">➕ Neue Stunde</h3>
-        <form method="POST" action="{{ url_for('admin_dyn.periods_add') }}" style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
+    <!-- ═══ NEUE STUNDE ════════════════════════════════════════════════════════ -->
+    <div class="section-card">
+        <h3>➕ Neue Stunde hinzufügen</h3>
+        <form method="POST" action="{{ url_for('admin_dyn.periods_add') }}" class="add-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <div>
-                <label style="font-size:.85rem;color:#666;">Stunden-Nr.</label><br>
-                <input type="number" name="number" min="1" max="12" required placeholder="7" style="width:80px;padding:.6rem;border:1px solid #ddd;border-radius:8px;">
+            <div class="form-group">
+                <label>Stunden-Nr.</label>
+                <input type="number" name="number" min="1" max="12" required placeholder="7" style="width:75px;">
             </div>
-            <div>
-                <label style="font-size:.85rem;color:#666;">Bezeichnung</label><br>
-                <input type="text" name="name" required placeholder="7. Stunde" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;min-width:150px;">
+            <div class="form-group">
+                <label>Bezeichnung</label>
+                <input type="text" name="name" required placeholder="7. Stunde" style="min-width:140px;">
             </div>
-            <div>
-                <label style="font-size:.85rem;color:#666;">Beginn (HH:MM)</label><br>
-                <input type="text" name="start_time" pattern="\d{2}:\d{2}" required placeholder="13:10" style="width:90px;padding:.6rem;border:1px solid #ddd;border-radius:8px;font-family:monospace;">
+            <div class="form-group">
+                <label>Beginn (HH:MM)</label>
+                <input type="text" name="start_time" pattern="\d{2}:\d{2}" required placeholder="13:10" style="width:90px;font-family:monospace;">
             </div>
-            <div>
-                <label style="font-size:.85rem;color:#666;">Ende (HH:MM)</label><br>
-                <input type="text" name="end_time" pattern="\d{2}:\d{2}" required placeholder="13:55" style="width:90px;padding:.6rem;border:1px solid #ddd;border-radius:8px;font-family:monospace;">
+            <div class="form-group">
+                <label>Ende (HH:MM)</label>
+                <input type="text" name="end_time" pattern="\d{2}:\d{2}" required placeholder="13:55" style="width:90px;font-family:monospace;">
             </div>
-            <button type="submit" class="btn btn-primary">Stunde hinzufügen</button>
+            <button type="submit" class="btn btn-primary">Hinzufügen</button>
         </form>
     </div>
 </div>
@@ -119,7 +356,8 @@
 <script>
 function toggleEditPeriod(id) {
     const row = document.getElementById('edit-p-' + id);
-    row.style.display = row.style.display === 'none' ? '' : 'none';
+    const visible = row.style.display !== 'none' && row.style.display !== '';
+    row.style.display = visible ? 'none' : '';
 }
 </script>
 {% endblock %}

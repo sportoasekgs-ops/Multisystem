@@ -3,106 +3,273 @@
 {% block title %}Buchung – {{ school_name or 'Buchungssystem' }}{% endblock %}
 
 {% block content %}
-<div class="dashboard">
-    <h2>Neue Buchung</h2>
-    
+<style>
+.booking-type-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.2rem;
+}
+.booking-type-option {
+    position: relative;
+    cursor: pointer;
+}
+.booking-type-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.booking-type-card {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    background: var(--bg-card);
+    transition: all 0.18s;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+.booking-type-card:hover {
+    border-color: var(--primary);
+}
+.booking-type-option input:checked + .booking-type-card {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+.booking-type-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+.booking-type-text strong {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.2rem;
+}
+.booking-type-text small {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+.class-booking-info {
+    background: var(--highlight-bg);
+    border: 1.5px solid var(--highlight-border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--highlight-text);
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.class-booking-info .info-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+.class-booking-info strong {
+    display: block;
+    font-size: 0.93rem;
+    margin-bottom: 0.2rem;
+}
+.booking-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.2rem;
+}
+.booking-section h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.booking-info-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1.5rem;
+}
+.booking-info-box h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin: 0 0 0.7rem 0;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.info-row {
+    display: flex;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-primary);
+}
+.info-row:last-child { border-bottom: none; }
+.info-row strong { color: var(--text-secondary); min-width: 130px; flex-shrink: 0; }
+.spots-badge {
+    display: inline-block;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    margin-left: 0.3rem;
+}
+.spots-badge.full { background: var(--error); }
+</style>
+
+<div class="dashboard" style="max-width:660px; margin:0 auto;">
+    <h2 style="margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem;">
+        📝 Neue Buchung
+    </h2>
+
+    <!-- Buchungsdetails -->
     <div class="booking-info-box">
         <h3>Buchungsdetails</h3>
-        <p><strong>Datum:</strong> {{ date_str }}</p>
-        <p><strong>Stunde:</strong> {{ period }}. Stunde ({{ period_time.start }} - {{ period_time.end }})</p>
-        <p><strong>Angebot:</strong> 
+        <div class="info-row"><strong>Datum:</strong> {{ date_str }}</div>
+        <div class="info-row"><strong>Stunde:</strong> {{ period }}. Stunde ({{ period_time.start }} – {{ period_time.end }})</div>
+        <div class="info-row">
+            <strong>Angebot:</strong>
             {% if period_info.type == 'fest' %}
-                {{ period_info.label }}
+                {{ period_info.label|course_emoji }} {{ period_info.label }}
             {% else %}
-                Freie Wahl (Modul wählbar)
+                ⭐ Freie Wahl (Modul wählbar)
             {% endif %}
-        </p>
-        <p><strong>Verfügbare Plätze:</strong> {{ available_spots }} / 5</p>
+        </div>
+        <div class="info-row">
+            <strong>Verfügbar:</strong>
+            <span class="spots-badge {% if available_spots == 0 %}full{% endif %}">
+                {{ available_spots }} / {{ max_students }} frei
+            </span>
+        </div>
     </div>
-    
+
     <form method="POST" id="bookingForm" class="booking-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        
-        <h3>Ihre Angaben</h3>
-        <div class="form-group">
-            <label for="teacher_name">Ihr Name</label>
-            <input type="text" id="teacher_name" name="teacher_name" required placeholder="z.B. Max Mustermann" value="{{ user_name }}">
-        </div>
-        
-        <div class="form-group">
-            <label for="teacher_class">Ihre Klasse</label>
-            <select id="teacher_class" name="teacher_class" required>
-                <option value="">-- Bitte Klasse wählen --</option>
-                {% for klasse in school_classes %}
-                <option value="{{ klasse }}">{{ klasse }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <h3>Schüler*innen</h3>
+        <input type="hidden" name="whole_class" id="hidden_whole_class" value="0">
+        <input type="hidden" name="num_students" id="hidden_num_students" value="1">
 
-        <!-- Namen optional Toggle -->
-        <div class="form-group" style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 16px;margin-bottom:1rem;">
-            <label class="checkbox-label" style="cursor:pointer;">
-                <input type="checkbox" id="names_optional" name="names_optional" value="1" onchange="toggleNamesOptional()">
-                <span class="checkbox-text">
-                    <span class="checkbox-icon">👥</span>
-                    <strong>Klasse als Gruppe buchen</strong> – Schüler-Namen optional
-                </span>
-            </label>
-            <p class="hint-text" style="margin-top:6px;">
-                Wenn aktiviert, reicht die Klassenangabe. Namen können leer bleiben.
-            </p>
+        <!-- Lehrkraft -->
+        <div class="booking-section">
+            <h3>👤 Ihre Angaben</h3>
+            <div class="form-group">
+                <label for="teacher_name">Ihr Name</label>
+                <input type="text" id="teacher_name" name="teacher_name" required placeholder="z.B. Max Mustermann" value="{{ user_name }}">
+            </div>
+            <div class="form-group">
+                <label for="teacher_class">Ihre Klasse</label>
+                <select id="teacher_class" name="teacher_class" required onchange="onTeacherClassChange()">
+                    <option value="">-- Bitte Klasse wählen --</option>
+                    {% for klasse in school_classes %}
+                    <option value="{{ klasse }}">{{ klasse }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-        
-        <!-- Exklusive Buchung - prominente Platzierung -->
-        <div class="form-group exclusive-booking-group exclusive-highlight" id="exclusiveBookingGroup">
-            <label class="checkbox-label exclusive-checkbox">
-                <input type="checkbox" name="is_exclusive" id="is_exclusive" value="1" onchange="toggleExclusiveMode()">
-                <span class="checkbox-text">
-                    <span class="checkbox-icon">🔒</span>
-                    <strong>Exklusive Nutzung {{ ('von ' + school_name) if school_name else 'der Anlage' }}</strong>
-                </span>
-            </label>
-            <p class="hint-text warning-text">
-                {{ ('Die gesamte ' + school_name) if school_name else 'Die Anlage' }} wird für diesen Zeitslot nur für <strong>einen Schüler</strong> reserviert. 
-                Diese Buchung muss vom Admin freigegeben werden.
-            </p>
+
+        <!-- Buchungsart -->
+        <div class="booking-section">
+            <h3>🏫 Buchungsart</h3>
+            <div class="booking-type-selector">
+                <label class="booking-type-option">
+                    <input type="radio" name="booking_type" value="individual" checked onchange="setBuchungsart('individual')">
+                    <div class="booking-type-card">
+                        <span class="booking-type-icon">🧑‍🤝‍🧑</span>
+                        <div class="booking-type-text">
+                            <strong>Einzelne Schüler*innen</strong>
+                            <small>1–{{ max_students }} Plätze, Namen eintragen</small>
+                        </div>
+                    </div>
+                </label>
+                <label class="booking-type-option">
+                    <input type="radio" name="booking_type" value="class" onchange="setBuchungsart('class')">
+                    <div class="booking-type-card">
+                        <span class="booking-type-icon">🏫</span>
+                        <div class="booking-type-text">
+                            <strong>Ganze Klasse</strong>
+                            <small>Slot vollständig belegt, keine Namen nötig</small>
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Ganze Klasse Info -->
+            <div id="class-booking-info" class="class-booking-info" style="display:none;">
+                <span class="info-icon">✅</span>
+                <div>
+                    <strong>Ganze Klasse wird gebucht</strong>
+                    Der Slot wird vollständig für Klasse <strong id="class-booking-name">–</strong> belegt.
+                    Es werden keine Einzelnamen benötigt.
+                </div>
+            </div>
+
+            <!-- Individuelle Schüler*innen -->
+            <div id="individual-section">
+                <div class="form-group" style="margin-bottom:0.8rem;">
+                    <label for="num_students_select">Anzahl Schüler*innen</label>
+                    <select id="num_students_select" onchange="updateStudentFields()">
+                        {% for i in range(1, max_students + 1) %}
+                        <option value="{{ i }}">{{ i }} Schüler*{% if i == 1 %}in{% else %}innen{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="studentFields" class="student-list"></div>
+
+                <!-- Exklusive Buchung -->
+                <div id="exclusiveBookingGroup" class="form-group exclusive-booking-group exclusive-highlight" style="margin-top:0.8rem;">
+                    <label class="checkbox-label exclusive-checkbox">
+                        <input type="checkbox" name="is_exclusive" id="is_exclusive" value="1" onchange="toggleExclusiveMode()">
+                        <span class="checkbox-text">
+                            <span class="checkbox-icon">🔒</span>
+                            <strong>Exklusive Nutzung</strong>
+                        </span>
+                    </label>
+                    <p class="hint-text warning-text" style="margin-top:0.3rem;">
+                        Nur 1 Schüler – gesamter Slot reserviert. Muss vom Admin freigegeben werden.
+                    </p>
+                </div>
+            </div>
         </div>
-        
-        <div class="form-group">
-            <label for="num_students">Anzahl Schüler*innen (1-{{ max_students }})</label>
-            <select id="num_students" name="num_students" onchange="updateStudentFields()" required>
-                {% for i in range(1, max_students + 1) %}
-                <option value="{{ i }}">{{ i }} Schüler*{% if i == 1 %}in{% else %}innen{% endif %}</option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <div id="studentFields" class="student-list">
-            <!-- Wird dynamisch mit JavaScript gefüllt -->
-        </div>
-        
+
         {% if period_info.type == 'frei' %}
-        <h3>Modul-Auswahl</h3>
-        <div class="form-group">
-            <label for="module">Wählen Sie ein Modul</label>
-            <select id="module" name="module" required>
-                <option value="">-- Bitte wählen --</option>
-                {% for module in free_modules %}
-                <option value="{{ module }}">{{ module }}</option>
-                {% endfor %}
-            </select>
+        <div class="booking-section">
+            <h3>📚 Modul-Auswahl</h3>
+            <div class="form-group">
+                <label for="module">Modul wählen</label>
+                <select id="module" name="module" required>
+                    <option value="">-- Bitte wählen --</option>
+                    {% for module in free_modules %}
+                    <option value="{{ module }}">{{ module }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
         {% endif %}
-        
-        <h3>Notizen (optional)</h3>
-        <div class="form-group">
-            <label for="notes">Notizen für den Admin</label>
-            <textarea id="notes" name="notes" rows="3" placeholder="z.B. Besonderheiten, Hinweise oder Fragen..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
-            <p class="hint-text">Diese Notizen werden nur dem Admin angezeigt.</p>
+
+        <div class="booking-section">
+            <h3>💬 Notizen (optional)</h3>
+            <div class="form-group" style="margin-bottom:0;">
+                <textarea id="notes" name="notes" rows="3"
+                    placeholder="z.B. Besonderheiten, Hinweise oder Fragen …"
+                    style="width:100%;padding:.75rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;resize:vertical;background:var(--bg-input);color:var(--text-primary);"></textarea>
+                <p class="hint-text">Diese Notizen werden nur dem Admin angezeigt.</p>
+            </div>
         </div>
-        
+
         <div class="form-group email-confirmation-group">
             <label class="checkbox-label">
                 <input type="checkbox" name="send_email_confirmation" id="send_email_confirmation" value="1">
@@ -113,8 +280,8 @@
             </label>
             <p class="hint-text">Bestätigung wird an {{ user_email }} gesendet</p>
         </div>
-        
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;">
             <a href="{{ url_for('dashboard', date=date_str) }}" class="btn btn-secondary">Abbrechen</a>
             <button type="submit" class="btn btn-primary">Buchung abschließen</button>
         </div>
@@ -122,109 +289,107 @@
 </div>
 
 <script>
-// Klassenliste für Schüler*innen-Dropdown
 const schoolClasses = {{ school_classes | tojson | safe }};
+const MAX_STUDENTS = {{ max_students }};
 
-// Gibt zurück ob Namen optional sind
-function areNamesOptional() {
-    return document.getElementById('names_optional').checked;
+function setBuchungsart(type) {
+    const classInfo = document.getElementById('class-booking-info');
+    const individualSection = document.getElementById('individual-section');
+    const hiddenWhole = document.getElementById('hidden_whole_class');
+    const hiddenNum = document.getElementById('hidden_num_students');
+
+    if (type === 'class') {
+        classInfo.style.display = 'flex';
+        individualSection.style.display = 'none';
+        hiddenWhole.value = '1';
+        hiddenNum.value = MAX_STUDENTS;
+        updateClassBookingName();
+    } else {
+        classInfo.style.display = 'none';
+        individualSection.style.display = '';
+        hiddenWhole.value = '0';
+        updateStudentFields();
+    }
 }
 
-// Namen-optional-Modus umschalten
-function toggleNamesOptional() {
-    const numStudents = parseInt(document.getElementById('num_students').value);
-    const optional = areNamesOptional();
+function updateClassBookingName() {
+    const cls = document.getElementById('teacher_class').value;
+    const el = document.getElementById('class-booking-name');
+    if (el) el.textContent = cls || '(bitte Klasse wählen)';
+}
+
+function onTeacherClassChange() {
+    updateClassBookingName();
+    const numStudents = parseInt(document.getElementById('num_students_select').value);
     for (let i = 0; i < numStudents; i++) {
-        const nameInput = document.getElementById('student_name_' + i);
-        if (nameInput) {
-            if (optional) {
-                nameInput.removeAttribute('required');
-                nameInput.placeholder = 'Name (optional)';
-            } else {
-                nameInput.setAttribute('required', 'required');
-                nameInput.placeholder = 'Name';
-            }
+        const sel = document.getElementById('student_class_' + i);
+        if (sel && document.getElementById('teacher_class').value) {
+            sel.value = document.getElementById('teacher_class').value;
         }
     }
 }
 
-// Exklusiv-Modus umschalten
 function toggleExclusiveMode() {
-    const exclusiveCheckbox = document.getElementById('is_exclusive');
-    const numStudentsSelect = document.getElementById('num_students');
-    
-    if (exclusiveCheckbox.checked) {
-        numStudentsSelect.value = '1';
-        numStudentsSelect.disabled = true;
-        numStudentsSelect.style.opacity = '0.6';
-        numStudentsSelect.style.cursor = 'not-allowed';
+    const excl = document.getElementById('is_exclusive');
+    const numSel = document.getElementById('num_students_select');
+    if (excl.checked) {
+        numSel.value = '1';
+        numSel.disabled = true;
+        numSel.style.opacity = '0.5';
         updateStudentFields();
     } else {
-        numStudentsSelect.disabled = false;
-        numStudentsSelect.style.opacity = '1';
-        numStudentsSelect.style.cursor = 'pointer';
+        numSel.disabled = false;
+        numSel.style.opacity = '1';
     }
 }
 
 function updateStudentFields() {
-    const numStudents = parseInt(document.getElementById('num_students').value);
+    const numStudents = parseInt(document.getElementById('num_students_select').value);
+    document.getElementById('hidden_num_students').value = numStudents;
     const container = document.getElementById('studentFields');
     const teacherClass = document.getElementById('teacher_class').value;
-    const exclusiveCheckbox = document.getElementById('is_exclusive');
-    const optional = areNamesOptional();
-    
+    const excl = document.getElementById('is_exclusive');
+
     container.innerHTML = '';
-    
-    // Wenn mehr als 1 Schüler, deaktiviere Exklusiv-Checkbox
-    if (numStudents > 1 && exclusiveCheckbox.checked) {
-        exclusiveCheckbox.checked = false;
+
+    if (numStudents > 1 && excl && excl.checked) {
+        excl.checked = false;
         toggleExclusiveMode();
     }
-    
-    // Erstelle Optionen für Klassen-Dropdown mit Vorauswahl der Lehrer-Klasse
-    function getClassOptions(selectedClass) {
-        let options = '<option value="">-- Klasse wählen --</option>';
-        schoolClasses.forEach(function(klasse) {
-            const isSelected = klasse === selectedClass ? 'selected' : '';
-            options += `<option value="${klasse}" ${isSelected}>${klasse}</option>`;
+
+    function getClassOptions(sel) {
+        let html = '<option value="">-- Klasse --</option>';
+        schoolClasses.forEach(k => {
+            html += `<option value="${k}"${k === sel ? ' selected' : ''}>${k}</option>`;
         });
-        return options;
+        return html;
     }
-    
+
     for (let i = 0; i < numStudents; i++) {
         const div = document.createElement('div');
         div.className = 'student-item';
-        const nameRequired = optional ? '' : 'required';
-        const namePlaceholder = optional ? 'Name (optional)' : 'Name';
+        div.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;margin-bottom:.6rem;background:var(--bg-secondary);';
         div.innerHTML = `
-            <div class="form-group">
-                <label for="student_name_${i}">Schüler*in ${i + 1} – Name${optional ? ' <span style="color:#6b7280;font-weight:400;font-size:.85em;">(optional)</span>' : ''}</label>
-                <input type="text" id="student_name_${i}" name="student_name_${i}" ${nameRequired} placeholder="${namePlaceholder}">
+            <div style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.7rem;">
+                Schüler*in ${i + 1}
             </div>
-            <div class="form-group">
-                <label for="student_class_${i}">Schüler*in ${i + 1} – Klasse</label>
-                <select id="student_class_${i}" name="student_class_${i}" required>
-                    ${getClassOptions(teacherClass)}
-                </select>
-            </div>
-        `;
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">
+                <div class="form-group" style="margin:0;">
+                    <label for="student_name_${i}" style="font-size:.8rem;">Name</label>
+                    <input type="text" id="student_name_${i}" name="student_name_${i}"
+                           placeholder="Name" style="margin:0;">
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label for="student_class_${i}" style="font-size:.8rem;">Klasse</label>
+                    <select id="student_class_${i}" name="student_class_${i}" required style="margin:0;">
+                        ${getClassOptions(teacherClass)}
+                    </select>
+                </div>
+            </div>`;
         container.appendChild(div);
     }
 }
 
-// Wenn Lehrer-Klasse geändert wird, aktualisiere alle Schüler-Klassen
-document.getElementById('teacher_class').addEventListener('change', function() {
-    const teacherClass = this.value;
-    const numStudents = parseInt(document.getElementById('num_students').value);
-    for (let i = 0; i < numStudents; i++) {
-        const studentClassSelect = document.getElementById('student_class_' + i);
-        if (studentClassSelect && teacherClass) {
-            studentClassSelect.value = teacherClass;
-        }
-    }
-});
-
-// Initialisiere mit 1 Schüler*in
 updateStudentFields();
 </script>
 {% endblock %}

@@ -329,19 +329,34 @@ input:checked + .slider:before { transform: translateX(24px); }
 
                 <!-- Resend-Felder -->
                 <div id="cms-resend-section" style="display:none;">
-                    <div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;padding:12px 16px;border-radius:8px;margin-bottom:1rem;font-size:.85rem;">
+                    <div style="background:var(--highlight-bg);border:1px solid var(--highlight-border);color:var(--highlight-text);padding:12px 16px;border-radius:8px;margin-bottom:1rem;font-size:.85rem;">
                         Registriere dich kostenlos auf <strong>resend.com</strong>, erstelle einen API-Key und verifiziere deine Domain. Zum Testen: <code>onboarding@resend.dev</code> als Absender verwenden.
                     </div>
                     <div class="form-group">
                         <label class="form-label">Resend API-Key</label>
-                        <input type="password" name="resend_api_key" class="form-control"
+                        <input type="password" name="resend_api_key" id="cms-resend-api-key" class="form-control"
                                value="{{ cms.resend_api_key or '' }}"
                                placeholder="re_xxxxxxxxxxxxxxxxxxxx" autocomplete="new-password">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Absender-E-Mail</label>
-                        <input type="email" name="resend_from" class="form-control"
+                        <input type="email" name="resend_from" id="cms-resend-from" class="form-control"
                                value="{{ cms.resend_from or '' }}" placeholder="buchung@deine-domain.de">
+                    </div>
+                    <div class="cms-card" style="border-left:4px solid #6366f1;margin-top:1rem;">
+                        <h3>🧪 Resend testen</h3>
+                        <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+                                <label class="form-label">Test-E-Mail senden an</label>
+                                <input type="email" id="cms-resend-test-email" class="form-control"
+                                       value="{{ cms.admin_email or '' }}" placeholder="test@schule.de">
+                            </div>
+                            <button type="button" class="btn-ghost" onclick="testCmsResend()" id="cms-resend-test-btn"
+                                    style="height:42px;flex-shrink:0;padding:.65rem 1.2rem;">
+                                📨 Testen
+                            </button>
+                        </div>
+                        <div id="cms-resend-test-result" class="alert" style="display:none;margin-top:1rem;"></div>
                     </div>
                 </div>
 
@@ -759,6 +774,44 @@ async function testCmsSmtp() {
 
     try {
         const resp = await fetch('{{ url_for("setup.test_smtp") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-error');
+        result.innerHTML = (data.success ? '✅ ' : '❌ ') + data.message;
+        result.style.display = 'flex';
+    } catch (e) {
+        result.className = 'alert alert-error';
+        result.innerHTML = '❌ Netzwerkfehler: ' + e.message;
+        result.style.display = 'flex';
+    }
+
+    btn.textContent = '📨 Testen';
+    btn.disabled = false;
+}
+
+async function testCmsResend() {
+    const btn    = document.getElementById('cms-resend-test-btn');
+    const result = document.getElementById('cms-resend-test-result');
+    btn.textContent = '⏳ Teste...';
+    btn.disabled = true;
+    result.style.display = 'none';
+
+    const apiKey    = document.getElementById('cms-resend-api-key').value;
+    const fromAddr  = document.getElementById('cms-resend-from').value;
+    const testEmail = document.getElementById('cms-resend-test-email').value;
+
+    const payload = {
+        csrf_token:    '{{ csrf_token }}',
+        resend_api_key: apiKey,
+        resend_from:    fromAddr,
+        test_email:     testEmail,
+    };
+
+    try {
+        const resp = await fetch('{{ url_for("admin_test_resend") }}', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)

@@ -33,7 +33,7 @@
             
             <div class="booking-body">
                 <div class="booking-offer">
-                    <span class="offer-label">{{ booking.offer_label }}</span>
+                    <span class="offer-label">{{ booking.offer_label|course_emoji }} {{ booking.offer_label }}</span>
                     <span class="offer-type-badge {% if booking.offer_type == 'fest' %}type-fest{% else %}type-frei{% endif %}">
                         {{ 'Festes Angebot' if booking.offer_type == 'fest' else 'Freies Modul' }}
                     </span>
@@ -48,11 +48,17 @@
                 
                 <div class="booking-students">
                     <span class="students-label">Schüler*innen:</span>
+                    {% if booking.students and booking.students[0].name == '' %}
+                    <ul class="students-list">
+                        <li>🏫 Ganze Klasse {{ booking.students[0].klasse }}</li>
+                    </ul>
+                    {% else %}
                     <ul class="students-list">
                         {% for student in booking.students %}
                         <li>{{ student.name|abbreviate_name }} ({{ student.klasse }})</li>
                         {% endfor %}
                     </ul>
+                    {% endif %}
                 </div>
                 
                 <div class="booking-meta">

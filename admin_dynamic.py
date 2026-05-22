@@ -2,8 +2,52 @@
 admin_dynamic.py – Admin-Blueprint für dynamische Stunden, Kurse & Klassen
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from database import db
+import json as _json
+
+# Eingebaute Vorlagen (werden nicht in der DB gespeichert)
+_BUILTIN_TEMPLATES = [
+    {
+        'id': 'builtin_6',
+        'name': 'Standard Halbtagsschule (6 Stunden)',
+        'description': 'Klassischer Schulvormittag von 7:50–13:10 Uhr',
+        'periods': [
+            {'number': 1, 'name': '1. Stunde', 'start': '07:50', 'end': '08:35'},
+            {'number': 2, 'name': '2. Stunde', 'start': '08:35', 'end': '09:20'},
+            {'number': 3, 'name': '3. Stunde', 'start': '09:40', 'end': '10:25'},
+            {'number': 4, 'name': '4. Stunde', 'start': '10:25', 'end': '11:10'},
+            {'number': 5, 'name': '5. Stunde', 'start': '11:30', 'end': '12:15'},
+            {'number': 6, 'name': '6. Stunde', 'start': '12:15', 'end': '13:00'},
+        ],
+    },
+    {
+        'id': 'builtin_8',
+        'name': 'Ganztagsschule (8 Stunden)',
+        'description': 'Ganztag von 7:50–15:10 Uhr mit Mittagspause',
+        'periods': [
+            {'number': 1, 'name': '1. Stunde', 'start': '07:50', 'end': '08:35'},
+            {'number': 2, 'name': '2. Stunde', 'start': '08:35', 'end': '09:20'},
+            {'number': 3, 'name': '3. Stunde', 'start': '09:40', 'end': '10:25'},
+            {'number': 4, 'name': '4. Stunde', 'start': '10:25', 'end': '11:10'},
+            {'number': 5, 'name': '5. Stunde', 'start': '11:30', 'end': '12:15'},
+            {'number': 6, 'name': '6. Stunde', 'start': '12:15', 'end': '13:00'},
+            {'number': 7, 'name': '7. Stunde', 'start': '14:00', 'end': '14:45'},
+            {'number': 8, 'name': '8. Stunde', 'start': '14:45', 'end': '15:30'},
+        ],
+    },
+    {
+        'id': 'builtin_4',
+        'name': 'Kurzer Schultag (4 Stunden)',
+        'description': 'Kompakter Vormittag von 8:00–11:35 Uhr',
+        'periods': [
+            {'number': 1, 'name': '1. Stunde', 'start': '08:00', 'end': '08:45'},
+            {'number': 2, 'name': '2. Stunde', 'start': '08:45', 'end': '09:30'},
+            {'number': 3, 'name': '3. Stunde', 'start': '09:50', 'end': '10:35'},
+            {'number': 4, 'name': '4. Stunde', 'start': '10:35', 'end': '11:20'},
+        ],
+    },
+]
 
 admin_dyn_bp = Blueprint('admin_dyn', __name__, url_prefix='/admin')
 
@@ -27,9 +71,13 @@ def periods():
     if not _admin_required():
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
-    from models import Period
+    from models import Period, PeriodTemplate
     all_periods = Period.query.order_by(Period.sort_order, Period.number).all()
-    return render_template('admin_periods.html', periods=all_periods)
+    saved_templates = PeriodTemplate.query.order_by(PeriodTemplate.created_at.desc()).all()
+    return render_template('admin_periods.html',
+                           periods=all_periods,
+                           saved_templates=saved_templates,
+                           builtin_templates=_BUILTIN_TEMPLATES)
 
 
 @admin_dyn_bp.route('/periods/add', methods=['POST'])
@@ -116,6 +164,126 @@ def periods_delete(period_id):
         db.session.rollback()
         flash(f'Fehler: {e}', 'error')
     return redirect(url_for('admin_dyn.periods'))
+
+
+# ─── Stunden-Vorlagen ─────────────────────────────────────────────────────────
+
+@admin_dyn_bp.route('/periods/templates/save', methods=['POST'])
+def periods_templates_save():
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    from models import Period, PeriodTemplate
+    template_name = request.form.get('template_name', '').strip()
+    template_desc = request.form.get('template_desc', '').strip()
+
+    if not template_name:
+        flash('Bitte einen Namen für die Vorlage eingeben.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    periods = Period.query.order_by(Period.sort_order, Period.number).all()
+    if not periods:
+        flash('Keine Stunden vorhanden – Vorlage kann nicht gespeichert werden.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    periods_data = [{'number': p.number, 'name': p.name, 'start': p.start_time, 'end': p.end_time} for p in periods]
+
+    try:
+        tmpl = PeriodTemplate(
+            name=template_name,
+            description=template_desc or None,
+            periods_json=_json.dumps(periods_data, ensure_ascii=False),
+        )
+        db.session.add(tmpl)
+        db.session.commit()
+        flash(f'Vorlage „{template_name}" gespeichert ({len(periods_data)} Stunden).', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Speichern: {e}', 'error')
+
+    return redirect(url_for('admin_dyn.periods'))
+
+
+@admin_dyn_bp.route('/periods/templates/<int:tmpl_id>/load', methods=['POST'])
+def periods_templates_load(tmpl_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    from models import Period, PeriodTemplate
+    tmpl = PeriodTemplate.query.get_or_404(tmpl_id)
+    _apply_period_template(tmpl.get_periods(), tmpl.name)
+    return redirect(url_for('admin_dyn.periods'))
+
+
+@admin_dyn_bp.route('/periods/templates/load-builtin', methods=['POST'])
+def periods_templates_load_builtin():
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    builtin_id = request.form.get('builtin_id', '')
+    tmpl = next((t for t in _BUILTIN_TEMPLATES if t['id'] == builtin_id), None)
+    if not tmpl:
+        flash('Vorlage nicht gefunden.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    _apply_period_template(tmpl['periods'], tmpl['name'])
+    return redirect(url_for('admin_dyn.periods'))
+
+
+@admin_dyn_bp.route('/periods/templates/<int:tmpl_id>/delete', methods=['POST'])
+def periods_templates_delete(tmpl_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    from models import PeriodTemplate
+    tmpl = PeriodTemplate.query.get_or_404(tmpl_id)
+    name = tmpl.name
+    try:
+        db.session.delete(tmpl)
+        db.session.commit()
+        flash(f'Vorlage „{name}" gelöscht.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler: {e}', 'error')
+    return redirect(url_for('admin_dyn.periods'))
+
+
+def _apply_period_template(periods_data, name):
+    """Ersetzt alle aktuellen Stunden durch die Vorlage."""
+    from models import Period
+    try:
+        Period.query.delete()
+        for p in periods_data:
+            period = Period(
+                number=p['number'],
+                name=p['name'],
+                start_time=p['start'],
+                end_time=p['end'],
+                sort_order=p['number'],
+                is_active=True,
+            )
+            db.session.add(period)
+        db.session.commit()
+        flash(f'Vorlage „{name}" geladen – {len(periods_data)} Stunden übernommen.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Laden der Vorlage: {e}', 'error')
 
 
 # ─── Kurse (Courses) ──────────────────────────────────────────────────────────

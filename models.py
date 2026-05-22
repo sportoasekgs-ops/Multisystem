@@ -798,6 +798,29 @@ def mark_all_notifications_as_read(recipient_role='admin'):
         print(f"Fehler beim Markieren aller Benachrichtigungen: {e}")
         return False
 
+class PeriodTemplate(db.Model):
+    """Gespeicherte Stunden-Vorlagen"""
+    __tablename__ = 'period_templates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.String(500), nullable=True)
+    periods_json = db.Column(db.Text, nullable=False)  # JSON-Array der Perioden
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def get_periods(self):
+        return json.loads(self.periods_json)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'periods': self.get_periods(),
+            'created_at': self.created_at.strftime('%d.%m.%Y %H:%M') if self.created_at else '',
+        }
+
+
 def get_unread_notification_count(recipient_role='admin'):
     """Gibt die Anzahl der ungelesenen Benachrichtigungen zurück"""
     return Notification.query.filter_by(recipient_role=recipient_role, is_read=False).count()

@@ -597,6 +597,23 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% if week_overview[0].schedule|length == 0 %}
+                    <tr>
+                        <td colspan="{{ week_overview|length + 1 }}" style="text-align:center;padding:2.5rem 1rem;">
+                            <div style="font-size:2rem;margin-bottom:.5rem;">📋</div>
+                            <strong style="font-size:1rem;color:var(--text-primary);">Noch keine Stunden konfiguriert</strong><br>
+                            <span style="font-size:.85rem;color:var(--text-secondary);">
+                                Bitte zuerst im
+                                {% if user_role == 'admin' %}
+                                <a href="{{ url_for('admin_cms') }}#tab-stunden">Admin-CMS → Stunden</a>
+                                {% else %}
+                                Admin-Bereich
+                                {% endif %}
+                                Stunden anlegen.
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
                     {% for slot_idx in range(week_overview[0].schedule|length) %}
                     {% set p_num = week_overview[0].schedule[slot_idx].period %}
                     <tr>
@@ -727,14 +744,21 @@
                                          style="width:{{ pct }}%"></div>
                                 </div>
                                 <div class="slot-students-list">
-                                    {% for booking in slot.bookings %} {% set
-                                    can_see = (user_role == 'admin') or
-                                    (booking.teacher_id == current_user_id) %}
+                                    {% for booking in slot.bookings %}
+                                    {% set can_see = (user_role == 'admin') or (booking.teacher_id == current_user_id) %}
+                                    {% set is_class_booking = booking.students and booking.students[0].name == '' %}
+                                    {% if is_class_booking %}
+                                    <span class="student-name {% if not can_see %}blurred{% endif %}">
+                                        {% if can_see %}🏫 Klasse {{ booking.students[0].klasse }} (ganze Klasse){% else %}***{% endif %}
+                                    </span>
+                                    {% else %}
                                     {% for student in booking.students %}
                                     <span class="student-name {% if not can_see %}blurred{% endif %}">
                                         {% if can_see %}{{ student.name|abbreviate_name }} ({{ student.klasse }}){% else %}***{% endif %}
                                     </span>
-                                    {% endfor %} {% endfor %}
+                                    {% endfor %}
+                                    {% endif %}
+                                    {% endfor %}
                                 </div>
                                 {% endif %}
 
@@ -775,6 +799,7 @@
                         {% endfor %}
                     </tr>
                     {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
             <div class="scroll-hint scroll-hint-right">❯</div>

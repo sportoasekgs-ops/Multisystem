@@ -60,10 +60,15 @@ def seed_initial_data():
 def get_period_times():
     """Gibt alle Stunden als Dict zurück: {number: {'start': '...', 'end': '...', 'name': '...'}}"""
     from models import Period
+    from system_config import is_setup_complete
     try:
         periods = Period.query.filter_by(is_active=True).order_by(Period.sort_order).all()
         if not periods:
-            return _DEFAULT_PERIOD_TIMES
+            # Fallback nur wenn Setup abgeschlossen (Upgrade alter Installation)
+            if is_setup_complete():
+                return _DEFAULT_PERIOD_TIMES
+            # Nach Ersteinrichtung: keine Stunden → leeres Dict → Dashboard zeigt nichts
+            return {}
         return {p.number: {'start': p.start_time, 'end': p.end_time, 'name': p.name} for p in periods}
     except Exception:
         return _DEFAULT_PERIOD_TIMES
