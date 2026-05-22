@@ -3239,8 +3239,8 @@ def admin_cms_save():
             flash(f'Verbindungstest fehlgeschlagen: {e}', 'error')
             return redirect(url_for('admin_cms') + '#tab-database')
         set_database_url(db_url)
-        flash('Datenbank-URL gespeichert. ✅ Bitte starte die App neu, damit die neue Verbindung aktiv wird.', 'success')
-        return redirect(url_for('admin_cms') + '#tab-database')
+        _trigger_restart()
+        return redirect(url_for('setup.restart_wait'))
 
     return redirect(url_for('admin_cms') + f'#tab-{section}')
 

@@ -541,9 +541,8 @@ input:checked + .slider:before { transform: translateX(24px); }
         <div class="cms-card" style="border-left:4px solid #6366f1;">
             <h3>🗄️ Datenbank-Verbindung</h3>
             <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.2rem;">
-                Die Datenbank-URL wird in der lokalen Datei <code>buchungssystem_local.json</code> gespeichert
-                und beim nächsten Start der App verwendet.
-                <strong>Nach dem Speichern muss die App neu gestartet werden.</strong>
+                Die Datenbank-URL wird in der lokalen Datei <code>buchungssystem_local.json</code> gespeichert.
+                <strong>Die App startet nach dem Speichern automatisch neu.</strong>
             </p>
 
             {% if db_url_masked %}
@@ -571,7 +570,7 @@ input:checked + .slider:before { transform: translateX(24px); }
 
                 <div class="btn-row">
                     <button type="button" class="btn-ghost" onclick="testCmsDb()">🔌 Verbindung testen</button>
-                    <button type="submit" class="btn-primary">💾 Speichern & App neu starten</button>
+                    <button type="submit" class="btn-primary">💾 Speichern & automatisch neu starten</button>
                 </div>
             </form>
         </div>

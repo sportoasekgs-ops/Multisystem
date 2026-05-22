@@ -223,8 +223,13 @@ def _handle_post(step_id):
         if admin_email:
             os.environ['ADMIN_EMAIL'] = admin_email
 
-        flash('IServ-Konfiguration gespeichert. Bitte starte die App neu, damit OAuth aktiv wird.', 'success')
-        return redirect(url_for('setup.step', step_id='admin'))
+        try:
+            from app import _trigger_restart
+            _trigger_restart()
+        except Exception:
+            pass
+        flash('IServ-Konfiguration gespeichert. App wird neu gestartet…', 'success')
+        return redirect(url_for('setup.restart_wait'))
 
     elif step_id == 'admin':
         action = request.form.get('action', 'save')

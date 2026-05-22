@@ -355,8 +355,9 @@ def database_settings():
                 flash('Bitte eine Datenbank-URL eingeben.', 'error')
             else:
                 set_database_url(db_url)
-                flash('Datenbank-URL gespeichert. Bitte starte die App neu, damit die neue Verbindung aktiv wird.', 'success')
-                return redirect(url_for('admin_dyn.database_settings'))
+                from app import _trigger_restart
+                _trigger_restart()
+                return redirect(url_for('setup.restart_wait'))
 
     raw_url = get_local('database_url', '')
     if raw_url:
