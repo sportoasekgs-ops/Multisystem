@@ -48,11 +48,42 @@
             <span>Für Gmail: Nutze ein <strong>App-Passwort</strong> (Google-Konto → Sicherheit → App-Passwörter). Normale Gmail-Passwörter werden von Google blockiert.</span>
         </div>
 
+        <!-- Schnellauswahl bekannter Provider -->
+        <div class="form-group" style="margin-bottom:1.2rem;">
+            <label class="form-label">Schnellauswahl Provider</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+                <button type="button" onclick="fillSmtp('smtp-mail.outlook.com',587,'starttls')" class="btn btn-secondary" style="font-size:0.8rem;padding:5px 12px;">📧 Outlook / Office365</button>
+                <button type="button" onclick="fillSmtp('smtp.gmail.com',587,'starttls')" class="btn btn-secondary" style="font-size:0.8rem;padding:5px 12px;">📧 Gmail</button>
+                <button type="button" onclick="fillSmtp('smtp.ionos.de',587,'starttls')" class="btn btn-secondary" style="font-size:0.8rem;padding:5px 12px;">📧 IONOS</button>
+                <button type="button" onclick="fillSmtp('mail.schule.de',587,'starttls')" class="btn btn-secondary" style="font-size:0.8rem;padding:5px 12px;">🏫 Schulserver</button>
+            </div>
+        </div>
+
+        <div id="smtp-host-warning" class="alert alert-warning" style="display:none;margin-bottom:1rem;">
+            <span>⚠️</span>
+            <span id="smtp-host-warning-text"></span>
+        </div>
+
+        <div id="ms-basicauth-warning" class="alert alert-warning" style="display:none;margin-bottom:1rem;">
+            <span>🔒</span>
+            <div>
+                <strong>Microsoft hat Basic Authentication deaktiviert!</strong><br>
+                Normales Passwort funktioniert <u>nicht</u> mehr mit Outlook / Office365.<br>
+                <strong>Lösungen:</strong>
+                <ol style="margin:.5rem 0 0 0;padding-left:1.2rem;font-size:.85rem;">
+                    <li><strong>App-Passwort</strong> erstellen: <a href="https://account.microsoft.com/security" target="_blank" style="color:#92400e;">Microsoft-Konto → Sicherheit → App-Passwörter</a> (erfordert aktivierte 2-Faktor-Auth)</li>
+                    <li><strong>IT-Admin</strong> bitten, SMTP AUTH für das Postfach im Exchange Admin Center zu aktivieren</li>
+                    <li><strong>Resend</strong> als alternativen E-Mail-Anbieter verwenden (kostenlos, einfach einzurichten)</li>
+                </ol>
+            </div>
+        </div>
+
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">SMTP-Host</label>
                 <input type="text" name="smtp_host" class="form-control" id="smtp_host"
-                       value="{{ smtp_host }}" placeholder="z.B. smtp.office365.com">
+                       value="{{ smtp_host }}" placeholder="z.B. smtp-mail.outlook.com"
+                       oninput="checkSmtpHost(this.value)">
             </div>
             <div class="form-group">
                 <label class="form-label">SMTP-Port</label>
@@ -154,6 +185,46 @@
 
 {% block scripts %}
 <script>
+const SMTP_TYPOS = {
+    'smtp.mailoutlook.com':  'smtp-mail.outlook.com',
+    'smtp.outlook.com':      'smtp-mail.outlook.com',
+    'smtp.office365.de':     'smtp.office365.com',
+    'smtp.gmail.de':         'smtp.gmail.com',
+    'mail.gmail.com':        'smtp.gmail.com',
+};
+
+function fillSmtp(host, port, tls) {
+    document.getElementById('smtp_host').value = host;
+    document.getElementById('smtp_port').value = port;
+    document.getElementById('smtp_tls').value  = tls;
+    checkSmtpHost(host);
+}
+
+const MS_HOSTS = ['outlook.com', 'office365.com', 'hotmail.com', 'live.com', 'microsoft.com'];
+
+function checkSmtpHost(val) {
+    const warn   = document.getElementById('smtp-host-warning');
+    const txt    = document.getElementById('smtp-host-warning-text');
+    const msWarn = document.getElementById('ms-basicauth-warning');
+    const lower  = val.trim().toLowerCase();
+
+    if (SMTP_TYPOS[lower]) {
+        txt.innerHTML = `Meintest du <strong>${SMTP_TYPOS[lower]}</strong>? „${val}" ist kein gültiger Server. <a href="#" onclick="fillSmtp('${SMTP_TYPOS[lower]}',587,'starttls');return false;" style="color:#92400e;font-weight:600;">Automatisch korrigieren →</a>`;
+        warn.style.display = 'flex';
+    } else {
+        warn.style.display = 'none';
+    }
+
+    const isMs = MS_HOSTS.some(h => lower.includes(h));
+    msWarn.style.display = isMs ? 'flex' : 'none';
+}
+
+// Beim Laden direkt prüfen
+document.addEventListener('DOMContentLoaded', function() {
+    const h = document.getElementById('smtp_host');
+    if (h && h.value) checkSmtpHost(h.value);
+});
+
 function toggleProvider() {
     const smtp = document.getElementById('provider_smtp').checked;
     document.getElementById('smtp-fields').style.display  = smtp ? '' : 'none';

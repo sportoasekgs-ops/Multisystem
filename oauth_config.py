@@ -21,7 +21,7 @@ def _load_iserv_credentials():
 
     client_id     = db_client_id     or os.environ.get('ISERV_CLIENT_ID', '').strip()
     client_secret = db_client_secret or os.environ.get('ISERV_CLIENT_SECRET', '').strip()
-    domain        = db_domain        or os.environ.get('ISERV_DOMAIN', 'kgs-pattensen.de').strip()
+    domain        = db_domain        or os.environ.get('ISERV_DOMAIN', '').strip()
 
     source = 'DB' if db_client_id else 'Env'
     if client_id:
@@ -272,9 +272,9 @@ def determine_user_role(userinfo):
     # Prüfe E-Mail-Domain (aus DB oder Env)
     try:
         from system_config import get_config
-        allowed_domain = get_config('iserv_domain', '').strip() or os.environ.get('ISERV_DOMAIN', 'kgs-pattensen.de').strip()
+        allowed_domain = get_config('iserv_domain', '').strip() or os.environ.get('ISERV_DOMAIN', '').strip()
     except Exception:
-        allowed_domain = os.environ.get('ISERV_DOMAIN', 'kgs-pattensen.de').strip()
+        allowed_domain = os.environ.get('ISERV_DOMAIN', '').strip()
 
     if allowed_domain and not email.endswith(f'@{allowed_domain}'):
         print(f"   ❌ KEIN ZUGANG - Keine @{allowed_domain} E-Mail")

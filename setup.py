@@ -271,17 +271,16 @@ def _handle_post(step_id):
 def _get_step_config(step_id):
     """Lädt gespeicherte Werte für das aktuelle Formular."""
     if step_id == 'database':
-        from local_config import get_database_url, get_local
+        from local_config import get_local
         raw_url = get_local('database_url', '')
         env_url = os.environ.get('DATABASE_URL', '') or os.environ.get('SQLALCHEMY_DATABASE_URI', '')
         db_configured = bool(raw_url or env_url)
-        # Maskierte Anzeige: zeige nur Host, verstecke Passwort
         display_url = raw_url or env_url
         if display_url:
             try:
                 from urllib.parse import urlparse
                 p = urlparse(display_url)
-                db_url_masked = f"{p.scheme}://***:***@{p.hostname}{p.path}"
+                db_url_masked = f"{p.scheme}://***@{p.hostname}{p.path}"
             except Exception:
                 db_url_masked = '(konfiguriert)'
         else:
@@ -327,7 +326,7 @@ def _get_step_config(step_id):
             'iserv_domain':        get_config('iserv_domain', os.environ.get('ISERV_DOMAIN', '')),
             'iserv_client_id':     get_config('iserv_client_id', os.environ.get('ISERV_CLIENT_ID', '')),
             'iserv_client_secret': get_config('iserv_client_secret', os.environ.get('ISERV_CLIENT_SECRET', '')),
-            'iserv_admin_email':   get_config('iserv_admin_email', os.environ.get('ADMIN_EMAIL', '')),
+            'iserv_admin_email':   get_config('iserv_admin_email', ''),
         }
     elif step_id == 'admin':
         from models import User
@@ -414,6 +413,32 @@ def test_smtp():
 
     except Exception as e:
         err = str(e)
+        # Bekannte Fehler verständlich erklären
+        if '5.7.139' in err or 'basic authentication is disabled' in err.lower():
+            return jsonify({'success': False, 'message':
+                '🔒 Microsoft hat Basic Authentication deaktiviert. '
+                'Normales Passwort funktioniert nicht mehr mit Outlook/Office365. '
+                'Lösung: App-Passwort erstellen (Microsoft-Konto → Sicherheit → '
+                'Erweiterte Sicherheit → App-Passwörter) – oder Resend als '
+                'E-Mail-Provider verwenden.',
+                'error_type': 'ms_basic_auth'})
+        if '5.7.57' in err or 'client not authenticated' in err.lower():
+            return jsonify({'success': False, 'message':
+                '🔒 Authentifizierung fehlgeschlagen. Bei Microsoft 365 Schulkonten '
+                'muss SMTP AUTH vom IT-Administrator explizit aktiviert werden '
+                '(Exchange Admin Center → Postfach → SMTP AUTH aktivieren).',
+                'error_type': 'ms_auth'})
+        if 'Name or service not known' in err or 'nodename nor servname' in err:
+            return jsonify({'success': False, 'message':
+                f'🌐 Hostname nicht gefunden: „{host}". '
+                'Bitte SMTP-Host prüfen – z.B. smtp-mail.outlook.com (Outlook) '
+                'oder smtp.gmail.com (Gmail).',
+                'error_type': 'hostname'})
+        if 'timed out' in err.lower() or 'Connection refused' in err:
+            return jsonify({'success': False, 'message':
+                f'⏱️ Verbindung zu {host}:{port} fehlgeschlagen. '
+                'Port oder Firewall-Einstellungen prüfen.',
+                'error_type': 'connection'})
         return jsonify({'success': False, 'message': f'Fehler: {err}'})
 
 

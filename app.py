@@ -1276,7 +1276,7 @@ def dashboard():
         })
     
     from system_config import get_config as _gc
-    _dashboard_title = _gc('dashboard_title', '').strip() or 'Buchungsübersicht SportOASE'
+    _dashboard_title = _gc('dashboard_title', '').strip()
     _help_content    = _gc('help_content', '').strip()
     _contact_name    = _gc('contact_name', '').strip()
     _contact_email   = _gc('contact_email', '').strip()

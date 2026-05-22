@@ -5,7 +5,7 @@
 <div class="wizard-card-header">
     <span class="step-icon">🗄️</span>
     <h2>Datenbank-Verbindung</h2>
-    <p>Gib die Adresse deiner PostgreSQL-Datenbank ein. Die URL wird sicher lokal gespeichert und beim nächsten Start verwendet.</p>
+    <p>Gib die Adresse deiner PostgreSQL-Datenbank ein. Die URL wird lokal gespeichert und beim nächsten Start verwendet.</p>
 </div>
 
 <form method="post" id="db-form">
@@ -21,7 +21,7 @@
     {% else %}
     <div class="alert alert-info">
         <span>ℹ️</span>
-        <span>Keine Datenbank-URL in der lokalen Konfiguration gefunden. Wird eine URL über <code>DATABASE_URL</code> Umgebungsvariable gesetzt, kann dieser Schritt übersprungen werden.</span>
+        <span>Keine Datenbank-URL konfiguriert. Bitte unten eintragen.</span>
     </div>
     {% endif %}
 
@@ -34,14 +34,13 @@
         Aus Sicherheitsgründen wird die aktuelle URL nicht erneut angezeigt. Nur ausfüllen, wenn du die URL ändern möchtest.</p>
     </div>
 
-    <div id="db-test-result" class="alert" style="display:none;margin-top:0;margin-bottom:16px;"></div>
-
     <div style="background:#f8f9fa;border-radius:12px;padding:18px;">
         <p style="font-weight:600;margin-bottom:10px;font-size:.9rem;">🧪 Verbindung testen</p>
         <button type="button" class="btn btn-ghost" onclick="testDb()" id="test-btn">
             🔌 Verbindung testen
         </button>
         <p class="form-hint" style="margin-top:8px;">Testet die eingegebene URL, bevor du speicherst.</p>
+        <div id="db-test-result" class="alert" style="display:none;margin-top:12px;margin-bottom:0;"></div>
     </div>
 
     <hr class="section-sep">

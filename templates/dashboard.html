@@ -18,10 +18,12 @@
 
     <!-- Unified Header Cards -->
     <div class="dashboard-top-section">
+        {% if dashboard_title %}
         <div class="dashboard-card dashboard-card-title">
             <span class="card-icon">📅</span>
             <span class="card-text">{{ dashboard_title }}</span>
         </div>
+        {% endif %}
         
         <div class="dashboard-card dashboard-card-date">
             <span class="card-icon">📆</span>
@@ -36,6 +38,7 @@
     </div>
 
     <!-- Gebrauchsanleitung & FAQ (aufklappbar) -->
+    {% if help_content %}
     <details class="help-section">
         <summary class="help-toggle">
             <span class="help-icon">📖</span>
@@ -43,9 +46,8 @@
             <span class="toggle-arrow">▼</span>
         </summary>
         <div class="help-content">
-        {% if help_content %}
             {{ help_content | safe }}
-        {% else %}
+        {% if False %}
             <div class="help-grid">
                 <!-- Schnellanleitung -->
                 <div class="help-card">
@@ -429,6 +431,7 @@
         {% endif %}
         </div>
     </details>
+    {% endif %}
 
     <div class="selected-date-info">
         <h3>{{ weekday }}, {{ selected_date.strftime('%d.%m.%Y') }}</h3>
