@@ -122,7 +122,12 @@ if _BOOTSTRAP_MODE:
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
 
-if not _BOOTSTRAP_MODE:
+# Im Bootstrap-Modus SQLite-In-Memory als Platzhalter, damit db.session
+# nie mit "not registered with sqlalchemy instance" crasht.
+if _BOOTSTRAP_MODE:
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+else:
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
@@ -132,9 +137,8 @@ if not _BOOTSTRAP_MODE:
 # Importiere zentrale Datenbank-Instanz
 from database import db
 
-# Initialisiere SQLAlchemy mit der App (nur wenn DB verfügbar)
-if not _BOOTSTRAP_MODE:
-    db.init_app(app)
+# db immer mit der App registrieren (auch im Bootstrap-Modus)
+db.init_app(app)
 
 # Importiere Modelle und Hilfsfunktionen (nur wenn DB verfügbar)
 if not _BOOTSTRAP_MODE:
