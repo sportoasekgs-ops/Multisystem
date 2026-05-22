@@ -327,9 +327,12 @@ def _get_step_config(step_id):
             'iserv_admin_email':   get_config('iserv_admin_email', ''),
         }
     elif step_id == 'admin':
-        from models import User
-        admins = User.query.filter_by(role='admin').all()
-        existing_admins = [{'username': u.username, 'email': u.email or ''} for u in admins]
+        try:
+            from models import User
+            admins = User.query.filter_by(role='admin').all()
+            existing_admins = [{'username': u.username, 'email': u.email or ''} for u in admins]
+        except Exception:
+            existing_admins = []
         return {'existing_admins': existing_admins}
     elif step_id == 'complete':
         return {
