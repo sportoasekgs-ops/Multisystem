@@ -192,29 +192,29 @@ body {
 }
 
 .user-role-badge.teacher {
-    background: var(--accent);
-    color: white;
+    background: var(--primary-light);
+    color: var(--primary-dark);
 }
 
 /* Exclusive Booking Styles */
 .exclusive-text {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #9333ea;
-    background: #f3e8ff;
+    color: var(--primary-dark);
+    background: var(--primary-light);
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
 }
 
 .exclusive-checkbox {
-    background: #fef3c7;
-    border: 2px solid #f59e0b;
+    background: var(--primary-light);
+    border: 2px solid var(--primary);
     padding: 0.75rem;
     border-radius: 8px;
 }
 
 .warning-text {
-    color: #92400e;
+    color: var(--primary-dark);
     font-size: 0.8rem;
     margin-top: 0.5rem;
 }
@@ -225,17 +225,17 @@ body {
 
 /* Prominente Exklusiv-Buchung Hervorhebung */
 .exclusive-highlight {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    border: 3px solid #f59e0b;
+    background: var(--primary-light);
+    border: 3px solid var(--primary);
     border-radius: 12px;
     padding: 1rem;
     margin-bottom: 1rem;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 4px 12px rgba(233, 30, 99, 0.2);
     animation: pulse-border 2s ease-in-out infinite;
 }
 
 .exclusive-highlight .checkbox-text strong {
-    color: #92400e;
+    color: var(--primary-dark);
     font-size: 1rem;
 }
 
@@ -248,21 +248,21 @@ body {
 
 @keyframes pulse-border {
     0%, 100% {
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        box-shadow: 0 4px 12px rgba(233, 30, 99, 0.2);
     }
     50% {
-        box-shadow: 0 4px 20px rgba(245, 158, 11, 0.5);
+        box-shadow: 0 4px 20px rgba(233, 30, 99, 0.35);
     }
 }
 
 /* Exklusiver Slot in Wochenübersicht */
 .period-exclusive {
-    background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
-    border: 2px solid #f59e0b !important;
+    background: var(--primary-light) !important;
+    border: 2px solid var(--primary) !important;
 }
 
 .exclusive-header {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    background: var(--primary);
     color: white;
     padding: 0.5rem;
     border-radius: 6px;
@@ -286,18 +286,18 @@ body {
 
 .exclusive-student {
     font-weight: 600;
-    color: #92400e;
+    color: var(--primary-dark);
 }
 
 .exclusive-teacher {
     font-size: 0.75rem;
-    color: #78716c;
+    color: var(--text-secondary);
 }
 
 /* Pending exclusive booking indicator */
 .pending-exclusive {
-    background: #fef3c7;
-    border: 2px dashed #f59e0b;
+    background: var(--primary-light);
+    border: 2px dashed var(--primary);
     padding: 0.5rem;
     border-radius: 8px;
     margin-top: 0.5rem;
@@ -305,14 +305,14 @@ body {
 
 .pending-exclusive-text {
     font-size: 0.75rem;
-    color: #92400e;
+    color: var(--primary-dark);
     font-weight: 500;
 }
 
 /* Pending Exclusive Hint in Slot */
 .pending-exclusive-hint {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    border: 1px dashed #f59e0b;
+    background: var(--primary-light);
+    border: 1px dashed var(--primary);
     border-radius: 6px;
     padding: 0.35rem 0.5rem;
     display: flex;
@@ -320,7 +320,7 @@ body {
     justify-content: center;
     gap: 0.35rem;
     font-size: 0.7rem;
-    color: #92400e;
+    color: var(--primary-dark);
     margin-bottom: 0.4rem;
 }
 
@@ -335,19 +335,19 @@ body {
 
 /* Pending Exclusive Admin Section */
 .pending-stat {
-    background: #fef3c7 !important;
-    border: 2px solid #f59e0b !important;
+    background: var(--primary-light) !important;
+    border: 2px solid var(--primary) !important;
 }
 
 .pending-exclusive-section {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    border: 2px solid #f59e0b;
+    background: var(--primary-light);
+    border: 2px solid var(--primary);
     border-radius: 12px;
     margin-bottom: 1.5rem;
 }
 
 .pending-exclusive-section .section-header h3 {
-    color: #92400e;
+    color: var(--primary-dark);
 }
 
 .pending-exclusive-list {
@@ -970,13 +970,13 @@ details.help-section[open] .toggle-arrow {
 }
 
 .help-card-exclusive {
-    background: linear-gradient(135deg, #fffbeb, #fef3c7);
-    border: 2px solid #f59e0b;
+    background: var(--primary-light);
+    border: 2px solid var(--primary);
     grid-column: 1 / -1;
 }
 
 .help-card-exclusive h4 {
-    color: #92400e;
+    color: var(--primary-dark);
 }
 
 .exclusive-intro {
@@ -1007,31 +1007,31 @@ details.help-section[open] .toggle-arrow {
 }
 
 .exclusive-note {
-    background: rgba(245, 158, 11, 0.15);
+    background: rgba(233, 30, 99, 0.08);
     padding: 0.75rem;
     border-radius: 6px;
     font-size: 0.8rem;
-    color: #92400e;
+    color: var(--primary-dark);
     margin: 0;
 }
 
 [data-theme="dark"] .help-card-exclusive {
-    background: linear-gradient(135deg, #422006, #78350f);
-    border-color: #f59e0b;
+    background: var(--primary-light);
+    border-color: var(--primary);
 }
 
 [data-theme="dark"] .help-card-exclusive h4 {
-    color: #fbbf24;
+    color: var(--primary);
 }
 
 [data-theme="dark"] .exclusive-step {
     background: rgba(0, 0, 0, 0.3);
-    color: #fef3c7;
+    color: var(--text-primary);
 }
 
 [data-theme="dark"] .exclusive-note {
-    background: rgba(245, 158, 11, 0.2);
-    color: #fcd34d;
+    background: rgba(233, 30, 99, 0.15);
+    color: var(--primary);
 }
 
 .offer-descriptions-grid {
@@ -1598,119 +1598,111 @@ details.help-section[open] .toggle-arrow {
 
 .slot-availability .full-text {
     color: var(--error);
+    font-weight: 700;
 }
 
 .slot-availability .status-text {
     color: var(--text-secondary);
 }
 
-/* Kursfarben - Pastelltöne (weniger gesättigt) */
-.course-wochenstart {
-    border-color: #f5b041;
-    background: linear-gradient(135deg, rgba(245,176,65,0.08) 0%, rgba(248,196,113,0.05) 100%);
-}
-.course-wochenstart .course-tag {
-    background: #f5b041;
-    color: #5d4e37;
+.slot-availability .booked-indicator {
+    color: var(--primary);
+    font-weight: 700;
 }
 
-.course-konflikt {
-    border-color: #bb8fce;
-    background: linear-gradient(135deg, rgba(187,143,206,0.08) 0%, rgba(215,189,226,0.05) 100%);
-}
-.course-konflikt .course-tag {
-    background: #bb8fce;
-    color: #4a3656;
+/* Slot mit Buchungen – leicht hervorgehoben */
+.slot-card.slot-has-bookings {
+    border-width: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.course-koordination {
-    border-color: #7fb3d5;
-    background: linear-gradient(135deg, rgba(127,179,213,0.08) 0%, rgba(174,214,241,0.05) 100%);
-}
-.course-koordination .course-tag {
-    background: #7fb3d5;
-    color: #2e4a5f;
+/* Ausgebuchter Slot */
+.slot-card.slot-full {
+    border-color: #ef4444 !important;
+    background: linear-gradient(135deg, rgba(239,68,68,0.06) 0%, rgba(254,202,202,0.04) 100%) !important;
+    opacity: 0.85;
 }
 
-.course-sozial {
-    border-color: #76d7c4;
-    background: linear-gradient(135deg, rgba(118,215,196,0.08) 0%, rgba(163,228,215,0.05) 100%);
-}
-.course-sozial .course-tag {
-    background: #76d7c4;
-    color: #1e5245;
-}
-
-.course-fitness {
-    border-color: #7dcea0;
-    background: linear-gradient(135deg, rgba(125,206,160,0.08) 0%, rgba(171,235,198,0.05) 100%);
-}
-.course-fitness .course-tag {
-    background: #7dcea0;
-    color: #1e5131;
+/* Booking-Fortschrittsbalken */
+.slot-booking-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 2px;
+    margin: 4px 0 6px;
+    overflow: hidden;
 }
 
+.slot-booking-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    min-width: 4px;
+}
+
+.slot-booking-bar-fill.bar-low  { background: #22c55e; }
+.slot-booking-bar-fill.bar-high { background: #f59e0b; }
+.slot-booking-bar-fill.bar-full { background: #ef4444; }
+
+/* Kursfarben - 4 reduzierte Farbgruppen, neutrale Karten-Hintergründe */
+
+/* Gruppe 1: Warm (Orange) – Wochenstart, Motorik */
+.course-wochenstart,
 .course-motorik {
-    border-color: #f0b27a;
-    background: linear-gradient(135deg, rgba(240,178,122,0.08) 0%, rgba(245,203,167,0.05) 100%);
+    border-color: #e8a87c;
 }
+.course-wochenstart .course-tag,
 .course-motorik .course-tag {
-    background: #f0b27a;
-    color: #5d4230;
+    background: #e8a87c;
+    color: #5d3a1a;
 }
 
-.course-turnen {
-    border-color: #f1948a;
-    background: linear-gradient(135deg, rgba(241,148,138,0.08) 0%, rgba(245,183,177,0.05) 100%);
-}
-.course-turnen .course-tag {
-    background: #f1948a;
-    color: #5d2a25;
-}
-
-.course-atem {
-    border-color: #85c1e9;
-    background: linear-gradient(135deg, rgba(133,193,233,0.08) 0%, rgba(174,214,241,0.05) 100%);
-}
-.course-atem .course-tag {
-    background: #85c1e9;
-    color: #21618c;
-}
-
+/* Gruppe 2: Blau – Koordination, Atem, Bodyscan */
+.course-koordination,
+.course-atem,
 .course-bodyscan {
-    border-color: #c39bd3;
-    background: linear-gradient(135deg, rgba(195,155,211,0.08) 0%, rgba(215,189,226,0.05) 100%);
+    border-color: #82b4d4;
 }
+.course-koordination .course-tag,
+.course-atem .course-tag,
 .course-bodyscan .course-tag {
-    background: #c39bd3;
-    color: #4a235a;
+    background: #82b4d4;
+    color: #1e3a4f;
 }
 
+/* Gruppe 3: Grün – Sozial, Fitness, Ruhe */
+.course-sozial,
+.course-fitness,
 .course-ruhe {
-    border-color: #73c6b6;
-    background: linear-gradient(135deg, rgba(115,198,182,0.08) 0%, rgba(163,228,215,0.05) 100%);
+    border-color: #7abfa8;
 }
+.course-sozial .course-tag,
+.course-fitness .course-tag,
 .course-ruhe .course-tag {
-    background: #73c6b6;
-    color: #1e5245;
+    background: #7abfa8;
+    color: #1e4036;
 }
 
-.course-frei {
-    border-color: #aab7b8;
-    background: linear-gradient(135deg, rgba(170,183,184,0.06) 0%, rgba(191,201,202,0.04) 100%);
+/* Gruppe 4: Pink/Primary – Turnen, Konflikt */
+.course-turnen,
+.course-konflikt {
+    border-color: #d98fa0;
 }
-.course-frei .course-tag {
-    background: #aab7b8;
-    color: #424949;
+.course-turnen .course-tag,
+.course-konflikt .course-tag {
+    background: #d98fa0;
+    color: #5d1e2e;
 }
 
+/* Gruppe 5: Neutral – Freie Wahl, Default */
+.course-frei,
 .course-default {
-    border-color: #99a3a4;
-    background: linear-gradient(135deg, rgba(153,163,164,0.08) 0%, rgba(178,186,187,0.05) 100%);
+    border-color: #b0b8bb;
 }
+.course-frei .course-tag,
 .course-default .course-tag {
-    background: #99a3a4;
-    color: #424949;
+    background: #b0b8bb;
+    color: #3a4042;
 }
 
 /* Admin Block Button in neuen Karten */

@@ -154,15 +154,24 @@ def _handle_post(step_id):
             flash('E-Mail-Konfiguration übersprungen.', 'info')
             return redirect(url_for('setup.step', step_id='iserv'))
 
+        provider = request.form.get('email_provider', 'smtp').strip()
         data = {
-            'smtp_host':  request.form.get('smtp_host', '').strip(),
-            'smtp_port':  request.form.get('smtp_port', '587').strip(),
-            'smtp_user':  request.form.get('smtp_user', '').strip(),
-            'smtp_pass':  request.form.get('smtp_pass', '').strip(),
-            'smtp_tls':   request.form.get('smtp_tls', 'starttls').strip(),
-            'smtp_from':  request.form.get('smtp_from', '').strip(),
-            'admin_email': request.form.get('admin_email', '').strip(),
+            'email_provider': provider,
+            'admin_email':    request.form.get('admin_email', '').strip(),
         }
+        if provider == 'resend':
+            data['resend_api_key'] = request.form.get('resend_api_key', '').strip()
+            data['resend_from']    = request.form.get('resend_from', '').strip()
+        else:
+            data['smtp_host'] = request.form.get('smtp_host', '').strip()
+            data['smtp_port'] = request.form.get('smtp_port', '587').strip()
+            data['smtp_user'] = request.form.get('smtp_user', '').strip()
+            data['smtp_tls']  = request.form.get('smtp_tls', 'starttls').strip()
+            data['smtp_from'] = request.form.get('smtp_from', '').strip()
+            # Passwort nur speichern wenn neu eingegeben
+            smtp_pass = request.form.get('smtp_pass', '').strip()
+            if smtp_pass:
+                data['smtp_pass'] = smtp_pass
         set_configs(data, category='smtp')
         flash('E-Mail-Konfiguration gespeichert.', 'success')
         return redirect(url_for('setup.step', step_id='iserv'))
@@ -302,13 +311,16 @@ def _get_step_config(step_id):
         }
     elif step_id == 'smtp':
         return {
-            'smtp_host':   get_config('smtp_host', ''),
-            'smtp_port':   get_config('smtp_port', '587'),
-            'smtp_user':   get_config('smtp_user', ''),
-            'smtp_pass':   get_config('smtp_pass', ''),
-            'smtp_tls':    get_config('smtp_tls', 'starttls'),
-            'smtp_from':   get_config('smtp_from', ''),
-            'admin_email': get_config('admin_email', ''),
+            'email_provider': get_config('email_provider', 'smtp'),
+            'smtp_host':      get_config('smtp_host', ''),
+            'smtp_port':      get_config('smtp_port', '587'),
+            'smtp_user':      get_config('smtp_user', ''),
+            'smtp_pass':      get_config('smtp_pass', ''),
+            'smtp_tls':       get_config('smtp_tls', 'starttls'),
+            'smtp_from':      get_config('smtp_from', ''),
+            'resend_api_key': get_config('resend_api_key', ''),
+            'resend_from':    get_config('resend_from', ''),
+            'admin_email':    get_config('admin_email', ''),
         }
     elif step_id == 'iserv':
         return {

@@ -3007,6 +3007,9 @@ def admin_cms():
         'smtp_tls':         get_config('smtp_tls', 'starttls'),
         'smtp_from':        get_config('smtp_from', ''),
         'admin_email':        get_config('admin_email', ''),
+        'email_provider':     get_config('email_provider', 'smtp'),
+        'resend_api_key':     get_config('resend_api_key', ''),
+        'resend_from':        get_config('resend_from', ''),
         'iserv_admin_email':  get_config('iserv_admin_email', ''),
         'iserv_domain':       get_config('iserv_domain', ''),
         'iserv_client_id':    get_config('iserv_client_id', ''),
@@ -3112,21 +3115,26 @@ def admin_cms_save():
         flash('Dashboard-Inhalte gespeichert.', 'success')
 
     elif section == 'smtp':
-        from system_config import set_configs
-        set_configs({
-            'smtp_host':   request.form.get('smtp_host', '').strip(),
-            'smtp_port':   request.form.get('smtp_port', '587').strip(),
-            'smtp_user':   request.form.get('smtp_user', '').strip(),
-            'smtp_tls':    request.form.get('smtp_tls', 'starttls').strip(),
-            'smtp_from':   request.form.get('smtp_from', '').strip(),
-            'admin_email': request.form.get('admin_email', '').strip(),
-        }, category='smtp')
-        # Passwort nur speichern wenn ausgefüllt
-        new_pass = request.form.get('smtp_pass', '').strip()
-        if new_pass:
-            from system_config import set_config as _sc
-            _sc('smtp_pass', new_pass, category='smtp')
-        flash('SMTP-Konfiguration gespeichert.', 'success')
+        from system_config import set_configs, set_config as _sc
+        provider = request.form.get('email_provider', 'smtp').strip()
+        data = {
+            'email_provider': provider,
+            'admin_email':    request.form.get('admin_email', '').strip(),
+        }
+        if provider == 'resend':
+            data['resend_api_key'] = request.form.get('resend_api_key', '').strip()
+            data['resend_from']    = request.form.get('resend_from', '').strip()
+        else:
+            data['smtp_host'] = request.form.get('smtp_host', '').strip()
+            data['smtp_port'] = request.form.get('smtp_port', '587').strip()
+            data['smtp_user'] = request.form.get('smtp_user', '').strip()
+            data['smtp_tls']  = request.form.get('smtp_tls', 'starttls').strip()
+            data['smtp_from'] = request.form.get('smtp_from', '').strip()
+            new_pass = request.form.get('smtp_pass', '').strip()
+            if new_pass:
+                _sc('smtp_pass', new_pass, category='smtp')
+        set_configs(data, category='smtp')
+        flash('E-Mail-Konfiguration gespeichert.', 'success')
 
     elif section == 'iserv':
         from system_config import set_configs
@@ -3225,13 +3233,10 @@ def admin_factory_reset():
             db.session.commit()
 
             if mode == 'full':
-                # Standardwerte neu einsäen
-                from dynamic_config import seed_initial_data
-                seed_initial_data()
                 # Session leeren, da der Admin-User gelöscht wurde
                 session.clear()
-                flash('✅ Vollständiger Werksreset abgeschlossen. Bitte lege jetzt einen neuen Admin-Account an.', 'success')
-                return redirect(url_for('setup.step', step_id='admin'))
+                flash('✅ Vollständiger Werksreset abgeschlossen. Bitte richte das System neu ein.', 'success')
+                return redirect(url_for('setup.index'))
             else:
                 flash('✅ Buchungsdaten erfolgreich gelöscht (Benutzer & Konfiguration bleiben erhalten).', 'success')
 
@@ -3336,13 +3341,6 @@ def factory_reset():
 
         from database import db as _db
         _db.session.commit()
-
-        # Dynamische Defaults neu einseeden (Stunden, Kurse, Klassen)
-        try:
-            from dynamic_config import seed_initial_data as _seed
-            _seed()
-        except Exception as seed_err:
-            app.logger.warning(f"[FACTORY RESET] Seeding nach Reset fehlgeschlagen: {seed_err}")
 
         # Session leeren
         session.clear()

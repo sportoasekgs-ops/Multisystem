@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Login – {{ school_name or 'Buchungssystem' }}{% endblock %}
+{% block title %}Login{% if school_name %} – {{ school_name }}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="login-container">
@@ -7,10 +7,10 @@
         <div class="login-logo">
             <img src="{{ logo_url }}" alt="{{ school_name or 'Logo' }}">
         </div>
-        <h2>{{ login_title or ('Willkommen im Buchungssystem' + (' ' + school_name if school_name else '')) }}</h2>
-        <p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
-            {{ login_subtitle or 'Melden Sie sich mit Ihrem IServ-Account an' }}
-        </p>
+        {% if login_title %}<h2>{{ login_title }}</h2>{% endif %}
+        {% if login_subtitle %}<p style="text-align: center; color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
+            {{ login_subtitle }}
+        </p>{% endif %}
 
         <a href="{{ url_for('login_iserv') }}" class="btn btn-iserv">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

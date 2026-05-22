@@ -234,85 +234,122 @@ input:checked + .slider:before { transform: translateX(24px); }
         </form>
     </div>
 
-    <!-- ── SMTP ──────────────────────────────────────────────────── -->
+    <!-- ── E-MAIL ──────────────────────────────────────────────── -->
     <div id="tab-smtp" class="cms-section">
         <form method="post" action="{{ url_for('admin_cms_save') }}" id="smtp-cms-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <input type="hidden" name="section" value="smtp">
             <div class="cms-card">
-                <h3>SMTP-Konfiguration</h3>
-                <div style="background:#dbeafe;border:1px solid #93c5fd;color:#1e40af;padding:12px 16px;border-radius:8px;margin-bottom:.8rem;font-size:.85rem;">
-                    <strong>📧 Gmail-Einstellungen:</strong>
-                    Host: <code>smtp.gmail.com</code> · Port: <code>587</code> · TLS: <code>STARTTLS</code><br>
-                    <strong>Wichtig:</strong> Gmail erfordert ein <strong>App-Passwort</strong> (nicht das normale Google-Passwort).
-                    <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:#1d4ed8;">→ App-Passwort erstellen</a>
-                    (Google-Konto → Sicherheit → 2-Schritt-Verifizierung muss aktiv sein)
+                <h3>E-Mail-Provider</h3>
+                <div style="display:flex;gap:12px;margin-bottom:1.5rem;">
+                    <label style="flex:1;cursor:pointer;">
+                        <input type="radio" name="email_provider" value="smtp" id="cms_provider_smtp"
+                               {% if (cms.email_provider or 'smtp') != 'resend' %}checked{% endif %}
+                               onchange="cmsToggleProvider()" style="display:none;">
+                        <div id="cms_card_smtp" style="border:2px solid {% if (cms.email_provider or 'smtp') != 'resend' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:14px;text-align:center;transition:all 0.2s;">
+                            <div style="font-size:1.5rem;margin-bottom:4px;">🖥️</div>
+                            <div style="font-weight:700;font-size:.85rem;">SMTP</div>
+                            <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Eigener Mailserver</div>
+                        </div>
+                    </label>
+                    <label style="flex:1;cursor:pointer;">
+                        <input type="radio" name="email_provider" value="resend" id="cms_provider_resend"
+                               {% if cms.email_provider == 'resend' %}checked{% endif %}
+                               onchange="cmsToggleProvider()" style="display:none;">
+                        <div id="cms_card_resend" style="border:2px solid {% if cms.email_provider == 'resend' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:14px;text-align:center;transition:all 0.2s;">
+                            <div style="font-size:1.5rem;margin-bottom:4px;">☁️</div>
+                            <div style="font-weight:700;font-size:.85rem;">Resend</div>
+                            <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Gmail-Alternative</div>
+                        </div>
+                    </label>
                 </div>
-                <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.2rem;">
-                    E-Mails werden ausschließlich über SMTP versendet.
-                </p>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                    <div class="form-group">
-                        <label class="form-label">SMTP-Host</label>
-                        <input type="text" name="smtp_host" id="cms-smtp-host" class="form-control"
-                               value="{{ cms.smtp_host or '' }}" placeholder="z.B. mail.schule.de">
+
+                <!-- SMTP-Felder -->
+                <div id="cms-smtp-section">
+                    <div style="background:#dbeafe;border:1px solid #93c5fd;color:#1e40af;padding:12px 16px;border-radius:8px;margin-bottom:.8rem;font-size:.85rem;">
+                        <strong>Gmail:</strong> Host <code>smtp.gmail.com</code> · Port <code>587</code> · STARTTLS &nbsp;|&nbsp;
+                        <strong>Wichtig:</strong> Gmail benötigt ein <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:#1d4ed8;">App-Passwort</a> (kein normales Passwort).
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">SMTP-Port</label>
-                        <input type="number" name="smtp_port" id="cms-smtp-port" class="form-control"
-                               value="{{ cms.smtp_port or '587' }}" placeholder="587">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">SMTP-Host</label>
+                            <input type="text" name="smtp_host" id="cms-smtp-host" class="form-control"
+                                   value="{{ cms.smtp_host or '' }}" placeholder="z.B. smtp.office365.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SMTP-Port</label>
+                            <input type="number" name="smtp_port" id="cms-smtp-port" class="form-control"
+                                   value="{{ cms.smtp_port or '587' }}" placeholder="587">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">SMTP-Benutzername</label>
+                            <input type="text" name="smtp_user" id="cms-smtp-user" class="form-control"
+                                   value="{{ cms.smtp_user or '' }}" placeholder="buchung@schule.de" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SMTP-Passwort</label>
+                            <input type="password" name="smtp_pass" id="cms-smtp-pass" class="form-control"
+                                   placeholder="{% if cms.smtp_host %}(gespeichert – leer lassen){% else %}Passwort eingeben{% endif %}"
+                                   autocomplete="new-password">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Verschlüsselung</label>
+                            <select name="smtp_tls" id="cms-smtp-tls" class="form-control" onchange="cmsSslPort()">
+                                <option value="starttls" {% if cms.smtp_tls == 'starttls' or not cms.smtp_tls %}selected{% endif %}>STARTTLS (Port 587)</option>
+                                <option value="ssl" {% if cms.smtp_tls == 'ssl' %}selected{% endif %}>SSL/TLS (Port 465)</option>
+                                <option value="none" {% if cms.smtp_tls == 'none' %}selected{% endif %}>Keine (Port 25)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Absender-E-Mail</label>
+                            <input type="email" name="smtp_from" id="cms-smtp-from" class="form-control"
+                                   value="{{ cms.smtp_from or '' }}" placeholder="buchung@schule.de">
+                        </div>
+                    </div>
+                    <div class="cms-card" style="border-left:4px solid #3b82f6;margin-top:1rem;">
+                        <h3>🧪 SMTP testen</h3>
+                        <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+                                <label class="form-label">Test-E-Mail senden an</label>
+                                <input type="email" id="cms-test-email" class="form-control"
+                                       value="{{ cms.smtp_user or '' }}" placeholder="test@schule.de">
+                            </div>
+                            <button type="button" class="btn-ghost" onclick="testCmsSmtp()" id="cms-smtp-test-btn"
+                                    style="height:42px;flex-shrink:0;padding:.65rem 1.2rem;">
+                                📨 Testen
+                            </button>
+                        </div>
+                        <div id="cms-smtp-test-result" class="alert" style="display:none;margin-top:1rem;"></div>
                     </div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                    <div class="form-group">
-                        <label class="form-label">SMTP-Benutzername</label>
-                        <input type="text" name="smtp_user" id="cms-smtp-user" class="form-control"
-                               value="{{ cms.smtp_user or '' }}" placeholder="z.B. buchung@schule.de" autocomplete="off">
+
+                <!-- Resend-Felder -->
+                <div id="cms-resend-section" style="display:none;">
+                    <div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;padding:12px 16px;border-radius:8px;margin-bottom:1rem;font-size:.85rem;">
+                        Registriere dich kostenlos auf <strong>resend.com</strong>, erstelle einen API-Key und verifiziere deine Domain. Zum Testen: <code>onboarding@resend.dev</code> als Absender verwenden.
                     </div>
                     <div class="form-group">
-                        <label class="form-label">SMTP-Passwort</label>
-                        <input type="password" name="smtp_pass" id="cms-smtp-pass" class="form-control"
-                               placeholder="{% if cms.smtp_host %}•••••••• (gespeichert){% else %}Passwort eingeben{% endif %}"
-                               autocomplete="new-password">
-                        <p class="form-hint">Leer lassen = bisheriges Passwort bleibt erhalten.</p>
-                    </div>
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                    <div class="form-group">
-                        <label class="form-label">Verschlüsselung</label>
-                        <select name="smtp_tls" id="cms-smtp-tls" class="form-control" onchange="cmsSslPort()">
-                            <option value="starttls" {% if cms.smtp_tls == 'starttls' or not cms.smtp_tls %}selected{% endif %}>STARTTLS (Port 587)</option>
-                            <option value="ssl" {% if cms.smtp_tls == 'ssl' %}selected{% endif %}>SSL/TLS (Port 465)</option>
-                            <option value="none" {% if cms.smtp_tls == 'none' %}selected{% endif %}>Keine (Port 25)</option>
-                        </select>
+                        <label class="form-label">Resend API-Key</label>
+                        <input type="password" name="resend_api_key" class="form-control"
+                               value="{{ cms.resend_api_key or '' }}"
+                               placeholder="re_xxxxxxxxxxxxxxxxxxxx" autocomplete="new-password">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Absender-E-Mail</label>
-                        <input type="email" name="smtp_from" id="cms-smtp-from" class="form-control"
-                               value="{{ cms.smtp_from or '' }}" placeholder="z.B. buchung@schule.de">
+                        <input type="email" name="resend_from" class="form-control"
+                               value="{{ cms.resend_from or '' }}" placeholder="buchung@deine-domain.de">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Admin-E-Mail (Buchungsbenachrichtigungen gehen an diese Adresse)</label>
+
+                <div class="form-group" style="margin-top:1rem;">
+                    <label class="form-label">Admin-E-Mail (Buchungsbenachrichtigungen)</label>
                     <input type="email" name="admin_email" class="form-control"
                            value="{{ cms.admin_email or '' }}" placeholder="z.B. admin@schule.de">
                 </div>
-            </div>
-
-            <div class="cms-card" style="border-left:4px solid #3b82f6;">
-                <h3>🧪 SMTP-Verbindung testen</h3>
-                <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
-                    <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
-                        <label class="form-label">Test-E-Mail senden an</label>
-                        <input type="email" id="cms-test-email" class="form-control"
-                               value="{{ cms.smtp_user or '' }}" placeholder="test@schule.de">
-                    </div>
-                    <button type="button" class="btn-ghost" onclick="testCmsSmtp()" id="cms-smtp-test-btn"
-                            style="height:42px;flex-shrink:0;padding:.65rem 1.2rem;">
-                        📨 Testen
-                    </button>
-                </div>
-                <div id="cms-smtp-test-result" class="alert" style="display:none;margin-top:1rem;"></div>
             </div>
 
             <div class="btn-row">
@@ -682,6 +719,15 @@ function validateReset() {
     }
     return confirm('⚠️ LETZTE WARNUNG: Wirklich ALLE Daten löschen und das System zurücksetzen?\n\nDiese Aktion kann nicht rückgängig gemacht werden!');
 }
+
+function cmsToggleProvider() {
+    const smtp = document.getElementById('cms_provider_smtp').checked;
+    document.getElementById('cms-smtp-section').style.display   = smtp ? '' : 'none';
+    document.getElementById('cms-resend-section').style.display = smtp ? 'none' : '';
+    document.getElementById('cms_card_smtp').style.borderColor   = smtp ? 'var(--primary)' : '#e5e7eb';
+    document.getElementById('cms_card_resend').style.borderColor = smtp ? '#e5e7eb' : 'var(--primary)';
+}
+cmsToggleProvider();
 
 function cmsSslPort() {
     const tls = document.getElementById('cms-smtp-tls').value;

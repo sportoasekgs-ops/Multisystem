@@ -1,89 +1,144 @@
 {% extends "setup/wizard_base.html" %}
-{% block title %}E-Mail / SMTP{% endblock %}
+{% block title %}E-Mail-Konfiguration{% endblock %}
 
 {% block card_content %}
 <div class="wizard-card-header">
     <span class="step-icon">📧</span>
-    <h2>E-Mail / SMTP-Konfiguration</h2>
-    <p>Richten Sie den E-Mail-Server für Buchungsbestätigungen ein. Dieser Schritt ist optional und kann übersprungen werden.</p>
+    <h2>E-Mail-Konfiguration</h2>
+    <p>Wähle einen E-Mail-Provider für Buchungsbestätigungen. Dieser Schritt ist optional und kann übersprungen werden.</p>
 </div>
 
 <form method="post" id="smtp-form">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 <div class="wizard-card-body">
 
-    <div class="alert alert-info">
-        <span>ℹ️</span>
-        <span>E-Mails werden für Buchungsbestätigungen und Benachrichtigungen benötigt. Ohne SMTP-Konfiguration werden keine E-Mails versendet. Sie können diesen Schritt auch überspringen.</span>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label class="form-label">SMTP-Host</label>
-            <input type="text" name="smtp_host" class="form-control" id="smtp_host"
-                   value="{{ smtp_host }}" placeholder="z.B. mail.schule.de">
-        </div>
-        <div class="form-group">
-            <label class="form-label">SMTP-Port</label>
-            <input type="number" name="smtp_port" class="form-control" id="smtp_port"
-                   value="{{ smtp_port }}" placeholder="587">
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label class="form-label">SMTP-Benutzername</label>
-            <input type="text" name="smtp_user" class="form-control" id="smtp_user"
-                   value="{{ smtp_user }}" placeholder="z.B. buchungssystem@schule.de" autocomplete="off">
-        </div>
-        <div class="form-group">
-            <label class="form-label">SMTP-Passwort</label>
-            <input type="password" name="smtp_pass" class="form-control" id="smtp_pass"
-                   value="{{ smtp_pass }}" placeholder="••••••••" autocomplete="new-password">
+    <!-- Provider-Auswahl -->
+    <div class="form-group" style="margin-bottom:1.5rem;">
+        <label class="form-label" style="font-weight:700;font-size:1rem;">E-Mail-Provider wählen</label>
+        <div style="display:flex;gap:12px;margin-top:8px;">
+            <label style="flex:1;cursor:pointer;">
+                <input type="radio" name="email_provider" value="smtp" id="provider_smtp"
+                       {% if email_provider != 'resend' %}checked{% endif %}
+                       onchange="toggleProvider()"
+                       style="display:none;">
+                <div class="provider-card" id="card_smtp" style="border:2px solid {% if email_provider != 'resend' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:16px;text-align:center;transition:all 0.2s;">
+                    <div style="font-size:1.8rem;margin-bottom:6px;">🖥️</div>
+                    <div style="font-weight:700;font-size:0.9rem;">SMTP</div>
+                    <div style="font-size:0.75rem;color:#6b7280;margin-top:4px;">Eigener Mailserver<br>Office365, Schule etc.</div>
+                </div>
+            </label>
+            <label style="flex:1;cursor:pointer;">
+                <input type="radio" name="email_provider" value="resend" id="provider_resend"
+                       {% if email_provider == 'resend' %}checked{% endif %}
+                       onchange="toggleProvider()"
+                       style="display:none;">
+                <div class="provider-card" id="card_resend" style="border:2px solid {% if email_provider == 'resend' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:16px;text-align:center;transition:all 0.2s;">
+                    <div style="font-size:1.8rem;margin-bottom:6px;">☁️</div>
+                    <div style="font-weight:700;font-size:0.9rem;">Resend</div>
+                    <div style="font-size:0.75rem;color:#6b7280;margin-top:4px;">Cloud-E-Mail<br>Gmail-Alternative</div>
+                </div>
+            </label>
         </div>
     </div>
 
-    <div class="form-row">
-        <div class="form-group">
-            <label class="form-label">Verschlüsselung</label>
-            <select name="smtp_tls" class="form-control" id="smtp_tls" onchange="updatePort()">
-                <option value="starttls" {% if smtp_tls == 'starttls' %}selected{% endif %}>STARTTLS (Port 587, empfohlen)</option>
-                <option value="ssl" {% if smtp_tls == 'ssl' %}selected{% endif %}>SSL/TLS (Port 465)</option>
-                <option value="none" {% if smtp_tls == 'none' %}selected{% endif %}>Keine (Port 25, unsicher)</option>
-            </select>
+    <!-- SMTP-Felder -->
+    <div id="smtp-fields">
+        <div class="alert alert-info" style="margin-bottom:1rem;">
+            <span>ℹ️</span>
+            <span>Für Gmail: Nutze ein <strong>App-Passwort</strong> (Google-Konto → Sicherheit → App-Passwörter). Normale Gmail-Passwörter werden von Google blockiert.</span>
         </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">SMTP-Host</label>
+                <input type="text" name="smtp_host" class="form-control" id="smtp_host"
+                       value="{{ smtp_host }}" placeholder="z.B. smtp.office365.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">SMTP-Port</label>
+                <input type="number" name="smtp_port" class="form-control" id="smtp_port"
+                       value="{{ smtp_port }}" placeholder="587">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">SMTP-Benutzername</label>
+                <input type="text" name="smtp_user" class="form-control" id="smtp_user"
+                       value="{{ smtp_user }}" placeholder="z.B. buchungssystem@schule.de" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label class="form-label">SMTP-Passwort</label>
+                <input type="password" name="smtp_pass" class="form-control" id="smtp_pass"
+                       value="" placeholder="{% if smtp_pass %}(gespeichert – leer lassen zum Behalten){% else %}Passwort eingeben{% endif %}" autocomplete="new-password">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Verschlüsselung</label>
+                <select name="smtp_tls" class="form-control" id="smtp_tls" onchange="updatePort()">
+                    <option value="starttls" {% if smtp_tls == 'starttls' %}selected{% endif %}>STARTTLS (Port 587, empfohlen)</option>
+                    <option value="ssl" {% if smtp_tls == 'ssl' %}selected{% endif %}>SSL/TLS (Port 465)</option>
+                    <option value="none" {% if smtp_tls == 'none' %}selected{% endif %}>Keine (Port 25, unsicher)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Absender-E-Mail</label>
+                <input type="email" name="smtp_from" class="form-control" id="smtp_from"
+                       value="{{ smtp_from }}" placeholder="z.B. buchungssystem@schule.de">
+                <p class="form-hint">Falls leer, wird der SMTP-Benutzername verwendet</p>
+            </div>
+        </div>
+
+        <hr class="section-sep">
+        <div style="background:#f8f9fa;border-radius:12px;padding:20px;">
+            <p style="font-weight:600;margin-bottom:12px;">🧪 SMTP-Verbindung testen</p>
+            <div style="display:flex;gap:12px;align-items:flex-end;">
+                <div class="form-group" style="flex:1;margin-bottom:0;">
+                    <label class="form-label">Test-E-Mail senden an</label>
+                    <input type="email" id="test_email" class="form-control"
+                           value="{{ smtp_user }}" placeholder="test@schule.de">
+                </div>
+                <button type="button" class="btn btn-ghost" onclick="testSmtp()" id="test-btn"
+                        style="flex-shrink:0;height:42px;">
+                    📨 Testen
+                </button>
+            </div>
+            <div id="smtp-test-result" class="alert" style="margin-top:14px;display:none;"></div>
+        </div>
+    </div>
+
+    <!-- Resend-Felder -->
+    <div id="resend-fields" style="display:none;">
+        <div class="alert alert-info" style="margin-bottom:1rem;">
+            <span>☁️</span>
+            <span>Resend ist eine Cloud-E-Mail-Alternative zu Gmail/SMTP. Registriere dich kostenlos auf <strong>resend.com</strong>, erstelle einen API-Key und gib ihn hier ein.</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Resend API-Key</label>
+            <input type="password" name="resend_api_key" class="form-control"
+                   value="{% if resend_api_key %}{{ resend_api_key }}{% endif %}"
+                   placeholder="re_xxxxxxxxxxxxxxxxxxxx" autocomplete="new-password">
+            <p class="form-hint">Zu finden unter resend.com → API Keys</p>
+        </div>
+
         <div class="form-group">
             <label class="form-label">Absender-E-Mail</label>
-            <input type="email" name="smtp_from" class="form-control" id="smtp_from"
-                   value="{{ smtp_from }}" placeholder="z.B. buchungssystem@schule.de">
-            <p class="form-hint">Falls leer, wird der SMTP-Benutzername verwendet</p>
+            <input type="email" name="resend_from" class="form-control"
+                   value="{{ resend_from }}" placeholder="buchungssystem@deine-domain.de">
+            <p class="form-hint">Muss eine bei Resend verifizierte Domain verwenden (oder onboarding@resend.dev zum Testen)</p>
         </div>
     </div>
 
+    <!-- Admin-E-Mail (immer sichtbar) -->
+    <hr class="section-sep">
     <div class="form-group">
-        <label class="form-label">Admin-E-Mail (Benachrichtigungen)</label>
+        <label class="form-label">Admin-E-Mail (Buchungsbenachrichtigungen)</label>
         <input type="email" name="admin_email" class="form-control"
                value="{{ admin_email }}" placeholder="z.B. admin@schule.de">
         <p class="form-hint">An diese Adresse werden neue Buchungsbenachrichtigungen gesendet</p>
-    </div>
-
-    <hr class="section-sep">
-
-    <!-- Test-Bereich -->
-    <div style="background:#f8f9fa;border-radius:12px;padding:20px;">
-        <p style="font-weight:600;margin-bottom:12px;">🧪 SMTP-Verbindung testen</p>
-        <div style="display:flex;gap:12px;align-items:flex-end;">
-            <div class="form-group" style="flex:1;margin-bottom:0;">
-                <label class="form-label">Test-E-Mail senden an</label>
-                <input type="email" id="test_email" class="form-control"
-                       value="{{ smtp_user }}" placeholder="test@schule.de">
-            </div>
-            <button type="button" class="btn btn-ghost" onclick="testSmtp()" id="test-btn"
-                    style="flex-shrink:0;height:42px;">
-                📨 Testen
-            </button>
-        </div>
-        <div id="smtp-test-result" class="alert" style="margin-top:14px;display:none;"></div>
     </div>
 
 </div>
@@ -99,13 +154,24 @@
 
 {% block scripts %}
 <script>
+function toggleProvider() {
+    const smtp = document.getElementById('provider_smtp').checked;
+    document.getElementById('smtp-fields').style.display  = smtp ? '' : 'none';
+    document.getElementById('resend-fields').style.display = smtp ? 'none' : '';
+    document.getElementById('card_smtp').style.borderColor   = smtp ? 'var(--primary)' : '#e5e7eb';
+    document.getElementById('card_resend').style.borderColor = smtp ? '#e5e7eb' : 'var(--primary)';
+}
+
 function updatePort() {
     const tls = document.getElementById('smtp_tls').value;
     const portField = document.getElementById('smtp_port');
-    if (tls === 'ssl')      portField.value = 465;
+    if (tls === 'ssl')       portField.value = 465;
     else if (tls === 'none') portField.value = 25;
-    else                     portField.value = 587;
+    else                      portField.value = 587;
 }
+
+// Initiale Anzeige
+toggleProvider();
 
 async function testSmtp() {
     const btn = document.getElementById('test-btn');
@@ -115,12 +181,13 @@ async function testSmtp() {
     result.style.display = 'none';
 
     const payload = {
-        smtp_host: document.getElementById('smtp_host').value,
-        smtp_port: document.getElementById('smtp_port').value,
-        smtp_user: document.getElementById('smtp_user').value,
-        smtp_pass: document.getElementById('smtp_pass').value,
-        smtp_tls:  document.getElementById('smtp_tls').value,
+        smtp_host:  document.getElementById('smtp_host').value,
+        smtp_port:  document.getElementById('smtp_port').value,
+        smtp_user:  document.getElementById('smtp_user').value,
+        smtp_pass:  document.getElementById('smtp_pass').value,
+        smtp_tls:   document.getElementById('smtp_tls').value,
         test_email: document.getElementById('test_email').value,
+        use_saved_pass: !document.getElementById('smtp_pass').value,
     };
 
     try {

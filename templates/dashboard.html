@@ -704,7 +704,7 @@
                             {% set course_icon = '📋' %} {% set course_tag =
                             'Fest' %} {% endif %} {% endif %}
 
-                            <div class="slot-card {{ course_class }}">
+                            <div class="slot-card {{ course_class }} {% if slot.bookings %}slot-has-bookings{% endif %} {% if slot.available == 0 and not slot.is_past and not slot.is_exclusive %}slot-full{% endif %}">
                                 <div class="slot-course-name">
                                     {% if slot.type == 'fest' %}{{ label }}{%
                                     else %}Freie Wahl{% endif %}
@@ -713,22 +713,23 @@
                                 {% if slot.pending_exclusive %}
                                 <div class="pending-exclusive-hint">
                                     <span class="pending-icon">⏳</span>
-                                    <span class="pending-text"
-                                        >Einzelbuchung angefragt</span
-                                    >
+                                    <span class="pending-text">Einzelbuchung angefragt</span>
                                 </div>
-                                {% endif %} {% if slot.bookings %}
+                                {% endif %}
+
+                                {% if slot.bookings %}
+                                <div class="slot-booking-bar">
+                                    {% set pct = ((slot.total_students / max_students) * 100)|int %}
+                                    <div class="slot-booking-bar-fill {% if slot.available == 0 %}bar-full{% elif pct >= 60 %}bar-high{% else %}bar-low{% endif %}"
+                                         style="width:{{ pct }}%"></div>
+                                </div>
                                 <div class="slot-students-list">
                                     {% for booking in slot.bookings %} {% set
                                     can_see = (user_role == 'admin') or
                                     (booking.teacher_id == current_user_id) %}
                                     {% for student in booking.students %}
-                                    <span
-                                        class="student-name {% if not can_see %}blurred{% endif %}"
-                                    >
-                                        {% if can_see %}{{ student.name|abbreviate_name }} ({{
-                                        student.klasse }}){% else %}***{% endif
-                                        %}
+                                    <span class="student-name {% if not can_see %}blurred{% endif %}">
+                                        {% if can_see %}{{ student.name|abbreviate_name }} ({{ student.klasse }}){% else %}***{% endif %}
                                     </span>
                                     {% endfor %} {% endfor %}
                                 </div>
@@ -736,51 +737,32 @@
 
                                 <div class="slot-footer">
                                     <span class="course-tag">
-                                        <span class="tag-icon"
-                                            >{{ course_icon }}</span
-                                        >
+                                        <span class="tag-icon">{{ course_icon }}</span>
                                         {{ course_tag }}
                                     </span>
                                     <span class="slot-availability">
                                         {% if slot.is_exclusive %}
-                                        <span class="exclusive-text"
-                                            >🔒 Exklusiv</span
-                                        >
-                                        {% elif slot.can_book %}
-                                        <span class="availability-text"
-                                            >{{ slot.total_students }}/{{ max_students }}
-                                            gebucht</span
-                                        >
-                                        {% elif slot.available == 0 and not
-                                        slot.is_past %}
-                                        <span class="full-text"
-                                            >Ausgebucht ({{ max_students }}/{{ max_students }})</span
-                                        >
+                                        <span class="exclusive-text">🔒 Exklusiv</span>
+                                        {% elif slot.available == 0 and not slot.is_past %}
+                                        <span class="full-text">⛔ Ausgebucht</span>
+                                        {% elif slot.bookings %}
+                                        <span class="availability-text booked-indicator">● {{ slot.total_students }}/{{ max_students }} gebucht</span>
                                         {% else %}
-                                        <span class="status-text"
-                                            >{{ slot.total_students }}/{{ max_students }}
-                                            gebucht</span
-                                        >
+                                        <span class="availability-text">{{ slot.total_students }}/{{ max_students }} gebucht</span>
                                         {% endif %}
                                     </span>
                                 </div>
 
                                 {% if slot.can_book %}
-                                <a
-                                    href="{{ url_for('book', date_str=day.date, period=p_num) }}"
-                                    class="book-btn"
-                                    data-book-url="{{ url_for('book', date_str=day.date, period=p_num) }}"
-                                >
+                                <a href="{{ url_for('book', date_str=day.date, period=p_num) }}"
+                                   class="book-btn"
+                                   data-book-url="{{ url_for('book', date_str=day.date, period=p_num) }}">
                                     📝 Jetzt buchen
                                 </a>
-                                {% endif %} {% if user_role == 'admin' and not
-                                slot.is_past %}
-                                <button
-                                    type="button"
-                                    class="slot-block-mini"
-                                    title="Sperren"
-                                    onclick="openBlockModal('{{ day.date }}', {{ p_num }}, '{{ day.name }} {{ day.date_formatted }}')"
-                                >
+                                {% endif %}
+                                {% if user_role == 'admin' and not slot.is_past %}
+                                <button type="button" class="slot-block-mini" title="Sperren"
+                                        onclick="openBlockModal('{{ day.date }}', {{ p_num }}, '{{ day.name }} {{ day.date_formatted }}')">
                                     🔒
                                 </button>
                                 {% endif %}
