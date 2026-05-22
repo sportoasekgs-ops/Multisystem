@@ -56,4 +56,5 @@ Thumbs.db
 logs/
 
 # Lokale Konfiguration (enthält DB-URL und andere Secrets – NICHT in Git!)
+buchungssystem_local.json
 sportoase_local.json

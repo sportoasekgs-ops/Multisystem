@@ -1,83 +1,228 @@
-{% extends "setup/wizard_base.html" %}
-{% block title %}IServ OAuth{% endblock %}
-
-{% block card_content %}
+{% extends "setup/wizard_base.html" %} {% block title %}IServ OAuth{% endblock
+%} {% block card_content %}
 <div class="wizard-card-header">
     <span class="step-icon">🔐</span>
     <h2>IServ OAuth-Konfiguration</h2>
-    <p>Verbinden Sie das System mit Ihrer IServ-Instanz für automatisches Single Sign-On. Dieser Schritt ist optional.</p>
+    <p>
+        Verbinden Sie das System mit Ihrer IServ-Instanz für automatisches
+        Single Sign-On. Dieser Schritt ist optional.
+    </p>
 </div>
 
 <form method="post">
-<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<div class="wizard-card-body">
-
-    <div class="alert alert-warning">
-        <span>⚠️</span>
-        <div>
-            <strong>Voraussetzung:</strong> Sie benötigen in IServ eine OAuth-Anwendung mit:<br>
-            • Erlaubter Redirect-URL: <code id="redirect-url" style="background:#fff3cd;padding:2px 6px;border-radius:4px;font-family:monospace;">{{ request.host_url }}oauth/callback</code><br>
-            • Aktivierten Scopes: <code style="background:#fff3cd;padding:2px 6px;border-radius:4px;font-family:monospace;">openid profile email roles groups</code>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <div class="wizard-card-body">
+        <div class="alert alert-warning">
+            <span>⚠️</span>
+            <div>
+                <strong>Voraussetzung:</strong> Sie benötigen in IServ eine
+                OAuth-Anwendung mit:<br />
+                • Erlaubter Redirect-URL:
+                <code
+                    id="redirect-url"
+                    style="
+                        background: #fff3cd;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-family: monospace;
+                    "
+                    >{{ request.host_url }}oauth/callback</code
+                ><br />
+                • Aktivierten Scopes:
+                <code
+                    style="
+                        background: #fff3cd;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-family: monospace;
+                    "
+                    >openid profile email</code
+                >
+                plus Rollen/Gruppen-Scopes (<code
+                    style="
+                        background: #fff3cd;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-family: monospace;
+                    "
+                    >roles, groups</code
+                >
+                oder je nach IServ-Version
+                <code
+                    style="
+                        background: #fff3cd;
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-family: monospace;
+                    "
+                    >iserv:roles, iserv:groups</code
+                >)
+            </div>
         </div>
-    </div>
 
-    <div class="form-group">
-        <label class="form-label">IServ-Domain <span class="req">*</span></label>
-        <div style="display:flex;align-items:center;gap:0;">
-            <span style="padding:10px 14px;background:#f1f3f5;border:1.5px solid var(--border);border-right:none;border-radius:8px 0 0 8px;font-size:0.85rem;color:#6c757d;white-space:nowrap;">https://</span>
-            <input type="text" name="iserv_domain" class="form-control"
-                   value="{{ iserv_domain }}"
-                   placeholder="kgs-pattensen.de"
-                   style="border-radius:0 8px 8px 0;border-left:none;" required>
-        </div>
-        <p class="form-hint">Nur die Domain eingeben, ohne https:// – z.B. <em>meineschule.de</em></p>
-    </div>
-
-    <div class="form-row">
         <div class="form-group">
-            <label class="form-label">Client ID <span class="req">*</span></label>
-            <input type="text" name="iserv_client_id" class="form-control"
-                   value="{{ iserv_client_id }}" placeholder="abc123..." autocomplete="off">
-            <p class="form-hint">Aus IServ Admin → Single Sign-On</p>
+            <label class="form-label"
+                >IServ-Domain <span class="req">*</span></label
+            >
+            <div style="display: flex; align-items: center; gap: 0">
+                <span
+                    style="
+                        padding: 10px 14px;
+                        background: #f1f3f5;
+                        border: 1.5px solid var(--border);
+                        border-right: none;
+                        border-radius: 8px 0 0 8px;
+                        font-size: 0.85rem;
+                        color: #6c757d;
+                        white-space: nowrap;
+                    "
+                    >https://</span
+                >
+                <input
+                    type="text"
+                    name="iserv_domain"
+                    class="form-control"
+                    value="{{ iserv_domain }}"
+                    placeholder="kgs-pattensen.de"
+                    style="border-radius: 0 8px 8px 0; border-left: none"
+                    required
+                />
+            </div>
+            <p class="form-hint">
+                Nur die Domain eingeben, ohne https:// – z.B.
+                <em>meineschule.de</em>
+            </p>
         </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label"
+                    >Client ID <span class="req">*</span></label
+                >
+                <input
+                    type="text"
+                    name="iserv_client_id"
+                    class="form-control"
+                    value="{{ iserv_client_id }}"
+                    placeholder="abc123..."
+                    autocomplete="off"
+                />
+                <p class="form-hint">Aus IServ Admin → Single Sign-On</p>
+            </div>
+            <div class="form-group">
+                <label class="form-label"
+                    >Client Secret <span class="req">*</span></label
+                >
+                <input
+                    type="password"
+                    name="iserv_client_secret"
+                    class="form-control"
+                    value="{{ iserv_client_secret }}"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                />
+                <p class="form-hint">Sicher verschlüsselt gespeichert</p>
+            </div>
+        </div>
+
         <div class="form-group">
-            <label class="form-label">Client Secret <span class="req">*</span></label>
-            <input type="password" name="iserv_client_secret" class="form-control"
-                   value="{{ iserv_client_secret }}" placeholder="••••••••" autocomplete="new-password">
-            <p class="form-hint">Sicher verschlüsselt gespeichert</p>
+            <label class="form-label"
+                >Admin-E-Mail (IServ-Adresse) <span class="req">*</span></label
+            >
+            <input
+                type="email"
+                name="admin_email"
+                class="form-control"
+                value="{{ iserv_admin_email }}"
+                placeholder="z.B. vorname.nachname@meineschule.de"
+                required
+            />
+            <p class="form-hint">
+                Die IServ-E-Mail-Adresse der Person, die Admin-Zugriff erhält.
+                Nach dem Login mit dieser Adresse wird automatisch die
+                Admin-Rolle vergeben.<br />
+                <strong>Wichtig:</strong> Diese Adresse muss exakt der E-Mail in
+                IServ entsprechen.
+            </p>
+        </div>
+
+        <hr class="section-sep" />
+
+        <div
+            style="
+                background: #f0fdf4;
+                border: 1px solid #86efac;
+                border-radius: 12px;
+                padding: 20px;
+            "
+        >
+            <p style="font-weight: 600; color: #166534; margin-bottom: 12px">
+                📖 IServ-Einrichtung (Anleitung)
+            </p>
+            <ol
+                style="
+                    font-size: 0.85rem;
+                    color: #166534;
+                    line-height: 2;
+                    padding-left: 18px;
+                "
+            >
+                <li>
+                    In IServ:
+                    <strong
+                        >Verwaltung → System → Single-Sign-On → Neue App
+                        erstellen</strong
+                    >
+                </li>
+                <li>
+                    App-Name: <em>{{ school_name or 'Buchungssystem' }}</em>
+                </li>
+                <li>
+                    Redirect-URI eintragen:
+                    <code
+                        style="
+                            background: #dcfce7;
+                            padding: 1px 6px;
+                            border-radius: 4px;
+                            font-family: monospace;
+                            font-size: 0.82rem;
+                        "
+                        >{{ request.host_url }}oauth/callback</code
+                    >
+                </li>
+                <li>
+                    Scopes aktivieren: <em>openid, profile, email</em> sowie
+                    Rollen/Gruppen-Scopes (<em>roles, groups</em> oder je nach
+                    IServ-Version <em>iserv:roles, iserv:groups</em>)
+                </li>
+                <li>Client ID und Secret kopieren und hier eintragen</li>
+            </ol>
         </div>
     </div>
-
-    <div class="form-group">
-        <label class="form-label">Admin-E-Mail (IServ-Adresse) <span class="req">*</span></label>
-        <input type="email" name="admin_email" class="form-control"
-               value="{{ iserv_admin_email }}" placeholder="z.B. vorname.nachname@meineschule.de" required>
-        <p class="form-hint">
-            Die IServ-E-Mail-Adresse der Person, die Admin-Zugriff erhält. Nach dem Login mit dieser Adresse wird automatisch die Admin-Rolle vergeben.<br>
-            <strong>Wichtig:</strong> Diese Adresse muss exakt der E-Mail in IServ entsprechen.
-        </p>
+    <div class="wizard-actions">
+        <a
+            href="{{ url_for('setup.step', step_id=prev_step) }}"
+            class="btn btn-ghost"
+            >← Zurück</a
+        >
+        <div style="display: flex; gap: 10px">
+            <button
+                type="submit"
+                name="action"
+                value="skip"
+                class="btn btn-secondary"
+            >
+                Überspringen
+            </button>
+            <button
+                type="submit"
+                name="action"
+                value="save"
+                class="btn btn-primary"
+            >
+                Speichern & Weiter →
+            </button>
+        </div>
     </div>
-
-    <hr class="section-sep">
-
-    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:20px;">
-        <p style="font-weight:600;color:#166534;margin-bottom:12px;">📖 IServ-Einrichtung (Anleitung)</p>
-        <ol style="font-size:0.85rem;color:#166534;line-height:2;padding-left:18px;">
-            <li>In IServ: <strong>Verwaltung → System → Single-Sign-On → Neue App erstellen</strong></li>
-            <li>App-Name: <em>{{ school_name or 'Buchungssystem' }}</em></li>
-            <li>Redirect-URI eintragen: <code style="background:#dcfce7;padding:1px 6px;border-radius:4px;font-family:monospace;font-size:0.82rem;">{{ request.host_url }}oauth/callback</code></li>
-            <li>Scopes aktivieren: <em>openid, profile, email, roles, groups</em></li>
-            <li>Client ID und Secret kopieren und hier eintragen</li>
-        </ol>
-    </div>
-
-</div>
-<div class="wizard-actions">
-    <a href="{{ url_for('setup.step', step_id=prev_step) }}" class="btn btn-ghost">← Zurück</a>
-    <div style="display:flex;gap:10px;">
-        <button type="submit" name="action" value="skip" class="btn btn-secondary">Überspringen</button>
-        <button type="submit" name="action" value="save" class="btn btn-primary">Speichern & Weiter →</button>
-    </div>
-</div>
 </form>
 {% endblock %}

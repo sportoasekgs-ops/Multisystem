@@ -1,9 +1,40 @@
 # IServ OAuth2/OpenID Connect Konfiguration
-# Credentials werden ZUERST aus der DB (Setup-Wizard) geladen, Env-Vars als Fallback
+# Credentials werden ZUERST aus der DB (Setup-Wizard) geladen, Env-Vars als Fallback.
+# Rollen-/Gruppen-Scopes und Claims werden tolerant gegenüber alten und neuen IServ-Varianten verarbeitet.
 
-import os
 import json
+import os
+import urllib.error
+import urllib.request
+
 from authlib.integrations.flask_client import OAuth
+
+
+def _safe_str(value, default=""):
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip()
+    return str(value).strip()
+
+
+def _get_config_or_env(config_key, env_key=None, default=""):
+    value = None
+    try:
+        from system_config import get_config
+
+        value = get_config(config_key)
+    except Exception:
+        value = None
+
+    value = _safe_str(value)
+    if value:
+        return value
+
+    if env_key:
+        return _safe_str(os.environ.get(env_key, default), default)
+
+    return _safe_str(default, default)
 
 
 def _load_iserv_credentials():
@@ -11,22 +42,79 @@ def _load_iserv_credentials():
     Lädt IServ-Credentials: DB hat Vorrang, Env-Vars als Fallback.
     Gibt (client_id, client_secret, domain) zurück.
     """
-    try:
-        from system_config import get_config
-        db_client_id     = get_config('iserv_client_id', '').strip()
-        db_client_secret = get_config('iserv_client_secret', '').strip()
-        db_domain        = get_config('iserv_domain', '').strip()
-    except Exception:
-        db_client_id = db_client_secret = db_domain = ''
+    client_id = _get_config_or_env("iserv_client_id", "ISERV_CLIENT_ID", "")
+    client_secret = _get_config_or_env("iserv_client_secret", "ISERV_CLIENT_SECRET", "")
+    domain = _get_config_or_env("iserv_domain", "ISERV_DOMAIN", "")
 
-    client_id     = db_client_id     or os.environ.get('ISERV_CLIENT_ID', '').strip()
-    client_secret = db_client_secret or os.environ.get('ISERV_CLIENT_SECRET', '').strip()
-    domain        = db_domain        or os.environ.get('ISERV_DOMAIN', '').strip()
-
-    source = 'DB' if db_client_id else 'Env'
+    source = (
+        "DB" if _safe_str(_get_config_or_env("iserv_client_id", None, "")) else "Env"
+    )
     if client_id:
         print(f"[OAuth] Credentials geladen aus: {source} | Domain: {domain}")
     return client_id, client_secret, domain
+
+
+def get_allowed_email_domain():
+    """Gibt die erlaubte Mail-Domain für IServ-Logins zurück.
+
+    Reihenfolge:
+      1. DB: `iserv_email_domain`
+      2. Env: `ISERV_EMAIL_DOMAIN`
+      3. Fallback auf `iserv_domain` / `ISERV_DOMAIN`
+    """
+    domain = _get_config_or_env("iserv_email_domain", "ISERV_EMAIL_DOMAIN", "")
+    if domain:
+        return domain.lower()
+    return _get_config_or_env("iserv_domain", "ISERV_DOMAIN", "").lower()
+
+
+def _fetch_openid_metadata(iserv_domain):
+    """Versucht OpenID-Metadaten von IServ zu laden, um kompatible Scopes zu bestimmen."""
+    if not iserv_domain:
+        return {}
+
+    urls = [
+        f"https://{iserv_domain}/.well-known/openid-configuration",
+        f"https://{iserv_domain}/iserv/public/.well-known/openid-configuration",
+    ]
+
+    last_error = None
+    for url in urls:
+        try:
+            with urllib.request.urlopen(url, timeout=5) as resp:
+                if resp.getcode() != 200:
+                    continue
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception as exc:
+            last_error = exc
+
+    if last_error:
+        print(
+            f"[OAuth] Hinweis: OpenID-Metadaten konnten nicht vorab geladen werden: {last_error}"
+        )
+    return {}
+
+
+def _determine_requested_scopes(iserv_domain):
+    """Ermittelt eine möglichst kompatible Scope-Liste für verschiedene IServ-Versionen."""
+    metadata = _fetch_openid_metadata(iserv_domain)
+    supported = set(metadata.get("scopes_supported") or [])
+
+    scopes = ["openid", "profile", "email"]
+    if supported:
+        for candidate in ("roles", "groups", "iserv:roles", "iserv:groups"):
+            if candidate in supported:
+                scopes.append(candidate)
+        print(
+            f"[OAuth] Angeforderte Scopes laut Discovery: {' '.join(dict.fromkeys(scopes))}"
+        )
+    else:
+        scopes.extend(["roles", "groups"])
+        print(
+            "[OAuth] Discovery-Scopes nicht verfügbar – Fallback auf: openid profile email roles groups"
+        )
+
+    return " ".join(dict.fromkeys(scopes))
 
 
 def init_oauth(app):
@@ -39,29 +127,34 @@ def init_oauth(app):
 
     client_id, client_secret, iserv_domain = _load_iserv_credentials()
 
-    if not client_id or not client_secret:
+    if not client_id or not client_secret or not iserv_domain:
         print("=" * 70)
-        print("⚠️  WARNUNG: IServ OAuth ist NICHT konfiguriert!")
-        print("   Bitte in Setup-Wizard (Admin → Einstellungen) oder")
-        print("   als Umgebungsvariable (ISERV_CLIENT_ID / ISERV_CLIENT_SECRET) eintragen.")
+        print("⚠️  WARNUNG: IServ OAuth ist NICHT vollständig konfiguriert!")
+        print(
+            "   Bitte Domain, Client-ID und Client-Secret im Setup oder per Env setzen."
+        )
         print("=" * 70)
         return oauth, None
 
-    iserv_base_url = f'https://{iserv_domain}'
+    iserv_base_url = f"https://{iserv_domain}"
+    requested_scope = _determine_requested_scopes(iserv_domain)
 
     print("=" * 70)
     print("✅ IServ OAuth Konfiguration geladen")
     print(f"   Domain: {iserv_domain}")
-    print(f"   Client ID: {client_id[:8]}...{client_id[-4:] if len(client_id) > 12 else ''}")
+    print(
+        f"   Client ID: {client_id[:8]}...{client_id[-4:] if len(client_id) > 12 else ''}"
+    )
+    print(f"   Scopes: {requested_scope}")
     print("=" * 70)
 
     try:
         iserv = oauth.register(
-            name='iserv',
+            name="iserv",
             client_id=client_id,
             client_secret=client_secret,
-            server_metadata_url=f'{iserv_base_url}/.well-known/openid-configuration',
-            client_kwargs={'scope': 'openid profile email roles groups'}
+            server_metadata_url=f"{iserv_base_url}/.well-known/openid-configuration",
+            client_kwargs={"scope": requested_scope},
         )
         return oauth, iserv
     except Exception as e:
@@ -77,25 +170,29 @@ def reinit_oauth(app, oauth_instance):
     """
     client_id, client_secret, iserv_domain = _load_iserv_credentials()
 
-    if not client_id or not client_secret:
+    if not client_id or not client_secret or not iserv_domain:
         return None
 
     try:
         # Entferne alten Client falls vorhanden
-        if 'iserv' in oauth_instance._clients:
-            del oauth_instance._clients['iserv']
+        if "iserv" in oauth_instance._clients:
+            del oauth_instance._clients["iserv"]
     except Exception:
         pass
 
+    requested_scope = _determine_requested_scopes(iserv_domain)
+
     try:
         iserv = oauth_instance.register(
-            name='iserv',
+            name="iserv",
             client_id=client_id,
             client_secret=client_secret,
-            server_metadata_url=f'https://{iserv_domain}/.well-known/openid-configuration',
-            client_kwargs={'scope': 'openid profile email roles groups'}
+            server_metadata_url=f"https://{iserv_domain}/.well-known/openid-configuration",
+            client_kwargs={"scope": requested_scope},
         )
-        print(f"[OAuth] Re-Initialisierung erfolgreich (Domain: {iserv_domain})")
+        print(
+            f"[OAuth] Re-Initialisierung erfolgreich (Domain: {iserv_domain}, Scopes: {requested_scope})"
+        )
         return iserv
     except Exception as e:
         print(f"[OAuth] Re-Initialisierung fehlgeschlagen: {e}")
@@ -106,14 +203,7 @@ def get_admin_email():
     """Gibt die Admin-E-Mail zurück: DB hat Vorrang, dann Env-Var.
     Gibt leeren String zurück wenn keine Admin-E-Mail konfiguriert ist.
     """
-    try:
-        from system_config import get_config
-        db_email = get_config('iserv_admin_email', '').strip()
-        if db_email:
-            return db_email
-    except Exception:
-        pass
-    return os.environ.get('ADMIN_EMAIL', '').strip()
+    return _get_config_or_env("iserv_admin_email", "ADMIN_EMAIL", "")
 
 
 def is_admin_email(email):
@@ -123,109 +213,77 @@ def is_admin_email(email):
     admin = get_admin_email()
     if not admin or not email:
         return False
-    return email.lower().strip() == admin.lower()
+    return _safe_str(email).lower() == admin.lower()
+
+
+def _append_membership_value(target, label, source_name, value):
+    cleaned = _safe_str(value).lower()
+    if cleaned and cleaned not in target:
+        target.append(cleaned)
+        print(f"   ✓ {label} ({source_name}): {value}")
+
+
+def _extract_membership_values(data, label, field_names):
+    values = []
+
+    def handle_dict(item):
+        for field_name in field_names:
+            if field_name in item and isinstance(item[field_name], str):
+                _append_membership_value(values, label, field_name, item[field_name])
+
+    if isinstance(data, dict):
+        if any(field_name in data for field_name in field_names):
+            handle_dict(data)
+        else:
+            for item in data.values():
+                if isinstance(item, dict):
+                    handle_dict(item)
+                elif isinstance(item, str):
+                    _append_membership_value(values, label, "String value", item)
+    elif isinstance(data, list):
+        for item in data:
+            if isinstance(item, dict):
+                handle_dict(item)
+            elif isinstance(item, str):
+                _append_membership_value(values, label, "String", item)
+    elif isinstance(data, str):
+        _append_membership_value(values, label, "einzelner String", data)
+
+    return values
 
 
 def extract_roles_from_userinfo(userinfo):
-    """
-    Extrahiert Rollennamen aus IServ userinfo.
+    """Extrahiert Rollennamen aus IServ userinfo (alt und neu)."""
+    roles_key = next((key for key in ("roles", "iserv:roles") if key in userinfo), None)
+    if not roles_key:
+        print("   ⚠️ Kein 'roles' oder 'iserv:roles' Feld in userinfo gefunden")
+        return []
 
-    IServ-Format (tatsächlich beobachtet):
-    {
-        "roles": [
-            {"uuid": "...", "id": "ROLE_SCHOOL_MANAGEMENT", "displayName": "Schulleitung"},
-            {"uuid": "...", "id": "ROLE_USER", "displayName": "Benutzer"}
-        ]
-    }
-
-    Gibt eine Liste von Rollennamen zurück (lowercase).
-    """
-    roles = []
-
-    if 'roles' in userinfo:
-        roles_data = userinfo['roles']
-        print(f"   📋 Raw 'roles' data: {roles_data}")
-
-        if isinstance(roles_data, list):
-            for role_item in roles_data:
-                if isinstance(role_item, dict):
-                    if 'displayName' in role_item and isinstance(role_item['displayName'], str):
-                        display_name = role_item['displayName'].lower().strip()
-                        roles.append(display_name)
-                        print(f"   ✓ Rolle (displayName): {role_item['displayName']}")
-                    if 'name' in role_item and isinstance(role_item['name'], str):
-                        role_name = role_item['name'].lower().strip()
-                        if role_name not in roles:
-                            roles.append(role_name)
-                            print(f"   ✓ Rolle (name): {role_item['name']}")
-                    if 'id' in role_item and isinstance(role_item['id'], str):
-                        role_id = role_item['id'].lower().strip()
-                        roles.append(role_id)
-                        print(f"   ✓ Rolle (id): {role_item['id']}")
-                elif isinstance(role_item, str):
-                    roles.append(role_item.lower().strip())
-                    print(f"   ✓ Rolle (String): {role_item}")
-        elif isinstance(roles_data, str):
-            roles.append(roles_data.lower().strip())
-            print(f"   ✓ Rolle (einzelner String): {roles_data}")
-    else:
-        print(f"   ⚠️ Kein 'roles' Feld in userinfo gefunden")
-
-    return list(set(r for r in roles if r))
+    roles_data = userinfo[roles_key]
+    print(f"   📋 Raw '{roles_key}' data: {roles_data}")
+    return list(
+        set(
+            _extract_membership_values(
+                roles_data, "Rolle", ("displayName", "name", "id")
+            )
+        )
+    )
 
 
 def extract_groups_from_userinfo(userinfo):
-    """
-    Extrahiert Gruppennamen aus IServ userinfo.
+    """Extrahiert Gruppennamen aus IServ userinfo (alt und neu)."""
+    groups_key = next(
+        (key for key in ("groups", "iserv:groups") if key in userinfo), None
+    )
+    if not groups_key:
+        print("   ⚠️ Kein 'groups' oder 'iserv:groups' Feld in userinfo gefunden")
+        return []
 
-    IServ-Format (tatsächlich beobachtet - Dictionary mit IDs als Keys):
-    {
-        "groups": {
-            "2235": {"id": 2235, "uuid": "...", "act": "schulleitung", "name": "Schulleitung"}
-        }
-    }
-
-    Gibt eine Liste von Gruppennamen zurück (lowercase).
-    """
-    groups = []
-
-    if 'groups' in userinfo:
-        groups_data = userinfo['groups']
-        print(f"   📋 Raw 'groups' data: {groups_data}")
-
-        if isinstance(groups_data, dict):
-            for group_key, group_item in groups_data.items():
-                if isinstance(group_item, dict):
-                    if 'name' in group_item and isinstance(group_item['name'], str):
-                        groups.append(group_item['name'].lower().strip())
-                        print(f"   ✓ Gruppe (name): {group_item['name']}")
-                    if 'act' in group_item and isinstance(group_item['act'], str):
-                        act_value = group_item['act'].lower().strip()
-                        if act_value not in groups:
-                            groups.append(act_value)
-                            print(f"   ✓ Gruppe (act): {group_item['act']}")
-                elif isinstance(group_item, str):
-                    groups.append(group_item.lower().strip())
-                    print(f"   ✓ Gruppe (String value): {group_item}")
-        elif isinstance(groups_data, list):
-            for group_item in groups_data:
-                if isinstance(group_item, dict):
-                    if 'name' in group_item and isinstance(group_item['name'], str):
-                        groups.append(group_item['name'].lower().strip())
-                        print(f"   ✓ Gruppe (name): {group_item['name']}")
-                    if 'act' in group_item and isinstance(group_item['act'], str):
-                        groups.append(group_item['act'].lower().strip())
-                        print(f"   ✓ Gruppe (act): {group_item['act']}")
-                elif isinstance(group_item, str):
-                    groups.append(group_item.lower().strip())
-                    print(f"   ✓ Gruppe (String): {group_item}")
-        elif isinstance(groups_data, str):
-            groups.append(groups_data.lower().strip())
-            print(f"   ✓ Gruppe (einzelner String): {groups_data}")
-    else:
-        print(f"   ⚠️ Kein 'groups' Feld in userinfo gefunden")
-
-    return list(set(g for g in groups if g))
+    groups_data = userinfo[groups_key]
+    print(f"   📋 Raw '{groups_key}' data: {groups_data}")
+    return list(
+        set(_extract_membership_values(groups_data, "Gruppe", ("name", "act", "id")))
+    )
 
 
 def determine_user_role(userinfo):
@@ -237,15 +295,15 @@ def determine_user_role(userinfo):
         - role: 'admin', 'teacher' oder None (kein Zugang)
         - iserv_role: Die erkannte IServ-Rolle/Gruppe
     """
-    email = userinfo.get('email', '').lower().strip()
+    email = _safe_str(userinfo.get("email", "")).lower()
 
     print("=" * 70)
-    print(f"🔐 IServ OAuth Login-Versuch")
+    print("🔐 IServ OAuth Login-Versuch")
     print(f"   E-Mail: {email}")
     print(f"   UserInfo Keys: {list(userinfo.keys())}")
     print("-" * 70)
 
-    print(f"   📋 Komplette UserInfo:")
+    print("   📋 Komplette UserInfo:")
     for key, value in userinfo.items():
         value_str = str(value)
         if len(value_str) > 300:
@@ -267,40 +325,61 @@ def determine_user_role(userinfo):
     # 1. Admin-E-Mail hat immer Admin-Zugang
     if is_admin_email(email):
         print(f"   ✅ Admin erkannt (E-Mail-Match: {get_admin_email()})")
-        return 'admin', 'Administrator'
+        return "admin", "Administrator"
 
-    # Prüfe E-Mail-Domain (aus DB oder Env)
-    try:
-        from system_config import get_config
-        allowed_domain = get_config('iserv_domain', '').strip() or os.environ.get('ISERV_DOMAIN', '').strip()
-    except Exception:
-        allowed_domain = os.environ.get('ISERV_DOMAIN', '').strip()
-
-    if allowed_domain and not email.endswith(f'@{allowed_domain}'):
+    allowed_domain = get_allowed_email_domain()
+    if allowed_domain and not email.endswith(f"@{allowed_domain}"):
         print(f"   ❌ KEIN ZUGANG - Keine @{allowed_domain} E-Mail")
         return None, None
 
     allowed_keywords = [
-        'schulleitung', 'role_school_management', 'school_management',
-        'lehrer', 'lehrerin', 'teacher', 'role_teacher',
-        'mitarbeitende', 'mitarbeiter', 'mitarbeiterin', 'role_staff', 'role_employee',
-        'pädagogische mitarbeiter', 'paedagogische mitarbeiter',
-        'pädagogischer mitarbeiter', 'role_educational_staff', 'role_pedagogue',
-        'sozialpädagog', 'sozialpaedagog', 'sozialpädagogin', 'role_social_worker',
-        'sekretariat', 'verwaltung', 'admins', 'role_admin', 'role_secretary',
-        'administrator', 'role_administrator',
+        "schulleitung",
+        "role_school_management",
+        "school_management",
+        "lehrer",
+        "lehrerin",
+        "teacher",
+        "role_teacher",
+        "mitarbeitende",
+        "mitarbeiter",
+        "mitarbeiterin",
+        "role_staff",
+        "role_employee",
+        "pädagogische mitarbeiter",
+        "paedagogische mitarbeiter",
+        "pädagogischer mitarbeiter",
+        "role_educational_staff",
+        "role_pedagogue",
+        "sozialpädagog",
+        "sozialpaedagog",
+        "sozialpädagogin",
+        "role_social_worker",
+        "sekretariat",
+        "verwaltung",
+        "admins",
+        "role_admin",
+        "role_secretary",
+        "administrator",
+        "role_administrator",
     ]
 
     for membership in all_memberships:
         for allowed in allowed_keywords:
             if allowed in membership:
-                display_role = membership.replace('_', ' ').title()
-                print(f"   ✅ Zugang gewährt - Rolle/Gruppe erkannt: '{membership}' (matched '{allowed}')")
-                return 'teacher', display_role
+                display_role = membership.replace("_", " ").title()
+                print(
+                    f"   ✅ Zugang gewährt - Rolle/Gruppe erkannt: '{membership}' (matched '{allowed}')"
+                )
+                return "teacher", display_role
 
     blocked_keywords = [
-        'schüler', 'schueler', 'schülerin', 'schuelerin',
-        'student', 'students', 'role_student',
+        "schüler",
+        "schueler",
+        "schülerin",
+        "schuelerin",
+        "student",
+        "students",
+        "role_student",
     ]
 
     is_student_only = False
@@ -312,12 +391,12 @@ def determine_user_role(userinfo):
                 break
 
     if is_student_only:
-        print(f"   ❌ KEIN ZUGANG - Nur Schüler-Rolle gefunden")
+        print("   ❌ KEIN ZUGANG - Nur Schüler-Rolle gefunden")
         return None, None
 
     if all_memberships:
-        print(f"   ❌ KEIN ZUGANG - Keine erlaubte Rolle/Gruppe gefunden")
+        print("   ❌ KEIN ZUGANG - Keine erlaubte Rolle/Gruppe gefunden")
     else:
-        print(f"   ❌ KEIN ZUGANG - Keine Rollen/Gruppen in userinfo gefunden")
+        print("   ❌ KEIN ZUGANG - Keine Rollen/Gruppen in userinfo gefunden")
 
     return None, None
