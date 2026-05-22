@@ -4233,54 +4233,71 @@ def admin_test_resend():
             body = e.read().decode("utf-8", errors="replace")
         except Exception:
             pass
-        # Bekannte Resend-Fehlercodes verständlich erklären
+
+        code = ""
+        name = ""
+        msg = body or str(e)
+
         try:
             err_data = _json.loads(body)
             code = err_data.get("statusCode") or err_data.get("code") or ""
             name = err_data.get("name", "")
-            msg = err_data.get("message", "")
-            # Error 1010 / validation_error: onboarding@resend.dev darf nur an eigene Adresse senden
-            # Resend schreibt die erlaubte E-Mail direkt in die Fehlermeldung
-            if (
-                "1010" in str(code)
-                or "1010" in body
-                or "testing emails" in msg.lower()
-                or "only send" in msg.lower()
-                or "own email" in msg.lower()
-                or "validation_error" in name.lower()
-            ):
-                # Erlaubte E-Mail aus Fehlermeldung extrahieren (z.B. "...to your own email address (max@example.com).")
-                import re as _re
-
-                match = _re.search(r"\(([^)@]+@[^)]+)\)", msg)
-                allowed_email = match.group(1) if match else None
-                hint = (
-                    f" Die erlaubte Empfänger-E-Mail laut Resend: <strong>{allowed_email}</strong>"
-                    if allowed_email
-                    else " Trage im Resend-Dashboard nach, mit welcher E-Mail du dich registriert hast, und nutze diese als Empfänger."
-                )
-                return jsonify(
-                    {
-                        "success": False,
-                        "message": f"⚠️ Testabsender-Einschränkung (onboarding@resend.dev): "
-                        f"Du kannst nur an deine eigene Resend-Konto-E-Mail senden.{hint} "
-                        f"Für echten Versand an beliebige Adressen: eigene Domain in Resend verifizieren.",
-                    }
-                )
-            if "invalid_api_key" in name.lower() or e.code == 401:
-                return jsonify(
-                    {
-                        "success": False,
-                        "message": '🔑 Ungültiger API-Key. Bitte prüfe den Key im Resend-Dashboard unter "API Keys". '
-                        "Hinweis: Stelle sicher, dass der Key gespeichert (nicht nur eingegeben) wurde.",
-                    }
-                )
-            if msg:
-                return jsonify(
-                    {"success": False, "message": f"Resend Fehler ({name}): {msg}"}
-                )
+            msg = err_data.get("message", "") or msg
         except Exception:
             pass
+
+        # Bekannte Resend-Fehlercodes verständlich erklären
+        lower_msg = msg.lower()
+        lower_body = body.lower()
+        if (
+            "1010" in str(code)
+            or "1010" in lower_body
+            or "testing emails" in lower_msg
+            or "only send" in lower_msg
+            or "own email" in lower_msg
+            or "validation_error" in name.lower()
+            or (
+                from_addr.lower() == "onboarding@resend.dev"
+                and e.code == 403
+                and "error code: 1010" in lower_body
+            )
+        ):
+            import re as _re
+
+            match = _re.search(r"\(([^)@]+@[^)]+)\)", msg)
+            allowed_email = match.group(1) if match else None
+            hint = (
+                f" Die erlaubte Empfänger-E-Mail laut Resend: <strong>{allowed_email}</strong>"
+                if allowed_email
+                else " Nutze als Test-Empfänger genau die E-Mail-Adresse deines Resend-Kontos."
+            )
+            return jsonify(
+                {
+                    "success": False,
+                    "message": "⚠️ Resend-Testmodus aktiv: Mit <code>onboarding@resend.dev</code> "
+                    "kannst du nur an deine eigene Resend-Konto-E-Mail senden."
+                    f"{hint} Für echten Versand an beliebige Adressen musst du in Resend "
+                    "eine eigene Domain verifizieren und diese als Absender verwenden.",
+                }
+            )
+
+        if "invalid_api_key" in name.lower() or e.code == 401:
+            return jsonify(
+                {
+                    "success": False,
+                    "message": '🔑 Ungültiger API-Key. Bitte prüfe den Key im Resend-Dashboard unter "API Keys". '
+                    "Hinweis: Stelle sicher, dass der Key gespeichert (nicht nur eingegeben) wurde.",
+                }
+            )
+
+        if msg and msg != body:
+            return jsonify(
+                {
+                    "success": False,
+                    "message": f"Resend Fehler ({name or e.code}): {msg}",
+                }
+            )
+
         return jsonify(
             {"success": False, "message": f"Resend HTTP {e.code}: {body or str(e)}"}
         )
