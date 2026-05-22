@@ -140,6 +140,16 @@ from database import db
 # db immer mit der App registrieren (auch im Bootstrap-Modus)
 db.init_app(app)
 
+# Im Bootstrap-Modus: Tabellen in der SQLite-In-Memory-DB anlegen,
+# damit Abfragen (z.B. im Setup-Wizard) nicht mit "no such table" crashen.
+if _BOOTSTRAP_MODE:
+    with app.app_context():
+        from models import (  # noqa: F401
+            User, Booking, SlotName, BlockedSlot, SystemConfig,
+            Period, Course, SchoolClass, Notification, PasswordResetToken,
+        )
+        db.create_all()
+
 # Importiere Modelle und Hilfsfunktionen (nur wenn DB verfügbar)
 if not _BOOTSTRAP_MODE:
     from models import (
