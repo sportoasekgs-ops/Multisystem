@@ -57,7 +57,10 @@ def step(step_id):
         return redirect(url_for('setup.step', step_id='welcome'))
 
     # Wenn Setup bereits fertig, nur Admin darf zurückkehren
-    if is_setup_complete() and step_id != 'complete':
+    # Im Bootstrap-Modus (keine echte DB) diesen Check überspringen,
+    # da 'dashboard' dort nicht erreichbar ist und einen Redirect-Loop auslösen würde.
+    from local_config import is_database_configured
+    if is_setup_complete() and step_id != 'complete' and is_database_configured():
         user_role = session.get('user_role')
         if user_role != 'admin':
             return redirect(url_for('dashboard'))

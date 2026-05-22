@@ -222,6 +222,10 @@ app.register_blueprint(admin_dyn_bp)
 @app.before_request
 def check_setup():
     """Leitet zum Setup-Wizard weiter, wenn das System noch nicht eingerichtet ist."""
+    # Im Bootstrap-Modus (keine DB konfiguriert): kein Setup-Check nötig,
+    # bootstrap_catch_all leitet alle Nicht-Setup-Routen zu /bootstrap weiter.
+    if _BOOTSTRAP_MODE:
+        return None
     # Routen, die auch ohne abgeschlossenes Setup erreichbar sein müssen
     _SETUP_BYPASS = {
         'static', 'login', 'logout',
@@ -539,9 +543,13 @@ def iserv_embed_login():
 @app.route('/login')
 def login():
     """Login-Seite - zeigt nur IServ-Login-Button, mit CMS-Texten"""
-    login_title    = get_config('login_title', '')
-    login_subtitle = get_config('login_subtitle', '')
-    login_notice   = get_config('login_notice', '')
+    try:
+        from system_config import get_config as _get_config
+        login_title    = _get_config('login_title', '')
+        login_subtitle = _get_config('login_subtitle', '')
+        login_notice   = _get_config('login_notice', '')
+    except Exception:
+        login_title = login_subtitle = login_notice = ''
     return render_template('login.html',
                            login_title=login_title,
                            login_subtitle=login_subtitle,
