@@ -93,9 +93,29 @@ def inject_csrf_token():
     return dict(csrf_token=generate_csrf_token())
 
 # Datenbank-Konfiguration
-# Reihenfolge: lokale Datei (buchungssystem_local.json) → kein Fallback
+# Reihenfolge: lokale Datei (buchungssystem_local.json) → DATABASE_URL Env-Var
 from local_config import get_database_url, is_database_configured, set_database_url
 db_uri = get_database_url()
+
+
+def _trigger_restart():
+    """Sendet SIGHUP an den Gunicorn-Master, um alle Worker neu zu starten.
+    Funktioniert auf Replit (--reload) und auf Render/Linux-Servern.
+    """
+    import signal
+    import subprocess
+    try:
+        result = subprocess.run(
+            ['pgrep', '-f', 'gunicorn'],
+            capture_output=True, text=True
+        )
+        pids = [int(p) for p in result.stdout.strip().split() if p.isdigit()]
+        if pids:
+            master_pid = min(pids)
+            os.kill(master_pid, signal.SIGHUP)
+            print(f"[Restart] SIGHUP an Gunicorn-Master PID {master_pid} gesendet.")
+    except Exception as e:
+        print(f"[Restart] Neustart fehlgeschlagen: {e}")
 
 # ── Bootstrap-Modus: keine DB-URL vorhanden ──────────────────────────────────
 _BOOTSTRAP_MODE = not bool(db_uri)
@@ -116,8 +136,14 @@ if _BOOTSTRAP_MODE:
                 error = 'Bitte eine Datenbank-URL eingeben.'
             else:
                 set_database_url(url)
+                _trigger_restart()
                 return render_template('bootstrap_saved.html')
         return render_template('bootstrap_db.html', error=error)
+
+    @app.route('/bootstrap/ready')
+    def bootstrap_ready():
+        """Wird vom Warte-Screen abgefragt: gibt 200 zurück wenn die App neu gestartet ist."""
+        return 'ok', 200
 
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = db_uri

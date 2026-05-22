@@ -3,9 +3,9 @@ Lokale Konfigurationsdatei (buchungssystem_local.json).
 Wird VOR dem Datenbankstart gelesen – hier werden Einstellungen gespeichert,
 die nicht in der Datenbank stehen können (z. B. die DATABASE_URL selbst).
 
-WICHTIG: Die Datenbank-URL wird AUSSCHLIESSLICH aus dieser lokalen Datei gelesen.
-Umgebungsvariablen (DATABASE_URL, etc.) werden bewusst ignoriert, da die
-Datenbank immer extern konfiguriert werden soll (Setup-Wizard oder Einstellungen).
+Priorität der DB-URL:
+  1. buchungssystem_local.json  (Setup-Wizard, Admin-Panel)
+  2. DATABASE_URL Umgebungsvariable  (Render, Docker, CI)
 """
 
 import json
@@ -51,14 +51,16 @@ def set_local(key: str, value) -> bool:
 def get_database_url() -> str:
     """
     Gibt die Datenbank-URL zurück.
-    Ausschliesslich aus der lokalen Konfigurationsdatei (buchungssystem_local.json).
-    Umgebungsvariablen werden NICHT verwendet – die DB muss immer manuell
-    über den Setup-Wizard oder die Admin-Einstellungen konfiguriert werden.
+    Priorität: lokale JSON-Datei → DATABASE_URL Umgebungsvariable.
     """
     local_url = get_local('database_url', '').strip()
     if local_url:
         print(f"[LocalConfig] DATABASE_URL aus lokaler Konfiguration geladen.")
         return local_url
+    env_url = os.environ.get('DATABASE_URL', '').strip()
+    if env_url:
+        print(f"[LocalConfig] DATABASE_URL aus Umgebungsvariable geladen.")
+        return env_url
     print(f"[LocalConfig] Keine DATABASE_URL konfiguriert – Bootstrap-Modus aktiv.")
     return ''
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Datenbank gespeichert – Buchungssystem</title>
+    <title>Neustart läuft – Buchungssystem</title>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -24,34 +24,87 @@
             max-width: 480px;
             text-align: center;
         }
-        .icon { font-size: 3.5rem; margin-bottom: 1rem; }
-        h1 { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.5rem; }
-        p { color: #6c757d; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.6; }
-        .step {
-            background: #f0fdf4; border: 1px solid #bbf7d0;
-            border-radius: 10px; padding: 1rem 1.2rem;
-            text-align: left; font-size: 0.85rem; color: #166534;
-            margin-bottom: 1.2rem; line-height: 1.7;
+        .spinner {
+            width: 56px; height: 56px;
+            border: 5px solid #fce4ec;
+            border-top-color: #E91E63;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin: 0 auto 1.2rem;
         }
-        .step strong { display: block; font-size: 0.9rem; margin-bottom: 0.3rem; color: #15803d; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h1 { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.5rem; }
+        p  { color: #6c757d; font-size: 0.9rem; margin-bottom: 1.2rem; line-height: 1.6; }
+        .progress-bar {
+            height: 6px; background: #fce4ec; border-radius: 3px; overflow: hidden; margin-bottom: 1.2rem;
+        }
+        .progress-fill {
+            height: 100%; background: #E91E63; border-radius: 3px;
+            width: 0%; transition: width 0.3s ease;
+        }
+        .status { font-size: 0.8rem; color: #9ca3af; }
+        .btn {
+            display: inline-block; margin-top: 1.2rem;
+            padding: 0.6rem 1.4rem; background: #E91E63; color: #fff;
+            border-radius: 8px; text-decoration: none; font-size: 0.9rem;
+            font-weight: 600; display: none;
+        }
     </style>
 </head>
 <body>
 <div class="card">
-    <div class="icon">✅</div>
-    <h1>Datenbank-URL gespeichert!</h1>
-    <p>Die URL wurde in der lokalen Konfigurationsdatei hinterlegt. Starte die App jetzt neu, damit die Verbindung aktiv wird.</p>
-
-    <div class="step">
-        <strong>Nächste Schritte:</strong>
-        1. App neu starten (Workflow stoppen und wieder starten)<br>
-        2. Die App öffnet dann automatisch den Setup-Wizard<br>
-        3. Dort kannst du alle weiteren Einstellungen vornehmen
-    </div>
-
-    <p style="font-size:0.8rem; color:#9ca3af;">
-        Die URL ist in <code>buchungssystem_local.json</code> gespeichert und wird beim nächsten Start verwendet.
-    </p>
+    <div class="spinner" id="spinner"></div>
+    <h1 id="title">App wird neu gestartet…</h1>
+    <p id="msg">Die Datenbank-URL wurde gespeichert. Die App startet jetzt neu und verbindet sich mit der Datenbank.</p>
+    <div class="progress-bar"><div class="progress-fill" id="bar"></div></div>
+    <div class="status" id="status">Warte auf Neustart…</div>
+    <a href="/setup/welcome" class="btn" id="btn">Weiter zum Setup →</a>
 </div>
+<script>
+    const bar    = document.getElementById('bar');
+    const status = document.getElementById('status');
+    const title  = document.getElementById('title');
+    const msg    = document.getElementById('msg');
+    const btn    = document.getElementById('btn');
+    const spinner = document.getElementById('spinner');
+
+    let attempts = 0;
+    const maxAttempts = 40;   // 40 × 1.5 s = 60 s Timeout
+    const waitBefore  = 3000; // 3 s warten bevor erster Ping
+
+    function ping() {
+        attempts++;
+        const pct = Math.min((attempts / maxAttempts) * 100, 95);
+        bar.style.width = pct + '%';
+
+        fetch('/setup/welcome', { method: 'HEAD' })
+            .then(r => {
+                if (r.ok || r.status === 302 || r.status === 200) {
+                    bar.style.width = '100%';
+                    spinner.style.borderTopColor = '#22c55e';
+                    title.textContent = '✅ Neustart abgeschlossen!';
+                    msg.textContent   = 'Die App läuft jetzt mit der neuen Datenbank.';
+                    status.textContent = 'Weiterleitung in 2 Sekunden…';
+                    btn.style.display = 'inline-block';
+                    setTimeout(() => { window.location.href = '/setup/welcome'; }, 2000);
+                } else {
+                    retry();
+                }
+            })
+            .catch(() => retry());
+    }
+
+    function retry() {
+        if (attempts >= maxAttempts) {
+            status.textContent = 'Timeout – bitte Seite manuell neu laden.';
+            btn.style.display = 'inline-block';
+            return;
+        }
+        status.textContent = `Warte… (Versuch ${attempts}/${maxAttempts})`;
+        setTimeout(ping, 1500);
+    }
+
+    setTimeout(ping, waitBefore);
+</script>
 </body>
 </html>

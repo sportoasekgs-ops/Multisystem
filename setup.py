@@ -51,6 +51,12 @@ def index():
     return redirect(url_for('setup.step', step_id='welcome'))
 
 
+@setup_bp.route('/restart-wait')
+def restart_wait():
+    """Warte-Seite nach dem Speichern der Datenbank-URL – zeigt Neustart-Animation."""
+    return render_template('bootstrap_saved.html')
+
+
 @setup_bp.route('/<step_id>', methods=['GET', 'POST'])
 def step(step_id):
     if step_id not in STEP_IDS:
@@ -89,7 +95,12 @@ def _handle_post(step_id):
         db_url = request.form.get('database_url', '').strip()
         if db_url:
             set_database_url(db_url)
-            flash('Datenbank-URL gespeichert. Bitte starte die App neu, damit die Verbindung aktiv wird.', 'success')
+            try:
+                from app import _trigger_restart
+                _trigger_restart()
+            except Exception:
+                pass
+            return redirect(url_for('setup.restart_wait'))
         else:
             flash('Keine URL eingegeben – bestehende Konfiguration bleibt unverändert.', 'info')
         return redirect(url_for('setup.step', step_id='general'))
