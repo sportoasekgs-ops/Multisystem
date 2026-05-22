@@ -337,7 +337,8 @@ input:checked + .slider:before { transform: translateX(24px); }
                         Resend sendet E-Mails über eine HTTP-API, keine SMTP-Ports nötig.<br>
                         <strong>Einrichtung:</strong> 1. Konto bei <a href="https://resend.com" target="_blank" style="color:#166534;font-weight:600;">resend.com</a> erstellen &nbsp;
                         2. API-Key generieren (Dashboard → API Keys) &nbsp;
-                        3. Domain verifizieren <em>oder</em> zum Testen <code>onboarding@resend.dev</code> als Absender nutzen (sendet nur an die registrierte E-Mail-Adresse).
+                        3. Domain verifizieren für den Produktivbetrieb.<br>
+                        <strong>Zum Testen ohne eigene Domain:</strong> Absender <code>onboarding@resend.dev</code> nutzen – aber dann <strong>muss die Empfänger-E-Mail identisch mit deiner Resend-Konto-E-Mail sein</strong> (Resend-Einschränkung, Fehler 1010 sonst).
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                     <div class="form-group">
