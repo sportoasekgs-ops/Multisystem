@@ -1,4 +1,4 @@
-# Haupt-Anwendungsdatei für die SportOase-Buchungssystem
+# Haupt-Anwendungsdatei für das Buchungssystem
 # Diese Datei enthält alle Routen (URLs) und die Logik der Webanwendung
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, Response, jsonify
@@ -93,7 +93,7 @@ def inject_csrf_token():
     return dict(csrf_token=generate_csrf_token())
 
 # Datenbank-Konfiguration
-# Reihenfolge: lokale Datei (sportoase_local.json) → Env-Var DATABASE_URL
+# Reihenfolge: lokale Datei (buchungssystem_local.json) → kein Fallback
 from local_config import get_database_url, is_database_configured, set_database_url
 db_uri = get_database_url()
 
@@ -286,19 +286,27 @@ def inject_branding():
 
     primary = branding.get('primary_color', '#E91E63')
     primary_rgb_comma, primary_rgb_space = _hex_to_rgb(primary)
+
+    def _cfg(key, default=''):
+        try:
+            from system_config import get_config as _gc
+            return _gc(key, default)
+        except Exception:
+            return default
+
     extra = {
         'logo_url': _resolve_logo_url(branding.get('logo_filename', '')),
         'favicon_url': _resolve_logo_url(branding.get('favicon_filename', '')),
         'primary_rgb': primary_rgb_comma,
         'primary_rgb_space': primary_rgb_space,
-        'cms_privacy_text': get_config('cms_privacy_text', ''),
-        'cms_imprint_text': get_config('cms_imprint_text', ''),
-        'dashboard_notice': get_config('dashboard_notice', ''),
-        'booking_notice':   get_config('booking_notice', ''),
-        'contact_name':     get_config('contact_name', ''),
-        'contact_email':    get_config('contact_email', ''),
-        'contact_phone':    get_config('contact_phone', ''),
-        'contact_text':     get_config('contact_text', ''),
+        'cms_privacy_text': _cfg('cms_privacy_text'),
+        'cms_imprint_text': _cfg('cms_imprint_text'),
+        'dashboard_notice': _cfg('dashboard_notice'),
+        'booking_notice':   _cfg('booking_notice'),
+        'contact_name':     _cfg('contact_name'),
+        'contact_email':    _cfg('contact_email'),
+        'contact_phone':    _cfg('contact_phone'),
+        'contact_text':     _cfg('contact_text'),
     }
     return dict(branding=branding, **branding, **extra)
 
@@ -3296,7 +3304,7 @@ if os.environ.get('FLASK_ENV') == 'production' or not os.environ.get('FLASK_DEBU
             pass
     
     try:
-        file_handler = RotatingFileHandler('logs/sportoase.log', maxBytes=10240000, backupCount=10)
+        file_handler = RotatingFileHandler('logs/buchungssystem.log', maxBytes=10240000, backupCount=10)
         file_handler.setFormatter(logging.Formatter(
             '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
         ))

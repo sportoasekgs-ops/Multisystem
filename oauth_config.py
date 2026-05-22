@@ -1,4 +1,4 @@
-# IServ OAuth2/OpenID Connect Konfiguration für SportOase
+# IServ OAuth2/OpenID Connect Konfiguration
 # Credentials werden ZUERST aus der DB (Setup-Wizard) geladen, Env-Vars als Fallback
 
 import os

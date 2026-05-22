@@ -1,7 +1,7 @@
 {
   "name": "workspace",
   "version": "1.0.0",
-  "description": "Web-Anwendung zur Verwaltung von Buchungen für die Schul-SportOase der KGS Pattensen (Ernst-Reuter-Schule).",
+  "description": "Web-basiertes Buchungssystem für Schuleinrichtungen.",
   "main": "index.js",
   "dependencies": {
     "agent-base": "^7.1.4",

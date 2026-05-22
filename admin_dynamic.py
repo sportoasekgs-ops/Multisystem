@@ -316,6 +316,65 @@ def classes_delete(class_id):
     return redirect(url_for('admin_dyn.classes'))
 
 
+# ─── Datenbank-Einstellungen ─────────────────────────────────────────────────
+
+@admin_dyn_bp.route('/database-settings', methods=['GET', 'POST'])
+def database_settings():
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+
+    from local_config import get_local, set_database_url
+    import sqlalchemy
+
+    test_result = None
+
+    if request.method == 'POST':
+        if not _validate_csrf(request.form.get('csrf_token', '')):
+            flash('Ungültiges Sicherheits-Token.', 'error')
+            return redirect(url_for('admin_dyn.database_settings'))
+
+        action = request.form.get('action', 'save')
+
+        if action == 'test':
+            db_url = request.form.get('database_url', '').strip()
+            if not db_url:
+                test_result = {'success': False, 'message': 'Bitte eine Datenbank-URL eingeben.'}
+            else:
+                try:
+                    engine = sqlalchemy.create_engine(db_url, connect_args={'connect_timeout': 8})
+                    with engine.connect() as conn:
+                        conn.execute(sqlalchemy.text('SELECT 1'))
+                    engine.dispose()
+                    test_result = {'success': True, 'message': 'Verbindung erfolgreich! Datenbank ist erreichbar.'}
+                except Exception as e:
+                    test_result = {'success': False, 'message': f'Verbindung fehlgeschlagen: {e}'}
+        else:
+            db_url = request.form.get('database_url', '').strip()
+            if not db_url:
+                flash('Bitte eine Datenbank-URL eingeben.', 'error')
+            else:
+                set_database_url(db_url)
+                flash('Datenbank-URL gespeichert. Bitte starte die App neu, damit die neue Verbindung aktiv wird.', 'success')
+                return redirect(url_for('admin_dyn.database_settings'))
+
+    raw_url = get_local('database_url', '')
+    if raw_url:
+        try:
+            from urllib.parse import urlparse
+            p = urlparse(raw_url)
+            db_url_masked = f"{p.scheme}://***@{p.hostname}{p.path}"
+        except Exception:
+            db_url_masked = '(konfiguriert)'
+    else:
+        db_url_masked = ''
+
+    return render_template('admin_db_settings.html',
+                           db_configured=bool(raw_url),
+                           db_url_masked=db_url_masked,
+                           test_result=test_result)
+
+
 # ─── Buchungs-Einstellungen ───────────────────────────────────────────────────
 
 @admin_dyn_bp.route('/booking-settings', methods=['GET', 'POST'])

@@ -1,8 +1,8 @@
-# SportOase Buchungssystem
+# Buchungssystem
 
 ## Overview
 
-SportOase Buchungssystem is a web-based booking management system for the school sports facility (SportOase) at KGS Pattensen (Ernst-Reuter-Schule). Teachers can book time slots for 1-5 students, view a color-coded weekly schedule, and manage their own bookings. Administrators have full control over all bookings, slot blocking, and user management. Authentication is handled via IServ SSO (OAuth2/OpenID Connect).
+Buchungssystem ist ein web-basiertes Buchungsverwaltungssystem für Schuleinrichtungen (z.B. KGS Pattensen / Ernst-Reuter-Schule). Teachers can book time slots for 1-5 students, view a color-coded weekly schedule, and manage their own bookings. Administrators have full control over all bookings, slot blocking, and user management. Authentication is handled via IServ SSO (OAuth2/OpenID Connect).
 
 ## User Preferences
 

@@ -1,5 +1,5 @@
 """
-E-Mail-Service für SportOase.
+E-Mail-Service für das Buchungssystem.
 Unterstützt zwei Provider:
   - SMTP (Standard): Jeder SMTP-Server, inkl. Office365, Schulserver etc.
   - Resend: Cloud-E-Mail über https://resend.com (API-Key erforderlich)

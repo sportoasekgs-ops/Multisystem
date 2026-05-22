@@ -1,4 +1,4 @@
-modules = ["python-3.11", "web", "postgresql-16"]
+modules = ["python-3.11", "web"]
 [agent]
 expertMode = true
 integrations = ["google-mail:1.0.0", "resend:1.0.0"]
@@ -18,19 +18,19 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "SportOase App"
+args = "Buchungssystem"
 
 [[workflows.workflow]]
-name = "SportOase App"
+name = "Buchungssystem"
 author = "agent"
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python -m gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
+args = ".pythonlibs/bin/gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
 waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[ports]]
 localPort = 5000

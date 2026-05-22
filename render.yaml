@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: sportoase-buchungssystem
+    name: buchungssystem
     runtime: python
     plan: starter
     region: frankfurt
@@ -13,7 +13,7 @@ services:
         value: 3.11.0
       - key: DATABASE_URL
         fromDatabase:
-          name: sportoase-db
+          name: buchungssystem-db
           property: connectionString
       - key: SESSION_SECRET
         generateValue: true
@@ -26,7 +26,7 @@ services:
         value: kgs-pattensen.de
 
 databases:
-  - name: sportoase-db
-    databaseName: sportoase
+  - name: buchungssystem-db
+    databaseName: buchungssystem
     plan: starter
     region: frankfurt

@@ -273,13 +273,11 @@ def _get_step_config(step_id):
     if step_id == 'database':
         from local_config import get_local
         raw_url = get_local('database_url', '')
-        env_url = os.environ.get('DATABASE_URL', '') or os.environ.get('SQLALCHEMY_DATABASE_URI', '')
-        db_configured = bool(raw_url or env_url)
-        display_url = raw_url or env_url
-        if display_url:
+        db_configured = bool(raw_url)
+        if raw_url:
             try:
                 from urllib.parse import urlparse
-                p = urlparse(display_url)
+                p = urlparse(raw_url)
                 db_url_masked = f"{p.scheme}://***@{p.hostname}{p.path}"
             except Exception:
                 db_url_masked = '(konfiguriert)'

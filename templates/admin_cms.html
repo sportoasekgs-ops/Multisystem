@@ -93,8 +93,8 @@ input:checked + .slider:before { transform: translateX(24px); }
                     <label class="form-label">Überschrift in der Dashboard-Kopfzeile</label>
                     <input type="text" name="dashboard_title" class="form-control"
                            value="{{ cms.dashboard_title or '' }}"
-                           placeholder="Buchungsübersicht SportOASE">
-                    <p class="form-hint">Leer lassen = Standardtext "Buchungsübersicht SportOASE" wird verwendet.</p>
+                           placeholder="Buchungsübersicht">
+                    <p class="form-hint">Leer lassen = Standardtext "Buchungsübersicht" wird verwendet.</p>
                 </div>
             </div>
             <div class="cms-card">
@@ -541,7 +541,7 @@ input:checked + .slider:before { transform: translateX(24px); }
         <div class="cms-card" style="border-left:4px solid #6366f1;">
             <h3>🗄️ Datenbank-Verbindung</h3>
             <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.2rem;">
-                Die Datenbank-URL wird in der lokalen Datei <code>sportoase_local.json</code> gespeichert
+                Die Datenbank-URL wird in der lokalen Datei <code>buchungssystem_local.json</code> gespeichert
                 und beim nächsten Start der App verwendet.
                 <strong>Nach dem Speichern muss die App neu gestartet werden.</strong>
             </p>
@@ -552,7 +552,7 @@ input:checked + .slider:before { transform: translateX(24px); }
             </div>
             {% else %}
             <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:.8rem 1rem;margin-bottom:1.2rem;font-size:.85rem;">
-                ⚠️ Keine URL in lokaler Konfiguration – aktuell wird die Umgebungsvariable <code>DATABASE_URL</code> verwendet.
+                ⚠️ Keine Datenbank-URL konfiguriert. Bitte unter „Admin → Datenbank" eintragen.
             </div>
             {% endif %}
 
@@ -582,7 +582,7 @@ input:checked + .slider:before { transform: translateX(24px); }
                 <li>Format: <code>postgresql://BENUTZER:PASSWORT@HOST:PORT/DATENBANKNAME</code></li>
                 <li>Unterstützt: PostgreSQL (Neon, Supabase, Render, eigener Server)</li>
                 <li>Bei <strong>Render</strong>: Interne DB-URL aus dem Render-Dashboard kopieren</li>
-                <li>Die URL wird lokal in <code>sportoase_local.json</code> gespeichert (nicht in der Datenbank)</li>
+                <li>Die URL wird lokal in <code>buchungssystem_local.json</code> gespeichert (nicht in der Datenbank)</li>
             </ul>
         </div>
     </div>

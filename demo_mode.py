@@ -1,5 +1,5 @@
 """
-Demo-Modus für SportOase.
+Demo-Modus für das Buchungssystem.
 Wenn aktiv: Fake-Buchungen werden angezeigt, kein echter E-Mail-Versand,
 Demo-Badge erscheint in der Navbar.
 """

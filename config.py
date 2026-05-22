@@ -148,4 +148,4 @@ ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", SMTP_USER)
 # =====================================================================
 
 SECRET_KEY = os.getenv("SESSION_SECRET", "dev-secret-key-change-in-production")
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/sportoase")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://localhost/buchungssystem")

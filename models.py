@@ -1,4 +1,4 @@
-# Datenbankmodelle für die SportOase-Anwendung mit Flask-SQLAlchemy
+# Datenbankmodelle für das Buchungssystem mit Flask-SQLAlchemy
 # Diese Datei definiert die Struktur der Datenbank-Tabellen für PostgreSQL
 
 from werkzeug.security import generate_password_hash, check_password_hash
