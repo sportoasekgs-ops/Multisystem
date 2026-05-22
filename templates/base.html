@@ -24,7 +24,7 @@
             --primary: {{ primary_color or '#E91E63' }};
             --primary-dark: {{ secondary_color or '#C2185B' }};
             --primary-light: {{ background_color or '#FCE4EC' }};
-            --login-gradient: linear-gradient(135deg, {{ background_color or '#FCE4EC' }} 0%, {{ primary_color or '#E91E63' }} 100%);
+            --login-gradient: {{ background_color or '#F5F5F5' }};
             --primary-rgb: {{ primary_rgb_space or '233 30 99' }};
             --primary-overlay: rgba({{ primary_rgb or '233, 30, 99' }}, 0.12);
         }

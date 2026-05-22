@@ -31,7 +31,7 @@
     --radius-lg: 12px;
     --radius-xl: 16px;
     /* Spezielle Farben */
-    --login-gradient: linear-gradient(135deg, #F8BBD9 0%, #E91E63 100%);
+    --login-gradient: #F5F5F5;
     --success-bg: #E8F5E9;
     --success-text: #2E7D32;
     --error-bg: #FFEBEE;
@@ -76,7 +76,7 @@
     --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6);
     /* Spezielle Farben */
-    --login-gradient: linear-gradient(135deg, #1E1E1E 0%, #311B28 100%);
+    --login-gradient: #1E1E1E;
     --success-bg: #1B3B1B;
     --success-text: #81C784;
     --error-bg: #3B1B1B;
