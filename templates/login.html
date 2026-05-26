@@ -21,6 +21,22 @@
             Mit IServ anmelden
         </a>
 
+        {% if demo_mode %}
+        <div style="margin-top: 1.5rem; padding: 1.2rem; background: rgba(245, 158, 11, 0.08); border: 1px dashed #f59e0b; border-radius: 12px; text-align: center;">
+            <p style="font-size: 0.9rem; font-weight: 600; color: #d97706; margin: 0 0 0.8rem 0; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                <span style="font-size: 1.1rem;">🔧</span> Demo-Modus ist aktiv
+            </p>
+            <div style="display: flex; gap: 0.6rem; justify-content: center;">
+                <a href="{{ url_for('login_demo', role='teacher') }}" style="background: #f59e0b; color: #fff; padding: 0.6rem 0.9rem; font-size: 0.85rem; border-radius: 8px; text-decoration: none; font-weight: 600; flex: 1; text-align: center; display: inline-block; transition: background 0.2s;">
+                    Demo-Lehrer
+                </a>
+                <a href="{{ url_for('login_demo', role='admin') }}" style="background: var(--text-primary, #374151); color: var(--bg, #fff); padding: 0.6rem 0.9rem; font-size: 0.85rem; border-radius: 8px; text-decoration: none; font-weight: 600; flex: 1; text-align: center; display: inline-block; transition: opacity 0.2s;">
+                    Demo-Admin
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         {% if login_notice %}
         <div style="margin-top:1.5rem;padding:.9rem 1.1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;font-size:.85rem;color:var(--text-secondary);text-align:center;">
             {{ login_notice }}

@@ -765,6 +765,33 @@ def login():
     )
 
 
+# Route: Demo-Login (Gast / Admin)
+@app.route("/login/demo")
+def login_demo():
+    """Erlaubt einen schnellen Demo-Login im Demo-Modus"""
+    if not is_demo_mode():
+        flash("Der Demo-Modus ist zurzeit nicht aktiv.", "error")
+        return redirect(url_for("login"))
+
+    role = request.args.get("role", "teacher")
+    if role == "admin":
+        session.clear()
+        session["user_id"] = -2
+        session["user_username"] = "demo_admin"
+        session["user_email"] = "demo.admin@example.com"
+        session["user_role"] = "admin"
+        flash("Als Demo-Admin eingeloggt.", "success")
+    else:
+        session.clear()
+        session["user_id"] = -1
+        session["user_username"] = "demo_teacher"
+        session["user_email"] = "demo.teacher@example.com"
+        session["user_role"] = "teacher"
+        flash("Als Demo-Lehrkraft eingeloggt.", "success")
+
+    return redirect(url_for("dashboard"))
+
+
 # Route: Lokaler Admin-Login (für Tests ohne IServ)
 @app.route("/login/local", methods=["POST"])
 def login_local():
@@ -1347,6 +1374,13 @@ def dashboard():
         monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d")
     )
 
+    # Im Demo-Modus: Fake-Buchungen hinzufügen
+    if is_demo_mode():
+        demo_bookings = get_demo_bookings_for_week(
+            monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d")
+        )
+        week_bookings = list(week_bookings) + demo_bookings
+
     # Hole alle blockierten Slots für diese Woche
     blocked_slots = get_blocked_slots_for_week(
         monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d")
@@ -1536,6 +1570,30 @@ def dashboard():
             .limit(5)
             .all()
         )
+
+        if is_demo_mode():
+            from datetime import date as py_date, timedelta
+            from demo_mode import get_demo_bookings_for_week
+            today_dt = py_date.today()
+            monday = today_dt - timedelta(days=today_dt.weekday())
+            start_date = monday.strftime('%Y-%m-%d')
+            end_date = (monday + timedelta(days=11)).strftime('%Y-%m-%d')
+            demo_bookings = get_demo_bookings_for_week(start_date, end_date)
+
+            class DemoBookingWrapper:
+                def __init__(self, d):
+                    self.id = d['id']
+                    self.date = d['date']
+                    self.weekday = d['weekday']
+                    self.period = d['period']
+                    self.offer_label = d['offer_label']
+                    self.is_exclusive = d.get('is_exclusive', False)
+                    self.is_approved = d.get('is_approved', True)
+                    self.students_json = d['students_json']
+
+            demo_wrapped = [DemoBookingWrapper(b) for b in demo_bookings if b['teacher_id'] == user_id and b['date'] >= today_str]
+            my_bookings_query = list(my_bookings_query) + demo_wrapped
+
 
         for booking in my_bookings_query:
             try:
@@ -1738,6 +1796,18 @@ def calendar_view(year=None, month=None):
         Booking.date >= first_day.strftime("%Y-%m-%d"),
         Booking.date <= last_day.strftime("%Y-%m-%d"),
     ).all()
+
+    if is_demo_mode():
+        from demo_mode import get_demo_bookings_for_week
+        demo_bookings = get_demo_bookings_for_week(
+            first_day.strftime("%Y-%m-%d"),
+            last_day.strftime("%Y-%m-%d")
+        )
+        class DemoBookingObj:
+            def __init__(self, d):
+                self.date = d['date']
+                self.students_json = d['students_json']
+        month_bookings = list(month_bookings) + [DemoBookingObj(d) for d in demo_bookings]
 
     month_blocked = BlockedSlot.query.filter(
         BlockedSlot.date >= first_day.strftime("%Y-%m-%d"),
@@ -2261,6 +2331,20 @@ def meine_buchungen():
         )
         all_bookings = [b.to_dict() for b in bookings_query]
 
+    # Im Demo-Modus: Fake-Buchungen hinzufügen
+    if is_demo_mode():
+        from datetime import date, timedelta
+        from demo_mode import get_demo_bookings_for_week
+        today_date = date.today()
+        monday = today_date - timedelta(days=today_date.weekday())
+        start_date = monday.strftime('%Y-%m-%d')
+        end_date = (monday + timedelta(days=11)).strftime('%Y-%m-%d')
+        demo_bookings = get_demo_bookings_for_week(start_date, end_date)
+        if not is_admin:
+            demo_bookings = [b for b in demo_bookings if b['teacher_id'] == user_id]
+        all_bookings = list(all_bookings) + demo_bookings
+
+
     # Deutsche Wochentagsnamen
     weekday_names_de = {
         "Mon": "Montag",
@@ -2661,6 +2745,20 @@ def admin():
         bookings = get_bookings_by_date(filter_date)
     else:
         bookings = get_all_bookings()
+
+    if is_demo_mode():
+        from demo_mode import get_demo_bookings_for_week, get_demo_bookings_for_date
+        if filter_date:
+            demo_bookings = get_demo_bookings_for_date(filter_date)
+        else:
+            from datetime import date as py_date, timedelta
+            today_dt = py_date.today()
+            monday = today_dt - timedelta(days=today_dt.weekday())
+            start_date = monday.strftime('%Y-%m-%d')
+            end_date = (monday + timedelta(days=11)).strftime('%Y-%m-%d')
+            demo_bookings = get_demo_bookings_for_week(start_date, end_date)
+        bookings = list(bookings) + demo_bookings
+
 
     # Konvertiere Buchungen für Anzeige
     bookings_display = []

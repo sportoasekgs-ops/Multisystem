@@ -387,6 +387,10 @@ def get_or_create_oauth_user(email, username, oauth_provider, oauth_id, role="te
 
 def get_user_by_id(user_id):
     """Sucht einen Benutzer anhand der ID"""
+    if user_id == -1:
+        return {"id": -1, "username": "demo_teacher", "email": "demo.teacher@example.com", "role": "teacher"}
+    elif user_id == -2:
+        return {"id": -2, "username": "demo_admin", "email": "demo.admin@example.com", "role": "admin"}
     user = User.query.get(user_id)
     return user.to_dict() if user else None
 
