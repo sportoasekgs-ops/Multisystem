@@ -5277,9 +5277,7 @@ footer {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
 }
 
 .ticker-author {
@@ -5456,9 +5454,7 @@ footer {
     font-size: 0.75rem;
     color: var(--text-tertiary);
     margin-top: 0.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
 }
 
 .badge-status {

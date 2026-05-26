@@ -373,17 +373,12 @@ function updateStudentFields() {
             <div style="font-size:.78rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.7rem;">
                 Schüler*in ${i + 1}
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">
+            <div style="display:grid;grid-template-columns:1fr;gap:.7rem;">
                 <div class="form-group" style="margin:0;">
                     <label for="student_name_${i}" style="font-size:.8rem;">Name</label>
                     <input type="text" id="student_name_${i}" name="student_name_${i}"
-                           placeholder="Name" style="margin:0;">
-                </div>
-                <div class="form-group" style="margin:0;">
-                    <label for="student_class_${i}" style="font-size:.8rem;">Klasse</label>
-                    <select id="student_class_${i}" name="student_class_${i}" required style="margin:0;">
-                        ${getClassOptions(teacherClass)}
-                    </select>
+                           placeholder="Name" style="margin:0;" required>
+                    <input type="hidden" id="student_class_${i}" name="student_class_${i}" value="${teacherClass}">
                 </div>
             </div>`;
         container.appendChild(div);
