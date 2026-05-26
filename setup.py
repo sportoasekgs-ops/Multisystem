@@ -162,9 +162,19 @@ def _handle_post(step_id):
             if f and f.filename:
                 ext = os.path.splitext(f.filename)[1].lower()
                 if ext in (".png", ".jpg", ".jpeg", ".svg", ".webp"):
-                    logo_filename = f"custom_logo{ext}"
-                    save_path = os.path.join("static", "uploads", logo_filename)
-                    f.save(save_path)
+                    # Save locally as a backup
+                    local_logo = f"custom_logo{ext}"
+                    f.save(os.path.join("static", "uploads", local_logo))
+                    
+                    # Convert to base64 for database persistence
+                    f.seek(0)
+                    file_data = f.read()
+                    import base64
+                    encoded = base64.b64encode(file_data).decode("utf-8")
+                    mime_type = f.content_type or f"image/{ext[1:]}"
+                    if ext == ".svg":
+                        mime_type = "image/svg+xml"
+                    logo_filename = f"data:{mime_type};base64,{encoded}"
                 else:
                     flash("Logo muss PNG, JPG, SVG oder WebP sein.", "error")
 
@@ -174,10 +184,20 @@ def _handle_post(step_id):
             f = request.files["favicon_file"]
             if f and f.filename:
                 ext = os.path.splitext(f.filename)[1].lower()
-                if ext in (".png", ".ico", ".svg"):
-                    favicon_filename = f"custom_favicon{ext}"
-                    save_path = os.path.join("static", "uploads", favicon_filename)
-                    f.save(save_path)
+                if ext in (".png", ".ico", ".svg", ".jpg", ".jpeg", ".webp"):
+                    # Save locally as a backup
+                    local_favicon = f"custom_favicon{ext}"
+                    f.save(os.path.join("static", "uploads", local_favicon))
+                    
+                    # Convert to base64 for database persistence
+                    f.seek(0)
+                    file_data = f.read()
+                    import base64
+                    encoded = base64.b64encode(file_data).decode("utf-8")
+                    mime_type = f.content_type or f"image/{ext[1:]}"
+                    if ext == ".svg":
+                        mime_type = "image/svg+xml"
+                    favicon_filename = f"data:{mime_type};base64,{encoded}"
 
         set_configs(
             {
