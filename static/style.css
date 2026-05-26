@@ -1766,7 +1766,7 @@ details.help-section[open] .toggle-arrow {
 .book-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgb(var(--primary-rgb) / 0.4);
-    background: linear-gradient(135deg, var(--primary-dark) 0%, #ad1457 100%);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
 }
 
 .book-btn:active {
@@ -3801,7 +3801,7 @@ footer {
 
 /* Exklusive Slots (Einzelangebote) im Dark Mode - Im edlen Dark-Pink/Rose Mix */
 [data-theme="dark"] .period-exclusive {
-    background: linear-gradient(135deg, #1f121a, #120a0f) !important;
+    background: linear-gradient(135deg, rgb(var(--primary-rgb) / 0.08), rgb(var(--primary-rgb) / 0.04)) !important;
     border: 2px solid var(--primary-dark) !important;
     box-shadow: 0 4px 12px rgb(var(--primary-rgb) / 0.15) !important;
 }
@@ -3827,16 +3827,16 @@ footer {
     color: var(--primary) !important;
 }
 [data-theme="dark"] .pending-exclusive-hint {
-    background: linear-gradient(135deg, rgba(240, 98, 146, 0.08), rgba(240, 98, 146, 0.02)) !important;
+    background: linear-gradient(135deg, rgb(var(--primary-rgb) / 0.08), rgb(var(--primary-rgb) / 0.02)) !important;
     border: 1.5px dashed var(--primary-light) !important;
     color: var(--primary) !important;
 }
 [data-theme="dark"] .pending-stat {
-    background: rgba(240, 98, 146, 0.05) !important;
+    background: rgb(var(--primary-rgb) / 0.05) !important;
     border: 2px solid var(--primary-light) !important;
 }
 [data-theme="dark"] .pending-exclusive-section {
-    background: linear-gradient(135deg, rgba(240, 98, 146, 0.05), rgba(240, 98, 146, 0.01)) !important;
+    background: linear-gradient(135deg, rgb(var(--primary-rgb) / 0.05), rgb(var(--primary-rgb) / 0.01)) !important;
     border: 2px solid var(--primary-light) !important;
 }
 
@@ -5565,7 +5565,7 @@ footer {
 
 .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary) 0%, #db2777 100%);
+    background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary) 100%);
     border-radius: 4px;
     width: 0%;
     transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
