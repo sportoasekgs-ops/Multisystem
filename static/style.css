@@ -3853,29 +3853,8 @@ footer {
     color: var(--error) !important;
 }
 
-/* Kurs-spezifische Karten-Backgrounds und Rahmen im Dark Mode (Unifiziert auf edles Dunkelgrau) */
-[data-theme="dark"] .course-wochenstart,
-[data-theme="dark"] .course-konflikt,
-[data-theme="dark"] .course-koordination,
-[data-theme="dark"] .course-sozial,
-[data-theme="dark"] .course-fitness,
-[data-theme="dark"] .course-motorik,
-[data-theme="dark"] .course-turnen,
-[data-theme="dark"] .course-atem,
-[data-theme="dark"] .course-bodyscan,
-[data-theme="dark"] .course-ruhe,
-[data-theme="dark"] .course-frei,
-[data-theme="dark"] .course-default {
-    border-color: var(--border-light) !important;
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%) !important;
-}
-
-/* Alle Kurs-Tags einheitlich in sanftem Rose/Pink */
-[data-theme="dark"] .course-tag {
-    background: rgb(var(--primary-rgb) / 0.1) !important;
-    color: var(--primary) !important;
-    border: 1px solid rgb(var(--primary-rgb) / 0.2) !important;
-}
+/* Kurs-spezifische Farben bleiben im Dark Mode erhalten, nur der Hintergrund der Karte wird abgedunkelt.
+   (Die "graue Einheits-Wand" wurde entfernt, damit Kurse farblich unterscheidbar bleiben) */
 
 /* "Jetzt buchen" Button im Dark Mode */
 [data-theme="dark"] .book-btn {
