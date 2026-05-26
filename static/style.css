@@ -765,7 +765,7 @@ h4 {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--primary-light) 0%, rgb(var(--primary-rgb) / 0.15) 100%);
+    background: var(--primary);
     border-radius: 10px;
 }
 
@@ -876,7 +876,7 @@ h4 {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--primary-light) 0%, rgb(var(--primary-rgb) / 0.15) 100%);
+    background: var(--primary);
     border-radius: 10px;
 }
 
@@ -1255,7 +1255,7 @@ details.help-section[open] .toggle-arrow {
 }
 
 .selected-date-info h3 {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: var(--primary);
     color: white;
     padding: 1rem 1.5rem;
     margin: 0;
@@ -1400,7 +1400,7 @@ details.help-section[open] .toggle-arrow {
 
 /* Heutiger Tag - dezent hervorheben */
 .week-table th.today-column {
-    background: linear-gradient(135deg, var(--primary-light) 0%, rgb(var(--primary-rgb) / 0.15) 100%);
+    background: var(--primary);
     border-bottom-color: var(--primary);
 }
 
@@ -1752,7 +1752,7 @@ details.help-section[open] .toggle-arrow {
     width: 100%;
     padding: 0.5rem 0.75rem;
     margin-top: 0.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: var(--primary);
     color: white;
     text-align: center;
     text-decoration: none;
@@ -1766,7 +1766,7 @@ details.help-section[open] .toggle-arrow {
 .book-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgb(var(--primary-rgb) / 0.4);
-    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    background: var(--primary-dark);
 }
 
 .book-btn:active {
@@ -3059,7 +3059,7 @@ footer {
 .contact-info-box {
     margin: 2rem auto;
     max-width: 800px;
-    background: linear-gradient(135deg, var(--primary-light) 0%, #ffffff 100%);
+    background: var(--primary);
     border: 2px solid var(--primary);
     border-radius: var(--radius-lg);
     padding: 1.5rem 2rem;
@@ -3772,9 +3772,9 @@ footer {
 
 /* Alle Kurs-Tags einheitlich in sanftem Rose/Pink */
 [data-theme="dark"] .course-tag {
-    background: rgba(240, 98, 146, 0.1) !important;
+    background: rgb(var(--primary-rgb) / 0.1) !important;
     color: var(--primary) !important;
-    border: 1px solid rgba(240, 98, 146, 0.2) !important;
+    border: 1px solid rgb(var(--primary-rgb) / 0.2) !important;
 }
 
 /* "Jetzt buchen" Button im Dark Mode */
@@ -3801,13 +3801,13 @@ footer {
 
 /* Exklusive Slots (Einzelangebote) im Dark Mode - Im edlen Dark-Pink/Rose Mix */
 [data-theme="dark"] .period-exclusive {
-    background: linear-gradient(135deg, rgb(var(--primary-rgb) / 0.08), rgb(var(--primary-rgb) / 0.04)) !important;
+    background: rgb(var(--primary-rgb) / 0.08) !important;
     border: 2px solid var(--primary-dark) !important;
     box-shadow: 0 4px 12px rgb(var(--primary-rgb) / 0.15) !important;
 }
 [data-theme="dark"] .exclusive-header {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
-    color: #0f172a !important;
+    background: var(--primary) !important;
+    color: white !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 [data-theme="dark"] .exclusive-student {
@@ -3820,14 +3820,14 @@ footer {
 
 /* Angefragte exklusive Slots (Pending) im Dark Mode - Im edlen Dark-Pink/Rose Mix */
 [data-theme="dark"] .pending-exclusive {
-    background: rgba(240, 98, 146, 0.05) !important;
+    background: rgb(var(--primary-rgb) / 0.05) !important;
     border: 2px dashed var(--primary-light) !important;
 }
 [data-theme="dark"] .pending-exclusive-text {
     color: var(--primary) !important;
 }
 [data-theme="dark"] .pending-exclusive-hint {
-    background: linear-gradient(135deg, rgb(var(--primary-rgb) / 0.08), rgb(var(--primary-rgb) / 0.02)) !important;
+    background: rgb(var(--primary-rgb) / 0.08) !important;
     border: 1.5px dashed var(--primary-light) !important;
     color: var(--primary) !important;
 }
@@ -3836,13 +3836,13 @@ footer {
     border: 2px solid var(--primary-light) !important;
 }
 [data-theme="dark"] .pending-exclusive-section {
-    background: linear-gradient(135deg, rgb(var(--primary-rgb) / 0.05), rgb(var(--primary-rgb) / 0.01)) !important;
+    background: rgb(var(--primary-rgb) / 0.05) !important;
     border: 2px solid var(--primary-light) !important;
 }
 
 /* Kontakt-Kachel im Dark Mode */
 [data-theme="dark"] .contact-info-box {
-    background: linear-gradient(135deg, var(--primary-light) 0%, var(--bg-secondary) 100%) !important;
+    background: var(--bg-secondary) !important;
     border-color: var(--primary-dark) !important;
     box-shadow: var(--shadow-lg);
 }
@@ -4083,7 +4083,7 @@ footer {
     flex-direction: column;
     align-items: center;
     padding: 1rem 2rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: var(--primary);
     border-radius: var(--radius-lg);
     color: white;
 }
@@ -4262,7 +4262,7 @@ footer {
     align-items: center;
     gap: 1rem;
     padding: 0.75rem 1rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: var(--primary);
     color: white;
 }
 
@@ -4526,7 +4526,7 @@ footer {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.25rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: var(--primary);
     color: white;
 }
 
@@ -5565,7 +5565,7 @@ footer {
 
 .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary-dark) 0%, var(--primary) 100%);
+    background: var(--primary);
     border-radius: 4px;
     width: 0%;
     transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
