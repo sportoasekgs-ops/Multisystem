@@ -244,12 +244,12 @@ input:checked + .slider:before { transform: translateX(24px); }
                 <div style="display:flex;gap:12px;margin-bottom:1.5rem;">
                     <label style="flex:1;cursor:pointer;">
                         <input type="radio" name="email_provider" value="smtp" id="cms_provider_smtp"
-                               {% if (cms.email_provider or 'smtp') != 'resend' %}checked{% endif %}
+                               {% if (cms.email_provider or 'smtp') == 'smtp' %}checked{% endif %}
                                onchange="cmsToggleProvider()" style="display:none;">
-                        <div id="cms_card_smtp" style="border:2px solid {% if (cms.email_provider or 'smtp') != 'resend' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:14px;text-align:center;transition:all 0.2s;">
+                        <div id="cms_card_smtp" style="border:2px solid {% if (cms.email_provider or 'smtp') == 'smtp' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:14px;text-align:center;transition:all 0.2s;">
                             <div style="font-size:1.5rem;margin-bottom:4px;">🖥️</div>
                             <div style="font-weight:700;font-size:.85rem;">SMTP</div>
-                            <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Eigener Mailserver</div>
+                            <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Auf Render blockiert</div>
                         </div>
                     </label>
                     <label style="flex:1;cursor:pointer;">
@@ -259,7 +259,17 @@ input:checked + .slider:before { transform: translateX(24px); }
                         <div id="cms_card_resend" style="border:2px solid {% if cms.email_provider == 'resend' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:14px;text-align:center;transition:all 0.2s;">
                             <div style="font-size:1.5rem;margin-bottom:4px;">☁️</div>
                             <div style="font-weight:700;font-size:.85rem;">Resend</div>
-                            <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Gmail-Alternative</div>
+                            <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Braucht Domain</div>
+                        </div>
+                    </label>
+                    <label style="flex:1;cursor:pointer;">
+                        <input type="radio" name="email_provider" value="brevo" id="cms_provider_brevo"
+                               {% if cms.email_provider == 'brevo' %}checked{% endif %}
+                               onchange="cmsToggleProvider()" style="display:none;">
+                        <div id="cms_card_brevo" style="border:2px solid {% if cms.email_provider == 'brevo' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:14px;text-align:center;transition:all 0.2s;">
+                            <div style="font-size:1.5rem;margin-bottom:4px;">📨</div>
+                            <div style="font-weight:700;font-size:.85rem;">Brevo</div>
+                            <div style="font-size:.72rem;color:#6b7280;margin-top:2px;">Ohne eigene Domain</div>
                         </div>
                     </label>
                 </div>
@@ -369,6 +379,48 @@ input:checked + .slider:before { transform: translateX(24px); }
                             </button>
                         </div>
                         <div id="cms-resend-test-result" class="alert" style="display:none;margin-top:1rem;"></div>
+                    </div>
+                </div>
+
+                <!-- Brevo-Felder -->
+                <div id="cms-brevo-section" style="display:none;">
+                    <div style="background:#dbeafe;border:1px solid #93c5fd;color:#1e40af;padding:12px 16px;border-radius:8px;margin-bottom:1rem;font-size:.85rem;">
+                        <strong>✅ Empfohlen für Render ohne eigene Domain.</strong><br>
+                        Brevo sendet per HTTP-API. Du musst in Brevo unter <strong>Senders & IP → Senders</strong> deine Absenderadresse bestätigen, z.B. <code>sportoase.kgs@gmail.com</code>.
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Brevo API-Key</label>
+                            <input type="password" name="brevo_api_key" id="cms-brevo-api-key" class="form-control"
+                                   value="{{ cms.brevo_api_key or '' }}" placeholder="xkeysib-..." autocomplete="new-password">
+                            <p class="form-hint">Brevo → SMTP & API → API Keys</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Absender-E-Mail</label>
+                            <input type="email" name="brevo_from" id="cms-brevo-from" class="form-control"
+                                   value="{{ cms.brevo_from or '' }}" placeholder="sportoase.kgs@gmail.com">
+                            <p class="form-hint">Muss in Brevo als Sender bestätigt sein.</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Absender-Name</label>
+                        <input type="text" name="brevo_from_name" id="cms-brevo-from-name" class="form-control"
+                               value="{{ cms.brevo_from_name or 'SportOase' }}" placeholder="SportOase">
+                    </div>
+                    <div class="cms-card" style="border-left:4px solid #2563eb;margin-top:1rem;">
+                        <h3>🧪 Brevo testen</h3>
+                        <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+                            <div class="form-group" style="flex:1;min-width:200px;margin-bottom:0;">
+                                <label class="form-label">Test-E-Mail senden an</label>
+                                <input type="email" id="cms-brevo-test-email" class="form-control"
+                                       value="{{ cms.admin_email or cms.brevo_from or '' }}" placeholder="test@schule.de">
+                            </div>
+                            <button type="button" class="btn-ghost" onclick="testCmsBrevo()" id="cms-brevo-test-btn"
+                                    style="height:42px;flex-shrink:0;padding:.65rem 1.2rem;">
+                                📨 Testen
+                            </button>
+                        </div>
+                        <div id="cms-brevo-test-result" class="alert" style="display:none;margin-top:1rem;"></div>
                     </div>
                 </div>
 
@@ -748,10 +800,14 @@ function validateReset() {
 
 function cmsToggleProvider() {
     const smtp = document.getElementById('cms_provider_smtp').checked;
+    const resend = document.getElementById('cms_provider_resend').checked;
+    const brevo = document.getElementById('cms_provider_brevo').checked;
     document.getElementById('cms-smtp-section').style.display   = smtp ? '' : 'none';
-    document.getElementById('cms-resend-section').style.display = smtp ? 'none' : '';
+    document.getElementById('cms-resend-section').style.display = resend ? '' : 'none';
+    document.getElementById('cms-brevo-section').style.display  = brevo ? '' : 'none';
     document.getElementById('cms_card_smtp').style.borderColor   = smtp ? 'var(--primary)' : '#e5e7eb';
-    document.getElementById('cms_card_resend').style.borderColor = smtp ? '#e5e7eb' : 'var(--primary)';
+    document.getElementById('cms_card_resend').style.borderColor = resend ? 'var(--primary)' : '#e5e7eb';
+    document.getElementById('cms_card_brevo').style.borderColor  = brevo ? 'var(--primary)' : '#e5e7eb';
 }
 cmsToggleProvider();
 
@@ -824,6 +880,41 @@ async function testCmsResend() {
 
     try {
         const resp = await fetch('{{ url_for("admin_test_resend") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        result.className = 'alert ' + (data.success ? 'alert-success' : 'alert-error');
+        result.innerHTML = (data.success ? '✅ ' : '❌ ') + data.message;
+        result.style.display = 'flex';
+    } catch (e) {
+        result.className = 'alert alert-error';
+        result.innerHTML = '❌ Netzwerkfehler: ' + e.message;
+        result.style.display = 'flex';
+    }
+
+    btn.textContent = '📨 Testen';
+    btn.disabled = false;
+}
+
+async function testCmsBrevo() {
+    const btn    = document.getElementById('cms-brevo-test-btn');
+    const result = document.getElementById('cms-brevo-test-result');
+    btn.textContent = '⏳ Teste...';
+    btn.disabled = true;
+    result.style.display = 'none';
+
+    const payload = {
+        csrf_token: '{{ csrf_token }}',
+        brevo_api_key: document.getElementById('cms-brevo-api-key').value,
+        brevo_from: document.getElementById('cms-brevo-from').value,
+        brevo_from_name: document.getElementById('cms-brevo-from-name').value,
+        test_email: document.getElementById('cms-brevo-test-email').value,
+    };
+
+    try {
+        const resp = await fetch('{{ url_for("admin_test_brevo") }}', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)

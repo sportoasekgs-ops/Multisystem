@@ -18,10 +18,10 @@
         <div style="display:flex;gap:12px;margin-top:8px;">
             <label style="flex:1;cursor:pointer;">
                 <input type="radio" name="email_provider" value="smtp" id="provider_smtp"
-                       {% if email_provider != 'resend' %}checked{% endif %}
+                       {% if email_provider != 'resend' and email_provider != 'brevo' %}checked{% endif %}
                        onchange="toggleProvider()"
                        style="display:none;">
-                <div class="provider-card" id="card_smtp" style="border:2px solid {% if email_provider != 'resend' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:16px;text-align:center;transition:all 0.2s;">
+                <div class="provider-card" id="card_smtp" style="border:2px solid {% if email_provider != 'resend' and email_provider != 'brevo' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:16px;text-align:center;transition:all 0.2s;">
                     <div style="font-size:1.8rem;margin-bottom:6px;">🖥️</div>
                     <div style="font-weight:700;font-size:0.9rem;">SMTP</div>
                     <div style="font-size:0.75rem;color:#6b7280;margin-top:4px;">Eigener Mailserver<br>Office365, Schule etc.</div>
@@ -36,6 +36,17 @@
                     <div style="font-size:1.8rem;margin-bottom:6px;">☁️</div>
                     <div style="font-weight:700;font-size:0.9rem;">Resend</div>
                     <div style="font-size:0.75rem;color:#6b7280;margin-top:4px;">Cloud-E-Mail<br>Gmail-Alternative</div>
+                </div>
+            </label>
+            <label style="flex:1;cursor:pointer;">
+                <input type="radio" name="email_provider" value="brevo" id="provider_brevo"
+                       {% if email_provider == 'brevo' %}checked{% endif %}
+                       onchange="toggleProvider()"
+                       style="display:none;">
+                <div class="provider-card" id="card_brevo" style="border:2px solid {% if email_provider == 'brevo' %}var(--primary){% else %}#e5e7eb{% endif %};border-radius:12px;padding:16px;text-align:center;transition:all 0.2s;">
+                    <div style="font-size:1.8rem;margin-bottom:6px;">📨</div>
+                    <div style="font-weight:700;font-size:0.9rem;">Brevo</div>
+                    <div style="font-size:0.75rem;color:#6b7280;margin-top:4px;">Cloud-E-Mail<br>Ohne eigene Domain</div>
                 </div>
             </label>
         </div>
@@ -73,7 +84,7 @@
                 <ol style="margin:.5rem 0 0 0;padding-left:1.2rem;font-size:.85rem;">
                     <li><strong>App-Passwort</strong> erstellen: <a href="https://account.microsoft.com/security" target="_blank" style="color:#92400e;">Microsoft-Konto → Sicherheit → App-Passwörter</a> (erfordert aktivierte 2-Faktor-Auth)</li>
                     <li><strong>IT-Admin</strong> bitten, SMTP AUTH für das Postfach im Exchange Admin Center zu aktivieren</li>
-                    <li><strong>Resend</strong> als alternativen E-Mail-Anbieter verwenden (kostenlos, einfach einzurichten)</li>
+                    <li><strong>Resend oder Brevo</strong> als alternativen E-Mail-Anbieter verwenden (kostenlos, einfach einzurichten, ideal für Render)</li>
                 </ol>
             </div>
         </div>
@@ -163,6 +174,35 @@
         </div>
     </div>
 
+    <!-- Brevo-Felder -->
+    <div id="brevo-fields" style="display:none;">
+        <div class="alert alert-info" style="margin-bottom:1rem;">
+            <span>📨</span>
+            <span>Brevo sendet per HTTP-API. Registriere dich kostenlos auf <strong>brevo.com</strong>, erstelle einen API-Key und gib ihn hier ein. Du musst in Brevo deine Absenderadresse bestätigen.</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Brevo API-Key</label>
+            <input type="password" name="brevo_api_key" class="form-control"
+                   value="{% if brevo_api_key %}{{ brevo_api_key }}{% endif %}"
+                   placeholder="xkeysib-..." autocomplete="new-password">
+            <p class="form-hint">Zu finden unter brevo.com → SMTP & API → API Keys</p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Absender-E-Mail</label>
+            <input type="email" name="brevo_from" class="form-control"
+                   value="{{ brevo_from }}" placeholder="sportoase.kgs@gmail.com">
+            <p class="form-hint">Muss bei Brevo als Absender verifiziert/bestätigt sein.</p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Absender-Name</label>
+            <input type="text" name="brevo_from_name" class="form-control"
+                   value="{{ brevo_from_name or 'SportOase' }}" placeholder="SportOase">
+        </div>
+    </div>
+
     <!-- Admin-E-Mail (immer sichtbar) -->
     <hr class="section-sep">
     <div class="form-group">
@@ -227,10 +267,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function toggleProvider() {
     const smtp = document.getElementById('provider_smtp').checked;
-    document.getElementById('smtp-fields').style.display  = smtp ? '' : 'none';
-    document.getElementById('resend-fields').style.display = smtp ? 'none' : '';
+    const resend = document.getElementById('provider_resend').checked;
+    const brevo = document.getElementById('provider_brevo').checked;
+
+    document.getElementById('smtp-fields').style.display   = smtp ? '' : 'none';
+    document.getElementById('resend-fields').style.display = resend ? '' : 'none';
+    document.getElementById('brevo-fields').style.display  = brevo ? '' : 'none';
+
     document.getElementById('card_smtp').style.borderColor   = smtp ? 'var(--primary)' : '#e5e7eb';
-    document.getElementById('card_resend').style.borderColor = smtp ? '#e5e7eb' : 'var(--primary)';
+    document.getElementById('card_resend').style.borderColor = resend ? 'var(--primary)' : '#e5e7eb';
+    document.getElementById('card_brevo').style.borderColor  = brevo ? 'var(--primary)' : '#e5e7eb';
 }
 
 function updatePort() {

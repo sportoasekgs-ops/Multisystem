@@ -3733,6 +3733,9 @@ def admin_cms():
         "email_provider": get_config("email_provider", "smtp"),
         "resend_api_key": get_config("resend_api_key", ""),
         "resend_from": get_config("resend_from", ""),
+        "brevo_api_key": get_config("brevo_api_key", ""),
+        "brevo_from": get_config("brevo_from", ""),
+        "brevo_from_name": get_config("brevo_from_name", "SportOase"),
         "iserv_admin_email": get_config("iserv_admin_email", ""),
         "iserv_domain": get_config("iserv_domain", ""),
         "iserv_client_id": get_config("iserv_client_id", ""),
@@ -3882,6 +3885,10 @@ def admin_cms_save():
         if provider == "resend":
             data["resend_api_key"] = request.form.get("resend_api_key", "").strip()
             data["resend_from"] = request.form.get("resend_from", "").strip()
+        elif provider == "brevo":
+            data["brevo_api_key"] = request.form.get("brevo_api_key", "").strip()
+            data["brevo_from"] = request.form.get("brevo_from", "").strip()
+            data["brevo_from_name"] = request.form.get("brevo_from_name", "").strip()
         else:
             data["smtp_host"] = request.form.get("smtp_host", "").strip()
             data["smtp_port"] = request.form.get("smtp_port", "587").strip()
@@ -4300,6 +4307,85 @@ def admin_test_resend():
 
         return jsonify(
             {"success": False, "message": f"Resend HTTP {e.code}: {body or str(e)}"}
+        )
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Verbindungsfehler: {str(e)}"})
+
+
+@app.route("/admin/test-brevo", methods=["POST"])
+@admin_required
+def admin_test_brevo():
+    """Testet die Brevo-E-Mail-Konfiguration."""
+    if not validate_csrf_token(
+        request.json.get("csrf_token", "") if request.json else ""
+    ):
+        return jsonify({"success": False, "message": "Ungültiges CSRF-Token."}), 403
+
+    data = request.json or {}
+    api_key = data.get("brevo_api_key", "").strip()
+    from_addr = data.get("brevo_from", "").strip()
+    from_name = data.get("brevo_from_name", "").strip() or "SportOase"
+    test_email = data.get("test_email", "").strip()
+
+    if not api_key or not from_addr or not test_email:
+        return jsonify(
+            {
+                "success": False,
+                "message": "API-Key, Absender-E-Mail und Test-Empfänger sind erforderlich.",
+            }
+        )
+
+    try:
+        import json as _json
+        import urllib.error
+        import urllib.request
+
+        payload = {
+            "sender": {"email": from_addr, "name": from_name},
+            "to": [{"email": test_email}],
+            "subject": "✅ Brevo-Test erfolgreich",
+            "htmlContent": '<h2>✅ Brevo funktioniert!</h2><p>Diese Test-E-Mail wurde erfolgreich über die Brevo-API verschickt.</p>',
+        }
+        req = urllib.request.Request(
+            "https://api.brevo.com/v3/smtp/email",
+            data=_json.dumps(payload).encode("utf-8"),
+            headers={
+                "api-key": api_key,
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            if resp.getcode() in (200, 201, 202):
+                return jsonify(
+                    {
+                        "success": True,
+                        "message": f"Test-E-Mail erfolgreich an {test_email} gesendet!",
+                    }
+                )
+            return jsonify(
+                {
+                    "success": False,
+                    "message": f"Brevo antwortete mit HTTP {resp.getcode()}.",
+                }
+            )
+    except urllib.error.HTTPError as e:
+        body = ""
+        try:
+            body = e.read().decode("utf-8", errors="replace")
+        except Exception:
+            pass
+
+        msg = body or str(e)
+        try:
+            err_data = _json.loads(body)
+            msg = err_data.get("message") or err_data.get("error", {}).get("message") or msg
+        except Exception:
+            pass
+
+        return jsonify(
+            {"success": False, "message": f"Brevo HTTP-Fehler {e.code}: {msg}"}
         )
     except Exception as e:
         return jsonify({"success": False, "message": f"Verbindungsfehler: {str(e)}"})

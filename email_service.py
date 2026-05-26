@@ -1,8 +1,9 @@
 """
 E-Mail-Service für das Buchungssystem.
-Unterstützt zwei Provider:
+Unterstützt Provider:
   - SMTP (Standard): Jeder SMTP-Server, inkl. Office365, Schulserver etc.
   - Resend: Cloud-E-Mail über https://resend.com (API-Key erforderlich)
+  - Brevo: Cloud-E-Mail über https://brevo.com (API-Key + verifizierte Absenderadresse)
 Konfiguration wird aus der Datenbank geladen (Setup-Wizard / Admin-CMS).
 """
 
@@ -87,9 +88,9 @@ def get_german_weekday(weekday_abbr):
 
 
 def get_email_provider():
-    """Gibt den konfigurierten E-Mail-Provider zurück: 'smtp' oder 'resend'."""
+    """Gibt den konfigurierten E-Mail-Provider zurück: 'smtp', 'resend' oder 'brevo'."""
     provider = _get_config_or_env("email_provider", "EMAIL_PROVIDER", "smtp").lower()
-    return provider if provider in {"smtp", "resend"} else "smtp"
+    return provider if provider in {"smtp", "resend", "brevo"} else "smtp"
 
 
 def get_smtp_config():
@@ -124,14 +125,28 @@ def get_resend_config():
         return "", ""
 
 
+def get_brevo_config():
+    try:
+        api_key = _get_config_or_env("brevo_api_key", "BREVO_API_KEY", "")
+        from_addr = _get_config_or_env("brevo_from", "BREVO_FROM", "")
+        from_name = _get_config_or_env(
+            "brevo_from_name", "BREVO_FROM_NAME", _get_app_name()
+        )
+        return api_key, from_addr, from_name
+    except Exception:
+        return "", "", ""
+
+
 def is_email_configured():
     provider = get_email_provider()
     if provider == "resend":
         api_key, from_addr = get_resend_config()
         return bool(api_key and from_addr)
-    else:
-        host, _, user, password, _, _ = get_smtp_config()
-        return bool(host and user and password)
+    if provider == "brevo":
+        api_key, from_addr, _ = get_brevo_config()
+        return bool(api_key and from_addr)
+    host, _, user, password, _, _ = get_smtp_config()
+    return bool(host and user and password)
 
 
 # Alias für alte Aufrufer
@@ -187,6 +202,53 @@ def _send_via_resend(to_email, subject, body_html, body_text=None):
         return False
     except Exception as e:
         logger.error(f"[EMAIL] Resend Fehler: {e}")
+        return False
+
+
+def _send_via_brevo(to_email, subject, body_html, body_text=None):
+    """Sendet E-Mail über Brevo HTTP-API."""
+    import urllib.error
+    import urllib.request
+
+    api_key, from_addr, from_name = get_brevo_config()
+    if not api_key or not from_addr:
+        logger.warning("[EMAIL] Brevo nicht konfiguriert – kein API-Key oder Absender.")
+        return False
+
+    payload = {
+        "sender": {"email": from_addr, "name": from_name or _get_app_name()},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent": body_html,
+    }
+    if body_text:
+        payload["textContent"] = body_text
+
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=data,
+        headers={
+            "api-key": api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            status = resp.getcode()
+            if status in (200, 201, 202):
+                logger.info(f"[EMAIL] Brevo: Erfolgreich gesendet an {to_email}")
+                return True
+            logger.error(f"[EMAIL] Brevo: HTTP {status}")
+            return False
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        logger.error(f"[EMAIL] Brevo HTTP-Fehler {e.code}: {body}")
+        return False
+    except Exception as e:
+        logger.error(f"[EMAIL] Brevo Fehler: {e}")
         return False
 
 
@@ -256,8 +318,9 @@ def send_email(to_email, subject, body_html, body_text=None):
     provider = get_email_provider()
     if provider == "resend":
         return _send_via_resend(to_email, subject, body_html, body_text)
-    else:
-        return _send_via_smtp(to_email, subject, body_html, body_text)
+    if provider == "brevo":
+        return _send_via_brevo(to_email, subject, body_html, body_text)
+    return _send_via_smtp(to_email, subject, body_html, body_text)
 
 
 # Aliases für Rückwärtskompatibilität

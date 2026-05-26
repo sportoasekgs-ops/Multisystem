@@ -206,6 +206,10 @@ def _handle_post(step_id):
         if provider == "resend":
             data["resend_api_key"] = request.form.get("resend_api_key", "").strip()
             data["resend_from"] = request.form.get("resend_from", "").strip()
+        elif provider == "brevo":
+            data["brevo_api_key"] = request.form.get("brevo_api_key", "").strip()
+            data["brevo_from"] = request.form.get("brevo_from", "").strip()
+            data["brevo_from_name"] = request.form.get("brevo_from_name", "").strip()
         else:
             data["smtp_host"] = request.form.get("smtp_host", "").strip()
             data["smtp_port"] = request.form.get("smtp_port", "587").strip()
@@ -386,6 +390,9 @@ def _get_step_config(step_id):
             "smtp_from": get_config("smtp_from", ""),
             "resend_api_key": get_config("resend_api_key", ""),
             "resend_from": get_config("resend_from", ""),
+            "brevo_api_key": get_config("brevo_api_key", ""),
+            "brevo_from": get_config("brevo_from", ""),
+            "brevo_from_name": get_config("brevo_from_name", "SportOase"),
             "admin_email": get_config("admin_email", ""),
         }
     elif step_id == "iserv":
@@ -513,7 +520,7 @@ def test_smtp():
                     "message": "🔒 Microsoft hat Basic Authentication deaktiviert. "
                     "Normales Passwort funktioniert nicht mehr mit Outlook/Office365. "
                     "Lösung: App-Passwort erstellen (Microsoft-Konto → Sicherheit → "
-                    "Erweiterte Sicherheit → App-Passwörter) – oder Resend als "
+                    "Erweiterte Sicherheit → App-Passwörter) – oder Resend/Brevo als "
                     "E-Mail-Provider verwenden.",
                     "error_type": "ms_basic_auth",
                 }
