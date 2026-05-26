@@ -378,7 +378,7 @@ body {
 
 .pending-exclusive-hint .pending-text {
     font-weight: 600;
-    white-space: nowrap;
+    word-break: break-word;
 }
 
 /* Pending Exclusive Admin Section */
@@ -4037,9 +4037,7 @@ footer {
     padding: 0.1rem 0.25rem;
     border-radius: 3px;
     margin-right: 0.15rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
     max-width: 100%;
 }
 
