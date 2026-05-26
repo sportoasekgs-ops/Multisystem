@@ -167,7 +167,13 @@ input:checked + .slider:before { transform: translateX(24px); }
                     {% endif %}
                     <div>
                         <p style="margin:0 0 .3rem 0;font-size:.85rem;font-weight:600;color:var(--text-secondary);">Aktuelles Logo</p>
-                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">{{ cms.logo_filename or '–' }}</p>
+                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">
+                            {% if cms.logo_filename and cms.logo_filename.startswith('data:') %}
+                                Gespeichert (Datenbank)
+                            {% else %}
+                                {{ cms.logo_filename or '–' }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">
@@ -193,7 +199,13 @@ input:checked + .slider:before { transform: translateX(24px); }
                     {% endif %}
                     <div>
                         <p style="margin:0 0 .3rem 0;font-size:.85rem;font-weight:600;color:var(--text-secondary);">Aktuelles Favicon</p>
-                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">{{ cms.favicon_filename or '–' }}</p>
+                        <p style="margin:0;font-size:.78rem;color:var(--text-tertiary);">
+                            {% if cms.favicon_filename and cms.favicon_filename.startswith('data:') %}
+                                Gespeichert (Datenbank)
+                            {% else %}
+                                {{ cms.favicon_filename or '–' }}
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
                 <div class="form-group">

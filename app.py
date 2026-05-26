@@ -440,6 +440,8 @@ def _resolve_logo_url(filename, default=""):
         filename = default
     if not filename:
         return ""
+    if filename.startswith("data:"):
+        return filename
     uploads_path = os.path.join("static", "uploads", filename)
     if os.path.exists(uploads_path):
         return f"/static/uploads/{filename}"
@@ -1572,8 +1574,7 @@ def dashboard():
         )
 
         if is_demo_mode():
-            from datetime import date as py_date, timedelta
-            from demo_mode import get_demo_bookings_for_week
+            from datetime import date as py_date
             today_dt = py_date.today()
             monday = today_dt - timedelta(days=today_dt.weekday())
             start_date = monday.strftime('%Y-%m-%d')
@@ -2333,7 +2334,7 @@ def meine_buchungen():
 
     # Im Demo-Modus: Fake-Buchungen hinzufügen
     if is_demo_mode():
-        from datetime import date, timedelta
+        from datetime import date
         from demo_mode import get_demo_bookings_for_week
         today_date = date.today()
         monday = today_date - timedelta(days=today_date.weekday())
@@ -2751,7 +2752,7 @@ def admin():
         if filter_date:
             demo_bookings = get_demo_bookings_for_date(filter_date)
         else:
-            from datetime import date as py_date, timedelta
+            from datetime import date as py_date
             today_dt = py_date.today()
             monday = today_dt - timedelta(days=today_dt.weekday())
             start_date = monday.strftime('%Y-%m-%d')
@@ -3942,6 +3943,7 @@ def admin_cms_save():
 
     elif section == "branding":
         import os as _os
+        import base64
 
         from system_config import set_config as _sc2
         from system_config import set_configs as _scs
@@ -3955,8 +3957,18 @@ def admin_cms_save():
             if f and f.filename:
                 ext = _os.path.splitext(f.filename)[1].lower()
                 if ext in _ALLOWED:
-                    logo_filename = f"custom_logo{ext}"
-                    f.save(_os.path.join("static", "uploads", logo_filename))
+                    # Save locally as a backup
+                    local_logo = f"custom_logo{ext}"
+                    f.save(_os.path.join("static", "uploads", local_logo))
+                    
+                    # Convert to base64 for database persistence
+                    f.seek(0)
+                    file_data = f.read()
+                    encoded = base64.b64encode(file_data).decode("utf-8")
+                    mime_type = f.content_type or f"image/{ext[1:]}"
+                    if ext == ".svg":
+                        mime_type = "image/svg+xml"
+                    logo_filename = f"data:{mime_type};base64,{encoded}"
                 else:
                     flash("Logo: Nur PNG, JPG, SVG oder WebP erlaubt.", "error")
 
@@ -3966,8 +3978,18 @@ def admin_cms_save():
             if f and f.filename:
                 ext = _os.path.splitext(f.filename)[1].lower()
                 if ext in _ALLOWED:
-                    favicon_filename = f"custom_favicon{ext}"
-                    f.save(_os.path.join("static", "uploads", favicon_filename))
+                    # Save locally as a backup
+                    local_favicon = f"custom_favicon{ext}"
+                    f.save(_os.path.join("static", "uploads", local_favicon))
+                    
+                    # Convert to base64 for database persistence
+                    f.seek(0)
+                    file_data = f.read()
+                    encoded = base64.b64encode(file_data).decode("utf-8")
+                    mime_type = f.content_type or f"image/{ext[1:]}"
+                    if ext == ".svg":
+                        mime_type = "image/svg+xml"
+                    favicon_filename = f"data:{mime_type};base64,{encoded}"
                 else:
                     flash("Favicon: Nur PNG, JPG, SVG oder WebP erlaubt.", "error")
 
