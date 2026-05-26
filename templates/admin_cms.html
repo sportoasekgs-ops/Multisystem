@@ -384,10 +384,18 @@ input:checked + .slider:before { transform: translateX(24px); }
 
                 <!-- Brevo-Felder -->
                 <div id="cms-brevo-section" style="display:none;">
-                    <div style="background:#dbeafe;border:1px solid #93c5fd;color:#1e40af;padding:12px 16px;border-radius:8px;margin-bottom:1rem;font-size:.85rem;">
-                        <strong>✅ Empfohlen für Render ohne eigene Domain.</strong><br>
-                        Brevo sendet per HTTP-API. Du musst in Brevo unter <strong>Senders & IP → Senders</strong> deine Absenderadresse bestätigen, z.B. <code>sportoase.kgs@gmail.com</code>.
-                    </div>
+                    <details style="background:var(--bg-card);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:1.2rem;font-size:.85rem;">
+                        <summary style="font-weight:600;cursor:pointer;color:var(--text-primary);outline:none;user-select:none;display:flex;align-items:center;gap:6px;">
+                            <span>📋</span> Anleitung: Brevo einrichten & IP-Fehler beheben
+                        </summary>
+                        <div style="margin-top:10px;color:var(--text-secondary);line-height:1.5;">
+                            <ol style="margin:0;padding-left:1.2rem;">
+                                <li style="margin-bottom:6px;"><strong>Absender verifizieren:</strong> Gehe in Brevo zu <em>Senders & IP → Senders</em> und füge <code>sportoase.kgs@gmail.com</code> (oder deine Wunschadresse) als Absender hinzu. Bestätige den Link in der E-Mail.</li>
+                                <li style="margin-bottom:6px;"><strong>API-Key generieren:</strong> Gehe zu <em>SMTP & API → API Keys</em> und erstelle einen Key. Trage ihn unten ein.</li>
+                                <li style="margin-bottom:6px;"><strong>Wichtig für Render.com (IP-Fehler beheben):</strong> Da Render dynamische Server-IP-Adressen nutzt, musst du unter <a href="https://app.brevo.com/security/authorised_ips" target="_blank" style="color:var(--primary);font-weight:600;text-decoration:underline;">Sicherheit → Autorisierte IPs</a> die Option <strong>"Blockieren unbekannter IP-Adressen"</strong> deaktivieren. Andernfalls schlägt der Versand mit Fehler 401 fehl.</li>
+                            </ol>
+                        </div>
+                    </details>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
                         <div class="form-group">
                             <label class="form-label">Brevo API-Key</label>
