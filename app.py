@@ -1615,7 +1615,7 @@ def dashboard():
             try:
                 students = json.loads(booking.students_json)
                 students_str = ", ".join(
-                    [f"{format_name_privacy(s.get('name'))} ({s.get('klasse')})" for s in students]
+                    [f"{abbreviate_name_filter(s.get('name'))} ({s.get('klasse')})" for s in students]
                 )
             except:
                 students_str = ""
@@ -1664,7 +1664,7 @@ def dashboard():
                 try:
                     students = json.loads(p_booking.students_json)
                     students_str = ", ".join(
-                        [f"{s.get('name')} ({s.get('klasse')})" for s in students]
+                        [f"{abbreviate_name_filter(s.get('name'))} ({s.get('klasse')})" for s in students]
                     )
                 except:
                     students_str = ""
