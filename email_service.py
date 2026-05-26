@@ -15,7 +15,6 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from config import ADMIN_EMAIL
 
 logger = logging.getLogger(__name__)
 
@@ -405,14 +404,14 @@ def _footer():
 
 
 def create_booking_notification_email(data):
-    from config import PERIOD_TIMES
+    from dynamic_config import get_period
 
     teacher = data.get("teacher_name", "Unbekannt")
     teacher_class = data.get("teacher_class", "")
     date = format_date_german(data.get("date", ""))
     weekday = get_german_weekday(data.get("weekday", ""))
     period = data.get("period", "")
-    period_time = PERIOD_TIMES.get(period, "")
+    p_info = get_period(period); period_time = f"{p_info.get('start', '?')} - {p_info.get('end', '?')}"
     offer = data.get("offer_label", "")
     offer_type = data.get("offer_type", "")
 
@@ -470,7 +469,7 @@ def send_booking_notification(data):
     admin_email = (
         _get_config_or_env("admin_email", "ADMIN_EMAIL", "")
         or _get_config_or_env("smtp_user", "SMTP_USER", "")
-        or _safe_str(ADMIN_EMAIL)
+        or ""
     )
     if not admin_email:
         logger.warning(
@@ -482,14 +481,14 @@ def send_booking_notification(data):
 
 
 def create_user_confirmation_email(data):
-    from config import PERIOD_TIMES
+    from dynamic_config import get_period
 
     teacher = data.get("teacher_name", "Unbekannt")
     teacher_class = data.get("teacher_class", "")
     date = format_date_german(data.get("date", ""))
     weekday = get_german_weekday(data.get("weekday", ""))
     period = data.get("period", "")
-    period_time = PERIOD_TIMES.get(period, "")
+    p_info = get_period(period); period_time = f"{p_info.get('start', '?')} - {p_info.get('end', '?')}"
     offer = data.get("offer_label", "")
     offer_type = data.get("offer_type", "")
 
@@ -552,7 +551,7 @@ def send_user_booking_confirmation(email, data):
 
 
 def send_exclusive_pending_email(email, data):
-    from config import PERIOD_TIMES
+    from dynamic_config import get_period
 
     students = data.get("students", [])
     if not students:
@@ -565,7 +564,7 @@ def send_exclusive_pending_email(email, data):
     date = format_date_german(data.get("date", ""))
     weekday = get_german_weekday(data.get("weekday", ""))
     period = data.get("period", "?")
-    period_time = PERIOD_TIMES.get(period, "")
+    p_info = get_period(period); period_time = f"{p_info.get('start', '?')} - {p_info.get('end', '?')}"
     offer = data.get("offer_label", "Unbekannt")
 
     subject = "Einzelbuchung angefragt – Warte auf Freigabe"
@@ -606,9 +605,9 @@ Schüler*in: {student_name} (Klasse {student_class})"""
 def send_exclusive_approved_email(
     teacher_email, teacher_name, student_name, date_str, period
 ):
-    from config import PERIOD_TIMES
+    from dynamic_config import get_period
 
-    period_time = PERIOD_TIMES.get(period, "")
+    p_info = get_period(period); period_time = f"{p_info.get('start', '?')} - {p_info.get('end', '?')}"
     date_formatted = format_date_german(date_str)
     subject = f"Einzelbuchung genehmigt – {_get_app_name()}"
 
@@ -646,9 +645,9 @@ Schüler*in: {student_name}"""
 def send_exclusive_rejected_email(
     teacher_email, teacher_name, student_name, date_str, period, rejection_reason=None
 ):
-    from config import PERIOD_TIMES
+    from dynamic_config import get_period
 
-    period_time = PERIOD_TIMES.get(period, "")
+    p_info = get_period(period); period_time = f"{p_info.get('start', '?')} - {p_info.get('end', '?')}"
     date_formatted = format_date_german(date_str)
     subject = f"Einzelbuchung abgelehnt – {_get_app_name()}"
     reason_html = (

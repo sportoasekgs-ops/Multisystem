@@ -253,7 +253,6 @@ if _BOOTSTRAP_MODE:
 
 # Importiere Modelle und Hilfsfunktionen (nur wenn DB verfügbar)
 if not _BOOTSTRAP_MODE:
-    from config import *
     from demo_mode import get_demo_bookings_for_week, is_demo_mode
     from dynamic_config import (
         get_booking_advance_minutes,
@@ -322,6 +321,24 @@ if not _BOOTSTRAP_MODE:
         )
 
         db.create_all()
+        
+        # --- Auto-Migrator: Fehlende Spalten hinzufügen (z.B. für blocked_slots.icon) ---
+        try:
+            inspector = db.inspect(db.engine)
+            if db.engine.dialect.has_table(db.engine.connect(), 'blocked_slots'):
+                columns = [col['name'] for col in inspector.get_columns('blocked_slots')]
+                if 'icon' not in columns:
+                    print("[MIGRATION] Füge fehlende Spalte 'icon' zu 'blocked_slots' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        # SQLite und Postgres unterstützen ADD COLUMN
+                        conn.execute(text("ALTER TABLE blocked_slots ADD COLUMN icon VARCHAR(10) DEFAULT '🔧'"))
+                        conn.commit()
+                    print("[MIGRATION] Spalte erfolgreich hinzugefügt.")
+        except Exception as e:
+            print(f"[MIGRATION] Fehler bei der Auto-Migration: {e}")
+        # --------------------------------------------------------------------------------
+
         # Für bestehende Installationen (vor Setup-Wizard-Feature):
         # Setup als abgeschlossen markieren wenn Benutzer UND school_name vorhanden.
         # school_name wird nur im Wizard-Schritt "Allgemeine Daten" gesetzt → nach Factory Reset
@@ -356,6 +373,16 @@ app.register_blueprint(setup_bp)
 from admin_dynamic import admin_dyn_bp
 
 app.register_blueprint(admin_dyn_bp)
+
+
+# ── Error Handlers ──────────────────────────────────────────────────────────
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("errors/404.html"), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template("errors/500.html"), 500
 
 
 # ── before_request: Setup-Check ──────────────────────────────────────────────
