@@ -50,6 +50,11 @@
             <span class="card-title">Buchungs-Regeln</span>
             <span class="card-desc">Kapazität & Vorlaufzeit</span>
         </a>
+        <a href="{{ url_for('admin_cms') }}#tab-smtp" class="admin-card" style="border-color: #60a5fa; background: rgba(96, 165, 250, 0.05);">
+            <span class="card-icon">📧</span>
+            <span class="card-title">E-Mail / SMTP</span>
+            <span class="card-desc">Postausgang konfigurieren</span>
+        </a>
         <a href="{{ url_for('admin_dyn.database_settings') }}" class="admin-card">
             <span class="card-icon">🗄️</span>
             <span class="card-title">Datenbank</span>
@@ -57,15 +62,15 @@
         </a>
         <a href="{{ url_for('setup.reopen') }}" class="admin-card">
             <span class="card-icon">⚙️</span>
-            <span class="card-title">Einstellungen</span>
+            <span class="card-title">Grundeinstellungen</span>
             <span class="card-desc">System konfigurieren</span>
         </a>
         <a href="{{ url_for('admin_cms') }}" class="admin-card">
             <span class="card-icon">✏️</span>
-            <span class="card-title">Inhalte (CMS)</span>
-            <span class="card-desc">Texte & Demo-Modus</span>
+            <span class="card-title">Texte & Layout</span>
+            <span class="card-desc">CMS, Branding & Demo</span>
         </a>
-        <a href="{{ url_for('admin_factory_reset') }}" class="admin-card" style="border-color: #fc8181;">
+        <a href="{{ url_for('admin_factory_reset') }}" class="admin-card" style="border-color: #fc8181; background: rgba(252, 129, 129, 0.05);">
             <span class="card-icon">🔴</span>
             <span class="card-title" style="color: #c53030;">Werksreset</span>
             <span class="card-desc">Daten löschen & neu starten</span>
