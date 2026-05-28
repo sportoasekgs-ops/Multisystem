@@ -114,7 +114,11 @@
                         <span>({{ booking.teacher_class }})</span>
                     </div>
                     <div class="pending-student">
-                        👤 {% for student in booking.students %}{{ student.name|abbreviate_name }} ({{ student.klasse }}){% endfor %}
+                        👤 {% if booking.students and booking.students[0].name == '' %}
+                            🏫 Ganze Klasse {{ booking.students[0].klasse }}
+                        {% else %}
+                            {% for student in booking.students %}{{ student.name|abbreviate_name }} ({{ student.klasse }}){% if not loop.last %}, {% endif %}{% endfor %}
+                        {% endif %}
                     </div>
                     <div class="pending-offer">
                         {{ booking.offer_label }}
@@ -202,9 +206,13 @@
                     <div class="students-info">
                         <span class="students-count">{{ booking.student_count }} Schüler*innen</span>
                         <ul class="students-mini-list">
+                            {% if booking.students and booking.students[0].name == '' %}
+                            <li>🏫 Ganze Klasse {{ booking.students[0].klasse }}</li>
+                            {% else %}
                             {% for student in booking.students %}
                             <li>{{ student.name|abbreviate_name }} ({{ student.klasse }})</li>
                             {% endfor %}
+                            {% endif %}
                         </ul>
                     </div>
                     {% if booking.notes %}

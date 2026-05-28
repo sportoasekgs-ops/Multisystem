@@ -421,15 +421,18 @@ def create_booking_notification_email(data):
     )
     count = len(students)
 
-    students_html = (
-        "".join(
-            [
-                f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• {s["name"]} (Klasse {s["klasse"]})</div>'
-                for s in students
-            ]
+    if students and students[0].get("name") == "":
+        students_html = f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• 🏫 Ganze Klasse {students[0].get("klasse")}</div>'
+    else:
+        students_html = (
+            "".join(
+                [
+                    f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• {s["name"]} (Klasse {s["klasse"]})</div>'
+                    for s in students
+                ]
+            )
+            or '<div style="color:#6b7280;">Keine Schüler*innen</div>'
         )
-        or '<div style="color:#6b7280;">Keine Schüler*innen</div>'
-    )
 
     subject = f"Neue Buchung: {offer} am {date}"
     html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head>
@@ -498,15 +501,18 @@ def create_user_confirmation_email(data):
     )
     count = len(students)
 
-    students_html = (
-        "".join(
-            [
-                f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• {s["name"]} (Klasse {s["klasse"]})</div>'
-                for s in students
-            ]
+    if students and students[0].get("name") == "":
+        students_html = f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• 🏫 Ganze Klasse {students[0].get("klasse")}</div>'
+    else:
+        students_html = (
+            "".join(
+                [
+                    f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• {s["name"]} (Klasse {s["klasse"]})</div>'
+                    for s in students
+                ]
+            )
+            or '<div style="color:#6b7280;">Keine Schüler*innen</div>'
         )
-        or '<div style="color:#6b7280;">Keine Schüler*innen</div>'
-    )
 
     subject = f"Buchung bestätigt: {offer} am {date}"
     html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head>
