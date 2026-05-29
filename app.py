@@ -1612,10 +1612,12 @@ def dashboard():
             except:
                 date_formatted = booking.date
 
+            is_class_booking = False
             try:
                 students = json.loads(booking.students_json)
                 if students and all(not s.get("name") for s in students):
                     students_str = f"Ganze Klasse {students[0].get('klasse')}"
+                    is_class_booking = True
                 else:
                     students_str = ", ".join(
                         [f"{abbreviate_name_filter(s.get('name'))} ({s.get('klasse')})" for s in students]
@@ -1633,6 +1635,7 @@ def dashboard():
                     "is_exclusive": booking.is_exclusive,
                     "is_approved": booking.is_approved,
                     "students_str": students_str,
+                    "is_class_booking": is_class_booking,
                 }
             )
 

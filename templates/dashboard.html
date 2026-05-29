@@ -509,9 +509,15 @@
                                                 {% endif %}
                                             {% endif %}
                                         </div>
+                                        {% if booking.is_class_booking %}
+                                        <div class="booking-students" title="{{ booking.students_str }}">
+                                            🏫 {{ booking.students_str }}
+                                        </div>
+                                        {% else %}
                                         <div class="booking-students" title="{{ booking.students_str }}">
                                             Schüler: {{ booking.students_str }}
                                         </div>
+                                        {% endif %}
                                     </div>
                                     <div class="booking-actions">
                                         <form method="POST" action="{{ url_for('delete_my_booking', booking_id=booking.id) }}" onsubmit="return confirm('Möchten Sie diese Buchung wirklich stornieren?');">

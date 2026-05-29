@@ -333,12 +333,23 @@ function toggleExclusiveMode() {
     const excl = document.getElementById('is_exclusive');
     const numSel = document.getElementById('num_students_select');
     if (excl.checked) {
+        // Speichere aktuelle Namen bevor irgendwas geändert wird
+        const savedNames = [];
+        for (let i = 0; i < MAX_STUDENTS; i++) {
+            const input = document.getElementById(`student_name_${i}`);
+            if (input) savedNames[i] = input.value;
+        }
         const oldVal = numSel.value;
         numSel.value = '1';
         numSel.disabled = true;
         numSel.style.opacity = '0.5';
         if (oldVal !== '1') {
             updateStudentFields();
+        }
+        // Stelle den Namen für Schüler 0 immer wieder her
+        const nameInput = document.getElementById('student_name_0');
+        if (nameInput && savedNames[0]) {
+            nameInput.value = savedNames[0];
         }
     } else {
         numSel.disabled = false;
