@@ -1195,7 +1195,12 @@
                                     if (tickerList && tickerList.children.length === 0) {
                                         tickerList.innerHTML = '<div class="ticker-empty"><p>Keine blockierten Termine in naher Zukunft.</p></div>';
                                     }
+                                    // Kurzer Delay vor dem Neuladen der Tabelle, damit der Erfolgstoast sichtbar bleibt
+                                    setTimeout(() => window.location.reload(), 800);
                                 }, 350);
+                            } else {
+                                // Wenn direkt aus dem Slot-Feld freigegeben, nach kurzem Delay neuladen
+                                setTimeout(() => window.location.reload(), 800);
                             }
                         } else if (isCancel) {
                             const bookingItem = form.closest('.booking-item');
