@@ -6190,7 +6190,7 @@ footer {
     stroke: var(--primary);
     stroke-width: 8;
     stroke-linecap: round;
-    transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .occupancy-ring-text {
@@ -6797,7 +6797,7 @@ footer {
     stroke: var(--primary);
     stroke-width: 8;
     stroke-linecap: round;
-    transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .occupancy-ring-text {
