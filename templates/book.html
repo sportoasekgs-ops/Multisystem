@@ -333,10 +333,13 @@ function toggleExclusiveMode() {
     const excl = document.getElementById('is_exclusive');
     const numSel = document.getElementById('num_students_select');
     if (excl.checked) {
+        const oldVal = numSel.value;
         numSel.value = '1';
         numSel.disabled = true;
         numSel.style.opacity = '0.5';
-        updateStudentFields();
+        if (oldVal !== '1') {
+            updateStudentFields();
+        }
     } else {
         numSel.disabled = false;
         numSel.style.opacity = '1';
@@ -349,6 +352,15 @@ function updateStudentFields() {
     const container = document.getElementById('studentFields');
     const teacherClass = document.getElementById('teacher_class').value;
     const excl = document.getElementById('is_exclusive');
+
+    // Speichere aktuell eingegebene Namen
+    const existingNames = [];
+    for (let i = 0; i < MAX_STUDENTS; i++) {
+        const input = document.getElementById(`student_name_${i}`);
+        if (input) {
+            existingNames.push(input.value);
+        }
+    }
 
     container.innerHTML = '';
 
@@ -382,6 +394,12 @@ function updateStudentFields() {
                 </div>
             </div>`;
         container.appendChild(div);
+
+        // Wert wiederherstellen falls vorhanden
+        const input = div.querySelector(`#student_name_${i}`);
+        if (input && existingNames[i]) {
+            input.value = existingNames[i];
+        }
     }
 }
 
