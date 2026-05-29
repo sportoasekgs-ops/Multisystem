@@ -437,14 +437,34 @@
         <h3>{{ weekday }}, {{ selected_date.strftime('%d.%m.%Y') }}</h3>
     </div>
 
+    <!-- Dashboard Control Bar -->
+    <div class="dashboard-control-bar">
+        <div class="widget-visibility-panel" id="widgetVisibilityPanel">
+            <h5>Widgets ein-/ausblenden</h5>
+            <div class="visibility-toggle">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-occupancy" checked onchange="toggleWidgetVisibility('occupancy', this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="toggle-occupancy">Auslastungs-Widget</label>
+            </div>
+        </div>
+        <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()" title="Widget-Layout anpassen">
+            <span class="btn-icon">⚙️</span>
+            <span class="btn-text">Layout anpassen</span>
+        </button>
+    </div>
+
     <!-- Dashboard Layout mit Wochenplan und Ticker -->
-    <div class="dashboard-layout">
+    <div class="dashboard-layout" id="dashboardLayout">
         
         <!-- Links-Panel (Meine Buchungen / Admin Freigaben) -->
         <div class="dashboard-left-panel">
             
             <!-- Admin-Freigaben (nur für Admins) -->
             {% if user_role == 'admin' %}
+            <div class="draggable-widget" data-widget-id="admin-approvals" id="widget-admin-approvals">
+            <span class="widget-drag-handle" title="Zum Verschieben ziehen">⠿</span>
             <div class="dashboard-widget admin-approvals-widget">
                 <div class="widget-header">
                     <h4>⏳ Offene Anfragen</h4>
@@ -482,9 +502,12 @@
                     {% endif %}
                 </div>
             </div>
+            </div>
             {% endif %}
 
             <!-- Meine nächsten Termine -->
+            <div class="draggable-widget" data-widget-id="my-bookings" id="widget-my-bookings">
+            <span class="widget-drag-handle" title="Zum Verschieben ziehen">⠿</span>
             <div class="dashboard-widget my-bookings-widget">
                 <div class="widget-header">
                     <h4>📅 Meine Buchungen</h4>
@@ -535,6 +558,7 @@
                         </div>
                     {% endif %}
                 </div>
+            </div>
             </div>
 
         </div>
@@ -812,8 +836,13 @@
         </div>
     </div>
 
-    <!-- Liveticker für blockierte Termine -->
-    <div class="dashboard-ticker">
+    <!-- Rechts-Panel (Liveticker / Auslastung) -->
+    <div class="dashboard-right-panel" data-zone="right" id="panel-right">
+        
+        <div class="draggable-widget" data-widget-id="dashboard-ticker" id="widget-dashboard-ticker">
+        <span class="widget-drag-handle" title="Zum Verschieben ziehen">⠿</span>
+        <!-- Liveticker für blockierte Termine -->
+        <div class="dashboard-widget dashboard-ticker">
         <div class="ticker-header">
             <h4>🔒 Blockierte Termine</h4>
             <span class="ticker-badge">{{ upcoming_blocked|length }}</span>
@@ -856,8 +885,63 @@
                 </div>
             {% endif %}
         </div>
-    </div>
-</div>
+        </div>
+
+        <!-- Auslastungs-Widget -->
+        <div class="draggable-widget" data-widget-id="occupancy" id="widget-occupancy">
+        <span class="widget-drag-handle" title="Zum Verschieben ziehen">⠿</span>
+        <div class="dashboard-widget occupancy-widget">
+            <div class="widget-header">
+                <h4>📊 Wochen-Auslastung</h4>
+            </div>
+            <div class="widget-body">
+                {% if occupancy_stats %}
+                <div class="occupancy-ring-container">
+                    <svg class="occupancy-ring" viewBox="0 0 100 100">
+                        <circle class="occupancy-ring-bg" cx="50" cy="50" r="40"></circle>
+                        <circle class="occupancy-ring-fill" cx="50" cy="50" r="40" 
+                                stroke-dasharray="251.2" 
+                                stroke-dashoffset="{{ 251.2 - (251.2 * occupancy_stats.slot_occupancy_pct / 100) }}"></circle>
+                    </svg>
+                    <div class="occupancy-ring-text">
+                        <div class="occupancy-ring-pct">{{ occupancy_stats.slot_occupancy_pct }}%</div>
+                        <div class="occupancy-ring-label">Belegt</div>
+                    </div>
+                </div>
+                
+                <div class="occupancy-stats-grid">
+                    <div class="occupancy-stat-item">
+                        <div class="occupancy-stat-value">{{ occupancy_stats.slots_with_bookings }} / {{ occupancy_stats.active_slots }}</div>
+                        <div class="occupancy-stat-label">Gebuchte Slots</div>
+                    </div>
+                    <div class="occupancy-stat-item">
+                        <div class="occupancy-stat-value">{{ occupancy_stats.student_occupancy_pct }}%</div>
+                        <div class="occupancy-stat-label">Schüler-Kapazität</div>
+                    </div>
+                </div>
+                
+                {% if occupancy_stats.peak_day %}
+                <div class="occupancy-peak">
+                    Spitzen-Tag: <strong>{{ occupancy_stats.peak_day.name }}</strong> ({{ occupancy_stats.peak_day.students }} Schüler)
+                </div>
+                {% endif %}
+                
+                <div class="occupancy-actions">
+                    <button type="button" class="btn-report" onclick="openAnalysisModal()">
+                        <span>📋</span> Bericht generieren
+                    </button>
+                </div>
+                {% else %}
+                <div class="widget-empty">
+                    <p>Keine Auslastungsdaten verfügbar.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        </div>
+
+    </div> <!-- End dashboard-right-panel -->
+</div> <!-- End dashboard-layout -->
 
     <!-- Kontakt-Information -->
     <div class="contact-info-box">
@@ -1016,6 +1100,94 @@
         </form>
     </div>
 </div>
+
+{% if user_role == 'admin' %}
+<!-- Belegungsanalyse Modal -->
+<div class="analysis-modal-overlay" id="analysisModalOverlay">
+    <div class="analysis-modal">
+        <div class="analysis-modal-header">
+            <h3>📊 Belegungsbericht: {{ monday_str|default('Woche') }}</h3>
+            <button class="analysis-modal-close" onclick="closeAnalysisModal()">&times;</button>
+        </div>
+        <div class="analysis-modal-body">
+            
+            <div class="analysis-summary-grid">
+                <div class="analysis-stat-card">
+                    <div class="stat-value">{{ occupancy_stats.slot_occupancy_pct if occupancy_stats else 0 }}%</div>
+                    <div class="stat-label">Slot-Auslastung</div>
+                </div>
+                <div class="analysis-stat-card">
+                    <div class="stat-value">{{ occupancy_stats.student_occupancy_pct if occupancy_stats else 0 }}%</div>
+                    <div class="stat-label">Schüler-Auslastung</div>
+                </div>
+                <div class="analysis-stat-card">
+                    <div class="stat-value">{{ occupancy_stats.total_booked_students if occupancy_stats else 0 }}</div>
+                    <div class="stat-label">Gebuchte Schüler</div>
+                </div>
+                <div class="analysis-stat-card">
+                    <div class="stat-value">{{ occupancy_stats.blocked_slots if occupancy_stats else 0 }}</div>
+                    <div class="stat-label">Blockierte Slots</div>
+                </div>
+            </div>
+
+            <div class="analysis-table-container">
+                <table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Tag</th>
+                            <th>Datum</th>
+                            <th>Status</th>
+                            <th>Slots</th>
+                            <th>Schüler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if occupancy_stats and occupancy_stats.day_stats %}
+                        {% for day in occupancy_stats.day_stats %}
+                        <tr>
+                            <td><strong>{{ day.name }}</strong></td>
+                            <td>{{ day.date_formatted }}</td>
+                            <td>
+                                {% set pct = (day.booked_slots / day.total_slots * 100)|round|int if day.total_slots > 0 else 0 %}
+                                <span class="pct-bar" style="width: {{ pct }}%"></span>
+                                {{ pct }}%
+                            </td>
+                            <td>{{ day.booked_slots }} / {{ day.total_slots }}</td>
+                            <td>{{ day.students }}</td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="analysis-text-report" style="display:none;">
+Belegungsbericht für die Woche {{ monday_str|default('') }}
+--------------------------------------------------------
+Zusammenfassung:
+- Slot-Auslastung: {{ occupancy_stats.slot_occupancy_pct if occupancy_stats else 0 }}% ({{ occupancy_stats.slots_with_bookings if occupancy_stats else 0 }} von {{ occupancy_stats.active_slots if occupancy_stats else 0 }} Slots gebucht)
+- Schüler-Auslastung: {{ occupancy_stats.student_occupancy_pct if occupancy_stats else 0 }}% ({{ occupancy_stats.total_booked_students if occupancy_stats else 0 }} von {{ occupancy_stats.student_capacity if occupancy_stats else 0 }} möglichen Plätzen)
+- Blockierte Slots: {{ occupancy_stats.blocked_slots if occupancy_stats else 0 }}
+{% if occupancy_stats and occupancy_stats.peak_day %}
+- Spitzen-Tag: {{ occupancy_stats.peak_day.name }} ({{ occupancy_stats.peak_day.students }} Schüler)
+{% endif %}
+
+Tagesübersicht:
+{% if occupancy_stats and occupancy_stats.day_stats %}
+{% for day in occupancy_stats.day_stats %}* {{ day.name }} ({{ day.date_formatted }}): {{ day.booked_slots }}/{{ day.total_slots }} Slots belegt, {{ day.students }} Schüler
+{% endfor %}
+{% endif %}
+            </div>
+
+        </div>
+        <div class="analysis-modal-actions">
+            <button onclick="copyAnalysisText()" title="Text in Zwischenablage kopieren">📋 Kopieren</button>
+            <button onclick="window.print()" title="Bericht drucken">🖨️ Drucken</button>
+            <button class="btn-csv" onclick="downloadCSV('{{ monday_str }}')" title="CSV für Excel/Numbers herunterladen">📥 CSV exportieren</button>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <script>
     function openBlockModal(date, period, slotInfo) {
@@ -1249,5 +1421,226 @@
             }
         });
     });
+
+// Edit Mode & Drag-and-Drop
+let isEditMode = false;
+
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const btn = document.getElementById('editModeBtn');
+    const layout = document.getElementById('dashboardLayout');
+    
+    if (isEditMode) {
+        btn.classList.add('active');
+        layout.classList.add('edit-mode-active');
+        enableDragAndDrop();
+    } else {
+        btn.classList.remove('active');
+        layout.classList.remove('edit-mode-active');
+        disableDragAndDrop();
+        saveWidgetLayout();
+    }
+}
+
+// Layout Saving & Restoring
+function saveWidgetLayout() {
+    const panels = ['dashboard-left-panel', 'panel-right'];
+    const layout = {};
+    
+    panels.forEach(panelId => {
+        const panel = document.querySelector('.' + panelId) || document.getElementById(panelId);
+        if (panel) {
+            const widgets = Array.from(panel.querySelectorAll('.draggable-widget'));
+            const zone = panel.getAttribute('data-zone') || (panelId.includes('left') ? 'left' : 'right');
+            layout[zone] = widgets.map(w => w.getAttribute('data-widget-id')).filter(Boolean);
+        }
+    });
+    
+    localStorage.setItem('dashboard_layout', JSON.stringify(layout));
+    
+    // Save visibility states
+    const occupancyToggle = document.getElementById('toggle-occupancy');
+    if (occupancyToggle) {
+        localStorage.setItem('widget_occupancy_visible', occupancyToggle.checked);
+    }
+}
+
+function restoreWidgetLayout() {
+    try {
+        const savedLayoutStr = localStorage.getItem('dashboard_layout');
+        if (savedLayoutStr) {
+            const layout = JSON.parse(savedLayoutStr);
+            const zones = {
+                'left': document.querySelector('.dashboard-left-panel'),
+                'right': document.getElementById('panel-right')
+            };
+            
+            Object.entries(layout).forEach(([zone, widgetIds]) => {
+                const targetZone = zones[zone];
+                if (!targetZone) return;
+                
+                widgetIds.forEach(id => {
+                    const widget = document.getElementById('widget-' + id);
+                    if (widget) {
+                        targetZone.appendChild(widget);
+                    }
+                });
+            });
+        }
+        
+        // Restore visibility
+        const occupancyVisible = localStorage.getItem('widget_occupancy_visible');
+        if (occupancyVisible !== null) {
+            const isVisible = occupancyVisible === 'true';
+            const toggle = document.getElementById('toggle-occupancy');
+            if (toggle) toggle.checked = isVisible;
+            toggleWidgetVisibility('occupancy', isVisible);
+        }
+    } catch (e) {
+        console.error("Fehler beim Wiederherstellen des Layouts:", e);
+    }
+}
+
+// Visibility Toggle
+function toggleWidgetVisibility(widgetId, isVisible) {
+    const widget = document.getElementById('widget-' + widgetId);
+    if (widget) {
+        widget.style.display = isVisible ? '' : 'none';
+        if (!isEditMode) {
+            localStorage.setItem('widget_' + widgetId + '_visible', isVisible);
+        }
+    }
+}
+
+// Drag & Drop Implementation
+function enableDragAndDrop() {
+    const widgets = document.querySelectorAll('.draggable-widget');
+    const zones = [document.querySelector('.dashboard-left-panel'), document.getElementById('panel-right')];
+    
+    widgets.forEach(widget => {
+        widget.setAttribute('draggable', 'true');
+        widget.addEventListener('dragstart', handleDragStart);
+        widget.addEventListener('dragend', handleDragEnd);
+    });
+    
+    zones.forEach(zone => {
+        if (!zone) return;
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('dragleave', handleDragLeave);
+        zone.addEventListener('drop', handleDrop);
+    });
+}
+
+function disableDragAndDrop() {
+    const widgets = document.querySelectorAll('.draggable-widget');
+    const zones = [document.querySelector('.dashboard-left-panel'), document.getElementById('panel-right')];
+    
+    widgets.forEach(widget => {
+        widget.removeAttribute('draggable');
+        widget.removeEventListener('dragstart', handleDragStart);
+        widget.removeEventListener('dragend', handleDragEnd);
+    });
+    
+    zones.forEach(zone => {
+        if (!zone) return;
+        zone.removeEventListener('dragover', handleDragOver);
+        zone.removeEventListener('dragleave', handleDragLeave);
+        zone.removeEventListener('drop', handleDrop);
+    });
+}
+
+let draggedItem = null;
+let placeholder = document.createElement('div');
+placeholder.className = 'drop-placeholder';
+
+function handleDragStart(e) {
+    draggedItem = this;
+    setTimeout(() => this.classList.add('dragging'), 0);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.getAttribute('data-widget-id'));
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    if (placeholder.parentNode) {
+        placeholder.parentNode.removeChild(placeholder);
+    }
+    draggedItem = null;
+    
+    const zones = [document.querySelector('.dashboard-left-panel'), document.getElementById('panel-right')];
+    zones.forEach(z => z && z.classList.remove('dragover'));
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    this.classList.add('dragover');
+    
+    const target = e.target.closest('.draggable-widget');
+    if (target && target !== draggedItem) {
+        const rect = target.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        if (y < rect.height / 2) {
+            this.insertBefore(placeholder, target);
+        } else {
+            this.insertBefore(placeholder, target.nextSibling);
+        }
+    } else if (!target) {
+        this.appendChild(placeholder);
+    }
+}
+
+function handleDragLeave(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+        this.classList.remove('dragover');
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    if (draggedItem) {
+        if (placeholder.parentNode) {
+            placeholder.parentNode.insertBefore(draggedItem, placeholder);
+        } else {
+            this.appendChild(draggedItem);
+        }
+    }
+}
+
+// Modal Logic
+function openAnalysisModal() {
+    const overlay = document.getElementById('analysisModalOverlay');
+    if (overlay) overlay.classList.add('show');
+}
+
+function closeAnalysisModal() {
+    const overlay = document.getElementById('analysisModalOverlay');
+    if (overlay) overlay.classList.remove('show');
+}
+
+function copyAnalysisText() {
+    const textNode = document.getElementById('analysis-text-report');
+    if (!textNode) return;
+    const text = textNode.textContent.trim();
+    
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Bericht in die Zwischenablage kopiert!', 'success');
+    }).catch(err => {
+        console.error('Copy failed', err);
+        showToast('Fehler beim Kopieren.', 'error');
+    });
+}
+
+function downloadCSV(dateStr) {
+    const dateQuery = dateStr ? `?date=${dateStr}` : '';
+    window.location.href = "{{ url_for('export_occupancy_report') }}" + dateQuery;
+}
+
+// Restore layout on load
+document.addEventListener('DOMContentLoaded', () => {
+    restoreWidgetLayout();
+});
+
 </script>
 {% endblock %}

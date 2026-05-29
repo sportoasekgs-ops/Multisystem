@@ -1717,6 +1717,65 @@ def dashboard():
     _contact_phone = _gc("contact_phone", "").strip()
     _contact_text = _gc("contact_text", "").strip()
 
+    # Compute occupancy stats from week_overview
+    total_slots = 0
+    slots_with_bookings = 0
+    blocked_slots = 0
+    total_booked_students = 0
+    day_stats = []  # Per-day breakdown
+    _max_students = get_max_students()
+
+    for day_data in week_overview:
+        day_booked = 0
+        day_total = 0
+        day_blocked = 0
+        day_students = 0
+        for slot in day_data['schedule']:
+            if slot.get('is_weekend'):
+                continue
+            total_slots += 1
+            if slot.get('blocked'):
+                blocked_slots += 1
+                day_blocked += 1
+                continue
+            day_total += 1
+            if slot.get('bookings'):
+                slots_with_bookings += 1
+                day_booked += 1
+            day_students += slot.get('total_students', 0)
+            total_booked_students += slot.get('total_students', 0)
+        day_stats.append({
+            'name': day_data['name'],
+            'date': day_data['date'],
+            'date_formatted': day_data['date_formatted'],
+            'total_slots': day_total,
+            'booked_slots': day_booked,
+            'blocked_slots': day_blocked,
+            'students': day_students,
+        })
+
+    active_slots = total_slots - blocked_slots
+    slot_occupancy_pct = round((slots_with_bookings / active_slots * 100) if active_slots > 0 else 0)
+    student_capacity = active_slots * _max_students
+    student_occupancy_pct = round((total_booked_students / student_capacity * 100) if student_capacity > 0 else 0)
+
+    # Find peak day
+    peak_day = max(day_stats, key=lambda d: d['students']) if day_stats else None
+
+    occupancy_stats = {
+        'total_slots': total_slots,
+        'active_slots': active_slots,
+        'slots_with_bookings': slots_with_bookings,
+        'blocked_slots': blocked_slots,
+        'total_booked_students': total_booked_students,
+        'student_capacity': student_capacity,
+        'slot_occupancy_pct': slot_occupancy_pct,
+        'student_occupancy_pct': student_occupancy_pct,
+        'peak_day': peak_day,
+        'day_stats': day_stats,
+        'max_students_per_slot': _max_students,
+    }
+
     return render_template(
         "dashboard.html",
         week_selector=week_selector,
@@ -1742,6 +1801,8 @@ def dashboard():
         contact_email=_contact_email,
         contact_phone=_contact_phone,
         contact_text=_contact_text,
+        occupancy_stats=occupancy_stats,
+        monday_str=monday.strftime('%Y-%m-%d'),
     )
 
 
@@ -3620,6 +3681,102 @@ def admin_unblock_slot():
         flash("Fehler beim Freigeben des Slots.", "error")
 
     return redirect(request.referrer or url_for("dashboard"))
+
+
+@app.route("/admin/export_occupancy_report")
+@login_required
+def export_occupancy_report():
+    """Generiert einen CSV-Belegungsbericht für eine Kalenderwoche"""
+    import csv
+    import io
+    from models import get_bookings_for_week, get_blocked_slots_for_week
+
+    # Nur Admins oder Lehrer dürfen exportieren
+    if session.get("user_role") not in ["admin", "teacher"]:
+        flash("Keine Berechtigung für diese Aktion.", "error")
+        return redirect(url_for("dashboard"))
+
+    date_param = request.args.get("date", "")
+    try:
+        if date_param:
+            ref_date = datetime.strptime(date_param, "%Y-%m-%d").date()
+        else:
+            ref_date = datetime.now(get_berlin_tz()).date()
+    except:
+        ref_date = datetime.now(get_berlin_tz()).date()
+
+    monday = ref_date - timedelta(days=ref_date.weekday())
+    friday = monday + timedelta(days=4)
+    kw = monday.isocalendar()[1]
+
+    weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    weekday_names = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"]
+    max_students = get_max_students()
+    period_times = get_period_times()
+
+    # Fetch all bookings for the week
+    all_bookings = get_bookings_for_week(monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d"))
+    blocked = get_blocked_slots_for_week(monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d"))
+
+    bookings_map = {}
+    for b in all_bookings:
+        bd = b if isinstance(b, dict) else b.__dict__
+        key = f"{bd.get('date', '')}_{bd.get('period', '')}"
+        if key not in bookings_map:
+            bookings_map[key] = []
+        bookings_map[key].append(bd)
+
+    blocked_set = set()
+    for bl in blocked:
+        bld = bl if isinstance(bl, dict) else bl.__dict__
+        blocked_set.add(f"{bld.get('date', '')}_{bld.get('period', '')}")
+
+    output = io.StringIO()
+    # BOM for Excel UTF-8 compatibility
+    output.write('\ufeff')
+    writer = csv.writer(output, delimiter=';')
+    writer.writerow(['Datum', 'Wochentag', 'Stunde', 'Kursname', 'Status', 'Gebuchte Schüler', 'Max. Plätze', 'Auslastung %', 'Lehrkräfte', 'Schülerliste'])
+
+    for i, wd in enumerate(weekdays):
+        day_date = monday + timedelta(days=i)
+        day_str = day_date.strftime("%Y-%m-%d")
+        day_formatted = day_date.strftime("%d.%m.%Y")
+
+        for period in sorted(period_times.keys()):
+            info = get_period_info(wd, period)
+            key = f"{day_str}_{period}"
+            kurs = info.get('label', 'Freie Wahl') if info.get('type') == 'fest' else 'Freie Wahl'
+
+            if key in blocked_set:
+                writer.writerow([day_formatted, weekday_names[i], f'{period}. Stunde', kurs, 'Blockiert', 0, max_students, '0%', '-', '-'])
+                continue
+
+            slot_bookings = bookings_map.get(key, [])
+            total_students = sum(len(b.get('students', [])) for b in slot_bookings)
+            pct = round(total_students / max_students * 100) if max_students > 0 else 0
+            teachers = ', '.join(set(b.get('teacher_name', '?') for b in slot_bookings)) or '-'
+
+            student_list = []
+            for b in slot_bookings:
+                for s in b.get('students', []):
+                    name = s.get('name', '')
+                    klasse = s.get('klasse', '')
+                    if name:
+                        student_list.append(f"{name} ({klasse})")
+                    elif klasse:
+                        student_list.append(f"Klasse {klasse} (ganze Klasse)")
+            students_str = ', '.join(student_list) or '-'
+
+            status = 'Belegt' if slot_bookings else 'Frei'
+            writer.writerow([day_formatted, weekday_names[i], f'{period}. Stunde', kurs, status, total_students, max_students, f'{pct}%', teachers, students_str])
+
+    output.seek(0)
+    filename = f"Belegungsbericht_KW{kw}_{monday.strftime('%Y')}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+    )
 
 
 @app.route("/admin/setup_holidays_2026", methods=["POST"])
