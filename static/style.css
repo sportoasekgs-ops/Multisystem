@@ -3890,9 +3890,35 @@ footer {
 
 /* Dashboard Dark Mode Anpassungen (Slot-Karten, Kursfarben, Buchungs-Buttons, Kontakt-Kachel) */
 [data-theme="dark"] .slot-card {
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%) !important;
-    border: 1.5px solid var(--border-light);
-    box-shadow: var(--shadow-sm);
+    background: rgba(30, 30, 48, 0.45) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Kategorie-spezifische Rahmenfarben für Slot-Karten im Dark Mode (dezent und elegant) */
+[data-theme="dark"] .slot-card.course-wochenstart,
+[data-theme="dark"] .slot-card.course-motorik {
+    border-color: rgba(232, 168, 124, 0.35) !important;
+}
+[data-theme="dark"] .slot-card.course-koordination,
+[data-theme="dark"] .slot-card.course-atem,
+[data-theme="dark"] .slot-card.course-bodyscan {
+    border-color: rgba(130, 180, 212, 0.35) !important;
+}
+[data-theme="dark"] .slot-card.course-sozial,
+[data-theme="dark"] .slot-card.course-fitness,
+[data-theme="dark"] .slot-card.course-ruhe {
+    border-color: rgba(122, 191, 168, 0.35) !important;
+}
+[data-theme="dark"] .slot-card.course-turnen,
+[data-theme="dark"] .slot-card.course-konflikt {
+    border-color: rgba(240, 98, 146, 0.35) !important;
+}
+[data-theme="dark"] .slot-card.course-frei,
+[data-theme="dark"] .slot-card.course-default {
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 [data-theme="dark"] .slot-course-name {
@@ -3900,7 +3926,8 @@ footer {
 }
 
 [data-theme="dark"] .slot-students-list .student-name {
-    color: var(--text-secondary) !important;
+    color: #e2e8f0 !important;
+    font-weight: 500;
 }
 
 [data-theme="dark"] .slot-availability .status-text {
@@ -3915,8 +3942,69 @@ footer {
     color: var(--error) !important;
 }
 
-/* Kurs-spezifische Farben bleiben im Dark Mode erhalten, nur der Hintergrund der Karte wird abgedunkelt.
-   (Die "graue Einheits-Wand" wurde entfernt, damit Kurse farblich unterscheidbar bleiben) */
+/* Kurs-Tags in edlem Translucent-Design im Dark Mode (kein Bunt-Lärm, perfekte Lesbarkeit) */
+[data-theme="dark"] .course-tag {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .course-wochenstart .course-tag,
+[data-theme="dark"] .course-motorik .course-tag {
+    background: rgba(232, 168, 124, 0.12) !important;
+    color: #ffd8a8 !important;
+    border: 1px solid rgba(232, 168, 124, 0.35) !important;
+}
+[data-theme="dark"] .course-koordination .course-tag,
+[data-theme="dark"] .course-atem .course-tag,
+[data-theme="dark"] .course-bodyscan .course-tag {
+    background: rgba(130, 180, 212, 0.12) !important;
+    color: #c5e1f5 !important;
+    border: 1px solid rgba(130, 180, 212, 0.35) !important;
+}
+[data-theme="dark"] .course-sozial .course-tag,
+[data-theme="dark"] .course-fitness .course-tag,
+[data-theme="dark"] .course-ruhe .course-tag {
+    background: rgba(122, 191, 168, 0.12) !important;
+    color: #c6f6d5 !important;
+    border: 1px solid rgba(122, 191, 168, 0.35) !important;
+}
+[data-theme="dark"] .course-turnen .course-tag,
+[data-theme="dark"] .course-konflikt .course-tag {
+    background: rgba(240, 98, 146, 0.12) !important;
+    color: #fbcfe8 !important;
+    border: 1px solid rgba(240, 98, 146, 0.35) !important;
+}
+[data-theme="dark"] .course-frei .course-tag,
+[data-theme="dark"] .course-default .course-tag {
+    background: rgba(176, 184, 187, 0.12) !important;
+    color: #cbd5e1 !important;
+    border: 1px solid rgba(176, 184, 187, 0.35) !important;
+}
+
+/* Vergangene Termine (period-past) im Dark Mode: dezent abgeblendet, aber lesbar */
+[data-theme="dark"] .period-past {
+    opacity: 0.7 !important;
+    background: transparent !important;
+}
+[data-theme="dark"] .period-past .slot-card {
+    opacity: 0.55 !important;
+    background: rgba(20, 20, 30, 0.2) !important;
+    border: 1px dashed rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+}
+[data-theme="dark"] .period-past .slot-course-name {
+    color: var(--text-tertiary) !important;
+}
+[data-theme="dark"] .period-past .course-tag {
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: var(--text-tertiary) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+[data-theme="dark"] .period-past .slot-availability .availability-text {
+    color: var(--text-tertiary) !important;
+}
+
+/* Kurs-spezifische Farben im Dark Mode */
 
 /* "Jetzt buchen" Button im Dark Mode */
 [data-theme="dark"] .book-btn {
