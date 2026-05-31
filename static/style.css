@@ -5751,17 +5751,21 @@ footer {
 }
 
 .toast-message {
-    color: var(--text-primary);
+    color: #f8fafc;
     font-size: 0.85rem;
     font-weight: 500;
     flex-grow: 1;
     line-height: 1.4;
 }
 
+.toast-icon {
+    color: #ffffff;
+}
+
 .toast-close {
     background: none;
     border: none;
-    color: var(--text-tertiary);
+    color: rgba(255, 255, 255, 0.65);
     cursor: pointer;
     font-size: 1.1rem;
     padding: 0.15rem;
@@ -5772,7 +5776,7 @@ footer {
 }
 
 .toast-close:hover {
-    color: var(--text-primary);
+    color: #ffffff;
 }
 
 /* ==========================================

@@ -28,18 +28,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260529c">
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260601a">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260601c">
     <meta http-equiv="refresh" content="600">
 
-    <!-- ── Dynamisches Branding aus der Datenbank ── -->
+    <!-- ── Dynamisches Branding aus der Datenbank (für alle Themes) ── -->
     <style>
         :root {
-            --primary: {{ primary_color or '#E91E63' }};
-            --primary-dark: {{ secondary_color or '#C2185B' }};
-            --primary-light: {{ background_color or '#FCE4EC' }};
-            --login-gradient: {{ background_color or '#F5F5F5' }};
+            --brand-primary: {{ primary_color or '#E91E63' }};
+            --brand-secondary: {{ secondary_color or '#C2185B' }};
+            --brand-light: {{ background_color or '#FCE4EC' }};
+            --primary: var(--brand-primary);
+            --primary-dark: var(--brand-secondary);
+            --primary-light: var(--brand-light);
+            --login-gradient: var(--brand-light);
             --primary-rgb: {{ primary_rgb_space or '233 30 99' }};
             --primary-overlay: rgba({{ primary_rgb or '233, 30, 99' }}, 0.12);
+            --brand-tint-8: color-mix(in srgb, var(--brand-primary) 8%, white);
+            --brand-tint-15: color-mix(in srgb, var(--brand-primary) 15%, white);
+            --brand-tint-25: color-mix(in srgb, var(--brand-primary) 25%, white);
+            --brand-shade-20: color-mix(in srgb, var(--brand-primary) 80%, black);
         }
     </style>
 

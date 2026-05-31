@@ -119,6 +119,13 @@
     }
 }
 
+/* Akzentfarben: immer aus CMS-Branding (Color Picker) */
+html[data-admin-theme] {
+    --primary: var(--brand-primary);
+    --primary-dark: var(--brand-secondary);
+    --primary-light: var(--brand-light);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    1. KLASSISCH – Neo-Brutalist Pop (knallig, versetzte Schatten, Poppins)
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -244,10 +251,6 @@ html[data-admin-theme="professional"] {
     --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-mono: 'Inter', monospace;
-    --primary: #1e40af;
-    --primary-rgb: 30, 64, 175;
-    --primary-dark: #1e3a8a;
-    --primary-light: #eff6ff;
     --accent: #047857;
     --accent-warn: #b45309;
     --text-primary: #0f172a;
@@ -300,7 +303,7 @@ html[data-admin-theme="professional"] .top-nav::after {
     content: '';
     display: block;
     height: 3px;
-    background: linear-gradient(90deg, #1e40af, #3b82f6);
+    background: linear-gradient(90deg, var(--primary), var(--brand-tint-25));
     position: absolute;
     left: 0;
     right: 0;
@@ -317,8 +320,8 @@ html[data-admin-theme="professional"] .top-nav nav a {
 
 html[data-admin-theme="professional"] .top-nav nav a:hover {
     transform: none;
-    background: #eff6ff;
-    color: #1e40af;
+    background: var(--primary-light);
+    color: var(--primary);
 }
 
 html[data-admin-theme="professional"] .user-info {
@@ -338,14 +341,14 @@ html[data-admin-theme="professional"] .btn {
 }
 
 html[data-admin-theme="professional"] .btn-primary {
-    background: #1e40af;
-    border-color: #1e3a8a;
+    background: var(--primary);
+    border-color: var(--primary-dark);
 }
 
 html[data-admin-theme="professional"] .btn-primary:hover,
 html[data-admin-theme="professional"] .btn-secondary:hover {
     transform: none;
-    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.25);
+    box-shadow: 0 2px 8px rgb(var(--primary-rgb) / 0.3);
 }
 
 html[data-admin-theme="professional"] .dashboard-card,
@@ -363,13 +366,13 @@ html[data-admin-theme="professional"] .date-selector {
 html[data-admin-theme="professional"] .dashboard-card:hover,
 html[data-admin-theme="professional"] .admin-card:hover {
     transform: none;
-    border-color: #1e40af;
-    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.12);
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgb(var(--primary-rgb) / 0.15);
 }
 
 html[data-admin-theme="professional"] .dashboard-card .card-icon {
     border-radius: 4px;
-    background: #1e40af;
+    background: var(--primary);
 }
 
 html[data-admin-theme="professional"] .week-table {
@@ -385,7 +388,7 @@ html[data-admin-theme="professional"] .week-table th {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    border-bottom: 2px solid #1e40af;
+    border-bottom: 2px solid var(--primary);
 }
 
 html[data-admin-theme="professional"] .week-table td {
@@ -406,8 +409,8 @@ html[data-admin-theme="professional"] .slot-card {
 
 html[data-admin-theme="professional"] .slot-card:hover {
     transform: none;
-    border-color: #1e40af;
-    box-shadow: inset 0 0 0 1px #1e40af;
+    border-color: var(--primary);
+    box-shadow: inset 0 0 0 1px var(--primary);
 }
 
 html[data-admin-theme="professional"] .slot-course-name {
@@ -419,7 +422,7 @@ html[data-admin-theme="professional"] .slot-course-name {
 }
 
 html[data-admin-theme="professional"] .selected-date-info h3 {
-    background: #1e40af;
+    background: var(--primary);
     border-radius: 6px;
     box-shadow: none;
 }
@@ -436,10 +439,10 @@ html[data-admin-theme="professional"] h2 {
 }
 
 html[data-admin-theme="professional"] .week-dates {
-    background: #eff6ff;
-    color: #1e40af;
+    background: var(--primary-light);
+    color: var(--primary);
     border-radius: 4px;
-    border: 1px solid #bfdbfe;
+    border: 1px solid var(--brand-tint-25);
 }
 
 html[data-admin-theme="professional"] .form-group input,
@@ -460,12 +463,8 @@ html[data-admin-theme="minimal"] {
     --font-heading: 'DM Sans', -apple-system, sans-serif;
     --font-body: 'DM Sans', -apple-system, sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
-    --primary: #000000;
-    --primary-rgb: 0, 0, 0;
-    --primary-dark: #000000;
-    --primary-light: #f4f4f5;
-    --accent: #000000;
-    --accent-warn: #000000;
+    --accent: var(--brand-primary);
+    --accent-warn: var(--brand-secondary);
     --text-primary: #000000;
     --text-secondary: #3f3f46;
     --text-tertiary: #71717a;
@@ -515,7 +514,7 @@ html[data-admin-theme="minimal"] .top-nav nav a {
 
 html[data-admin-theme="minimal"] .top-nav nav a:hover {
     transform: none;
-    background: #000;
+    background: var(--primary-dark);
     color: #fff;
 }
 
@@ -536,13 +535,14 @@ html[data-admin-theme="minimal"] .btn {
 }
 
 html[data-admin-theme="minimal"] .btn-primary {
-    background: #000;
+    background: var(--primary-dark);
     color: #fff;
+    border-color: var(--primary-dark);
 }
 
 html[data-admin-theme="minimal"] .btn-primary:hover {
     background: #fff;
-    color: #000;
+    color: var(--primary-dark);
     transform: none;
     box-shadow: none;
 }
@@ -569,7 +569,7 @@ html[data-admin-theme="minimal"] .admin-theme-bar {
 html[data-admin-theme="minimal"] .dashboard-card:hover,
 html[data-admin-theme="minimal"] .admin-card:hover {
     transform: none;
-    background: #000;
+    background: var(--primary-dark);
     color: #fff;
 }
 
@@ -582,13 +582,13 @@ html[data-admin-theme="minimal"] .admin-card:hover .card-desc {
 
 html[data-admin-theme="minimal"] .dashboard-card .card-icon {
     border-radius: 0;
-    background: #000;
+    background: var(--primary-dark);
 }
 
 html[data-admin-theme="minimal"] .week-table th {
-    background: #000;
+    background: var(--primary-dark);
     color: #fff;
-    border: 1px solid #000;
+    border: 1px solid var(--primary-dark);
     font-family: var(--font-mono);
     font-size: 0.65rem;
     letter-spacing: 0.12em;
@@ -626,7 +626,7 @@ html[data-admin-theme="minimal"] .slot-course-name {
 }
 
 html[data-admin-theme="minimal"] .selected-date-info h3 {
-    background: #000;
+    background: var(--primary-dark);
     color: #fff;
     border-radius: 0;
     font-family: var(--font-mono);
@@ -655,9 +655,9 @@ html[data-admin-theme="minimal"] .dashboard-title {
 }
 
 html[data-admin-theme="minimal"] .week-dates {
-    background: #fff;
-    color: #000;
-    border: 1px solid #000;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    border: 1px solid var(--primary-dark);
     border-radius: 0;
     font-family: var(--font-mono);
     font-size: 0.75rem;
@@ -676,7 +676,7 @@ html[data-admin-theme="minimal"] .form-group input:focus {
 }
 
 html[data-admin-theme="minimal"] .stat-card {
-    background: #000;
+    background: var(--primary-dark);
     border-radius: 0;
 }
 
@@ -692,26 +692,22 @@ html[data-admin-theme="elegant"] {
     --font-heading: 'Playfair Display', Georgia, serif;
     --font-body: 'Source Sans 3', -apple-system, sans-serif;
     --font-mono: 'Source Sans 3', sans-serif;
-    --primary: #0f766e;
-    --primary-rgb: 15, 118, 110;
-    --primary-dark: #115e59;
-    --primary-light: rgba(204, 251, 241, 0.65);
     --accent: #7c3aed;
     --accent-warn: #ca8a04;
-    --text-primary: #134e4a;
+    --text-primary: color-mix(in srgb, var(--brand-primary) 55%, #0f172a);
     --text-secondary: #64748b;
     --text-tertiary: #94a3b8;
     --bg-primary: rgba(255, 255, 255, 0.72);
     --bg-secondary: transparent;
     --bg-tertiary: rgba(255, 255, 255, 0.5);
     --bg-card: rgba(255, 255, 255, 0.65);
-    --border: rgba(15, 118, 110, 0.25);
-    --border-light: rgba(15, 118, 110, 0.12);
-    --login-gradient: linear-gradient(160deg, #f0fdfa 0%, #f5f3ff 50%, #faf5ff 100%);
-    --shadow-sm: 0 4px 24px rgba(15, 118, 110, 0.08);
-    --shadow: 0 8px 32px rgba(15, 118, 110, 0.1);
-    --shadow-md: 0 12px 40px rgba(15, 118, 110, 0.12);
-    --shadow-lg: 0 20px 60px rgba(15, 118, 110, 0.15);
+    --border: rgb(var(--primary-rgb) / 0.25);
+    --border-light: rgb(var(--primary-rgb) / 0.12);
+    --login-gradient: linear-gradient(160deg, var(--brand-light) 0%, #f8fafc 50%, var(--brand-tint-8) 100%);
+    --shadow-sm: 0 4px 24px rgb(var(--primary-rgb) / 0.08);
+    --shadow: 0 8px 32px rgb(var(--primary-rgb) / 0.1);
+    --shadow-md: 0 12px 40px rgb(var(--primary-rgb) / 0.12);
+    --shadow-lg: 0 20px 60px rgb(var(--primary-rgb) / 0.15);
     --radius-sm: 12px;
     --radius: 16px;
     --radius-lg: 22px;
@@ -720,28 +716,28 @@ html[data-admin-theme="elegant"] {
 }
 
 html[data-admin-theme="elegant"] body {
-    background: linear-gradient(165deg, #f0fdfa 0%, #ecfeff 25%, #f5f3ff 60%, #fdf4ff 100%);
+    background: linear-gradient(165deg, var(--brand-light) 0%, #ffffff 35%, var(--brand-tint-8) 70%, var(--brand-tint-15) 100%);
     background-attachment: fixed;
     min-height: 100vh;
     letter-spacing: 0.01em;
 }
 
 html[data-admin-theme="elegant"] .bg-glow-orb.orb-1 {
-    background: radial-gradient(circle, rgba(20, 184, 166, 0.35) 0%, transparent 65%);
+    background: radial-gradient(circle, rgb(var(--primary-rgb) / 0.35) 0%, transparent 65%);
     width: 480px;
     height: 480px;
 }
 
 html[data-admin-theme="elegant"] .bg-glow-orb.orb-2 {
-    background: radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, transparent 65%);
+    background: radial-gradient(circle, rgb(var(--primary-rgb) / 0.18) 0%, transparent 65%);
 }
 
 html[data-admin-theme="elegant"] .top-nav {
     background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(16px) saturate(1.4);
     -webkit-backdrop-filter: blur(16px) saturate(1.4);
-    border-bottom: 1px solid rgba(15, 118, 110, 0.15);
-    box-shadow: 0 4px 30px rgba(15, 118, 110, 0.06);
+    border-bottom: 1px solid rgb(var(--primary-rgb) / 0.15);
+    box-shadow: 0 4px 30px rgb(var(--primary-rgb) / 0.06);
 }
 
 html[data-admin-theme="elegant"] .top-nav nav a {
@@ -751,38 +747,38 @@ html[data-admin-theme="elegant"] .top-nav nav a {
 
 html[data-admin-theme="elegant"] .top-nav nav a:hover {
     transform: none;
-    background: rgba(204, 251, 241, 0.6);
-    color: #0f766e;
+    background: var(--primary-light);
+    color: var(--primary-dark);
 }
 
 html[data-admin-theme="elegant"] .user-info {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(15, 118, 110, 0.15);
+    border: 1px solid rgb(var(--primary-rgb) / 0.15);
     border-radius: 999px;
 }
 
 html[data-admin-theme="elegant"] .btn {
     border-radius: 999px;
     border: 1px solid transparent;
-    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.2);
+    box-shadow: 0 4px 14px rgb(var(--primary-rgb) / 0.2);
     font-weight: 600;
     letter-spacing: 0.02em;
 }
 
 html[data-admin-theme="elegant"] .btn-primary {
-    background: linear-gradient(135deg, #0f766e, #14b8a6);
+    background: linear-gradient(135deg, var(--primary), var(--brand-tint-25));
     border: none;
 }
 
 html[data-admin-theme="elegant"] .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.35);
+    box-shadow: 0 8px 24px rgb(var(--primary-rgb) / 0.35);
 }
 
 html[data-admin-theme="elegant"] .btn-secondary {
     background: rgba(255, 255, 255, 0.8);
-    border-color: rgba(15, 118, 110, 0.2);
+    border-color: rgb(var(--primary-rgb) / 0.2);
 }
 
 html[data-admin-theme="elegant"] .btn-secondary:hover {
@@ -809,17 +805,17 @@ html[data-admin-theme="elegant"] .dashboard-card:hover,
 html[data-admin-theme="elegant"] .admin-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-lg);
-    border-color: rgba(15, 118, 110, 0.3);
+    border-color: rgb(var(--primary-rgb) / 0.3);
 }
 
 html[data-admin-theme="elegant"] .dashboard-card .card-icon {
     border-radius: 50%;
-    background: linear-gradient(135deg, #0f766e, #2dd4bf);
+    background: linear-gradient(135deg, var(--primary), var(--brand-tint-25));
 }
 
 html[data-admin-theme="elegant"] .week-table th {
-    background: rgba(15, 118, 110, 0.12);
-    color: #115e59;
+    background: rgb(var(--primary-rgb) / 0.12);
+    color: var(--primary-dark);
     font-family: var(--font-heading);
     font-weight: 600;
     font-size: 0.85rem;
@@ -827,22 +823,22 @@ html[data-admin-theme="elegant"] .week-table th {
 }
 
 html[data-admin-theme="elegant"] .week-table td {
-    border-color: rgba(15, 118, 110, 0.1);
+    border-color: rgb(var(--primary-rgb) / 0.1);
     background: rgba(255, 255, 255, 0.4);
 }
 
 html[data-admin-theme="elegant"] .slot-card {
     border-radius: var(--radius);
-    border: 1px solid rgba(15, 118, 110, 0.2);
+    border: 1px solid rgb(var(--primary-rgb) / 0.2);
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(6px);
-    box-shadow: 0 4px 16px rgba(15, 118, 110, 0.08);
+    box-shadow: 0 4px 16px rgb(var(--primary-rgb) / 0.08);
 }
 
 html[data-admin-theme="elegant"] .slot-card:hover {
     transform: scale(1.02);
-    box-shadow: 0 8px 28px rgba(15, 118, 110, 0.15);
-    border-color: rgba(15, 118, 110, 0.4);
+    box-shadow: 0 8px 28px rgb(var(--primary-rgb) / 0.15);
+    border-color: rgb(var(--primary-rgb) / 0.4);
 }
 
 html[data-admin-theme="elegant"] .slot-course-name {
@@ -850,12 +846,12 @@ html[data-admin-theme="elegant"] .slot-course-name {
     font-style: italic;
     font-weight: 600;
     text-transform: none;
-    color: #115e59;
+    color: var(--primary-dark);
     font-size: 0.85rem;
 }
 
 html[data-admin-theme="elegant"] .selected-date-info h3 {
-    background: linear-gradient(135deg, #0f766e 0%, #6366f1 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--brand-shade-20) 100%);
     border-radius: var(--radius-xl);
     font-family: var(--font-heading);
     font-weight: 600;
@@ -875,7 +871,7 @@ html[data-admin-theme="elegant"] .login-box h2 {
 
 html[data-admin-theme="elegant"] .login-logo img {
     border-radius: 50%;
-    box-shadow: 0 12px 40px rgba(15, 118, 110, 0.2);
+    box-shadow: 0 12px 40px rgb(var(--primary-rgb) / 0.2);
     border: 3px solid rgba(255, 255, 255, 0.9);
 }
 
@@ -887,19 +883,19 @@ html[data-admin-theme="elegant"] .admin-header h2 {
     font-family: var(--font-heading);
     font-weight: 600;
     letter-spacing: -0.02em;
-    color: #115e59;
+    color: var(--primary-dark);
 }
 
 html[data-admin-theme="elegant"] .week-dates {
-    background: rgba(204, 251, 241, 0.5);
-    color: #0f766e;
+    background: var(--primary-light);
+    color: var(--primary-dark);
     border-radius: 999px;
-    border: 1px solid rgba(15, 118, 110, 0.2);
+    border: 1px solid rgb(var(--primary-rgb) / 0.2);
 }
 
 html[data-admin-theme="elegant"] .week-nav-arrow {
     border-radius: 50%;
-    border: 1px solid rgba(15, 118, 110, 0.2);
+    border: 1px solid rgb(var(--primary-rgb) / 0.2);
     background: rgba(255, 255, 255, 0.6);
 }
 
@@ -907,11 +903,11 @@ html[data-admin-theme="elegant"] .form-group input,
 html[data-admin-theme="elegant"] .form-group select {
     border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.7);
-    border-color: rgba(15, 118, 110, 0.2);
+    border-color: rgb(var(--primary-rgb) / 0.2);
 }
 
 html[data-admin-theme="elegant"] .stat-card {
-    background: linear-gradient(135deg, #0f766e 0%, #6366f1 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--brand-shade-20) 100%);
     border-radius: var(--radius-xl);
 }
 
@@ -920,12 +916,8 @@ html[data-admin-theme="elegant"] main.container {
     z-index: 1;
 }
 
-/* ── Dark Mode × Theme ── */
+/* ── Dark Mode × Theme (Branding-Farben bleiben, nur neutrale Flächen) ── */
 html[data-theme="dark"][data-admin-theme="professional"] {
-    --primary: #60a5fa;
-    --primary-rgb: 96, 165, 250;
-    --primary-dark: #3b82f6;
-    --primary-light: #1e293b;
     --text-primary: #f1f5f9;
     --bg-primary: #0f172a;
     --bg-secondary: #0f172a;
@@ -942,18 +934,14 @@ html[data-theme="dark"][data-admin-theme="professional"] body {
 }
 
 html[data-theme="dark"][data-admin-theme="minimal"] {
-    --primary: #fafafa;
-    --primary-rgb: 250, 250, 250;
-    --primary-dark: #e4e4e7;
-    --primary-light: #27272a;
     --text-primary: #fafafa;
     --text-secondary: #a1a1aa;
     --bg-primary: #09090b;
     --bg-secondary: #09090b;
     --bg-tertiary: #18181b;
     --bg-card: #09090b;
-    --border: #fafafa;
-    --border-light: #3f3f46;
+    --border: #3f3f46;
+    --border-light: #27272a;
 }
 
 html[data-theme="dark"][data-admin-theme="minimal"] body {
@@ -963,26 +951,43 @@ html[data-theme="dark"][data-admin-theme="minimal"] body {
 html[data-theme="dark"][data-admin-theme="minimal"] .top-nav,
 html[data-theme="dark"][data-admin-theme="minimal"] .dashboard-card,
 html[data-theme="dark"][data-admin-theme="minimal"] .slot-card {
-    border-color: #fafafa;
+    border-color: var(--border);
 }
 
 html[data-theme="dark"][data-admin-theme="elegant"] {
-    --primary: #2dd4bf;
-    --primary-rgb: 45, 212, 191;
-    --primary-dark: #14b8a6;
-    --primary-light: rgba(19, 78, 74, 0.5);
-    --text-primary: #ecfdf5;
-    --text-secondary: #99f6e4;
-    --bg-primary: rgba(4, 47, 46, 0.75);
-    --bg-card: rgba(4, 47, 46, 0.6);
-    --border: rgba(45, 212, 191, 0.3);
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --bg-primary: rgba(15, 23, 42, 0.75);
+    --bg-card: rgba(15, 23, 42, 0.6);
+    --border: rgb(var(--primary-rgb) / 0.35);
 }
 
 html[data-theme="dark"][data-admin-theme="elegant"] body {
-    background: linear-gradient(165deg, #042f2e 0%, #0f172a 40%, #1e1b4b 100%);
+    background: linear-gradient(165deg, color-mix(in srgb, var(--brand-primary) 35%, #020617) 0%, #0f172a 50%, #020617 100%);
 }
 
 html[data-theme="dark"][data-admin-theme="elegant"] h2,
 html[data-theme="dark"][data-admin-theme="elegant"] .dashboard-title {
-    color: #99f6e4;
+    color: var(--primary-light);
+}
+
+/* Toast: immer lesbar (unabhängig vom Theme-Text) */
+.toast-message {
+    color: #f8fafc !important;
+}
+
+.toast-icon {
+    color: #ffffff;
+}
+
+.toast-close {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
+.toast-close:hover {
+    color: #ffffff !important;
+}
+
+.toast.success {
+    border-left-color: var(--brand-primary, var(--primary));
 }
