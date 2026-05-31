@@ -959,7 +959,7 @@
                     {% if contact_email or contact_phone %}
                     {{ contact_text or 'Bei Fragen bin ich direkt erreichbar:' }}
                     {% if contact_email %}
-                        via E-Mail: <strong><a href="mailto:{{ contact_email }}" style="color:inherit;">{{ contact_email }}</a></strong>
+                        via E-Mail: <strong><a href="mailto:{{ contact_email }}">{{ contact_email }}</a></strong>
                         {% if contact_phone %} und telefonisch unter: <strong>{{ contact_phone }}</strong>{% endif %}
                     {% elif contact_phone %}
                         telefonisch unter: <strong>{{ contact_phone }}</strong>

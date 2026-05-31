@@ -3175,12 +3175,13 @@ footer {
     margin: 2rem auto;
     max-width: 800px;
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: var(--radius-xl);
     padding: 1.5rem 2rem;
     box-shadow: var(--shadow-md), 0 0 30px rgba(var(--primary-rgb), 0.15);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    color: #ffffff;
 }
 
 .contact-content {
@@ -3202,14 +3203,29 @@ footer {
 
 .contact-text p {
     margin: 0;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.95);
     font-size: 1rem;
     line-height: 1.6;
 }
 
 .contact-text strong {
-    color: var(--primary);
+    color: #ffffff;
     font-weight: 600;
+}
+
+.contact-text a,
+.contact-text a:visited {
+    color: #ffffff;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.contact-text a:hover {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.contact-text small {
+    color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Responsive: Mobile */
@@ -4028,12 +4044,20 @@ footer {
 
 /* Kontakt-Kachel im Dark Mode */
 [data-theme="dark"] .contact-info-box {
-    background: var(--bg-secondary) !important;
-    border-color: var(--primary-dark) !important;
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary)) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
     box-shadow: var(--shadow-lg);
+    color: #ffffff;
 }
-[data-theme="dark"] .contact-text strong {
-    color: var(--primary) !important;
+
+[data-theme="dark"] .contact-text p {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="dark"] .contact-text strong,
+[data-theme="dark"] .contact-text a,
+[data-theme="dark"] .contact-text a:visited {
+    color: #ffffff !important;
 }
 
 /* ===== Kompakte Slot-Darstellung ===== */

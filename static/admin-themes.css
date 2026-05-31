@@ -1,6 +1,6 @@
-/* ===== Seiten-Themes (data-admin-theme auf <html>, systemweit) ===== */
+/* ===== Seiten-Themes: komplette visuelle Welten (data-admin-theme auf <html>) ===== */
 
-/* Theme-Auswahl */
+/* ── Theme-Auswahl UI ── */
 .admin-theme-bar {
     display: flex;
     flex-wrap: wrap;
@@ -56,27 +56,33 @@
 }
 
 .admin-theme-swatch {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
     flex-shrink: 0;
 }
 
 .admin-theme-swatch--classic {
-    background: linear-gradient(135deg, #e91e63 50%, #fce4ec 50%);
+    background: linear-gradient(135deg, #e91e63 40%, #fff 40% 60%, #475569 60%);
+    border-radius: 0;
+    box-shadow: 2px 2px 0 #475569;
 }
 
 .admin-theme-swatch--professional {
-    background: linear-gradient(135deg, #1e40af 50%, #dbeafe 50%);
+    background: linear-gradient(180deg, #1e40af 0%, #dbeafe 100%);
+    border-radius: 2px;
 }
 
 .admin-theme-swatch--minimal {
-    background: linear-gradient(135deg, #27272a 50%, #fafafa 50%);
+    background: #fff;
+    border: 2px solid #18181b;
+    border-radius: 0;
 }
 
 .admin-theme-swatch--elegant {
-    background: linear-gradient(135deg, #0f766e 50%, #ccfbf1 50%);
+    background: linear-gradient(135deg, #ccfbf1, #ede9fe);
+    border-radius: 50%;
 }
 
 .nav-admin-theme {
@@ -113,88 +119,826 @@
     }
 }
 
-/* ── 1. Klassisch: Standard (keine Overrides) ── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. KLASSISCH – Neo-Brutalist Pop (knallig, versetzte Schatten, Poppins)
+   ═══════════════════════════════════════════════════════════════════════════ */
+html[data-admin-theme="classic"] {
+    --font-heading: 'Poppins', sans-serif;
+    --font-body: 'Poppins', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --shadow-sm: 3px 3px 0 rgba(71, 85, 105, 0.85);
+    --shadow: 5px 5px 0 rgba(71, 85, 105, 0.85);
+    --shadow-md: 7px 7px 0 rgba(71, 85, 105, 0.85);
+    --shadow-lg: 9px 9px 0 rgba(71, 85, 105, 0.85);
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --radius-2xl: 22px;
+}
 
-/* ── 2. Professionell: Corporate Blue, weiche Schatten ── */
+html[data-admin-theme="classic"] body {
+    background-color: var(--bg-secondary);
+    background-image: radial-gradient(circle at 20% 20%, rgba(var(--primary-rgb), 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(var(--primary-rgb), 0.06) 0%, transparent 40%);
+}
+
+html[data-admin-theme="classic"] .bg-glow-orb {
+    opacity: 1;
+}
+
+html[data-admin-theme="classic"] .top-nav {
+    border-bottom: 3px solid var(--border);
+    box-shadow: 0 4px 0 var(--border);
+}
+
+html[data-admin-theme="classic"] .top-nav nav a:hover {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    transform: translate(-2px, -2px);
+    box-shadow: 3px 3px 0 var(--border);
+}
+
+html[data-admin-theme="classic"] .btn {
+    border-width: 2px;
+    border-color: var(--border);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+}
+
+html[data-admin-theme="classic"] .btn-primary:hover,
+html[data-admin-theme="classic"] .btn-secondary:hover {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 transparent;
+}
+
+html[data-admin-theme="classic"] .dashboard-card,
+html[data-admin-theme="classic"] .week-overview,
+html[data-admin-theme="classic"] .login-box,
+html[data-admin-theme="classic"] .admin-card,
+html[data-admin-theme="classic"] .admin-section-modern,
+html[data-admin-theme="classic"] .date-selector,
+html[data-admin-theme="classic"] .modal-content {
+    border-width: 2px;
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+}
+
+html[data-admin-theme="classic"] .dashboard-card:hover,
+html[data-admin-theme="classic"] .admin-card:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary);
+}
+
+html[data-admin-theme="classic"] .slot-card {
+    border-width: 2px;
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-sm);
+}
+
+html[data-admin-theme="classic"] .slot-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: var(--shadow);
+}
+
+html[data-admin-theme="classic"] .slot-course-name {
+    font-style: italic;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+html[data-admin-theme="classic"] .week-table th {
+    background: var(--primary);
+    color: #fff;
+    border: 2px solid var(--border);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+}
+
+html[data-admin-theme="classic"] .week-table td {
+    border: 1px solid var(--border-light);
+}
+
+html[data-admin-theme="classic"] .selected-date-info h3 {
+    border: 2px solid var(--border);
+    box-shadow: var(--shadow-md);
+}
+
+html[data-admin-theme="classic"] .dashboard-title,
+html[data-admin-theme="classic"] h2,
+html[data-admin-theme="classic"] h3 {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. PROFESSIONELL – Corporate Grid (Inter, Raster, sachlich, blau)
+   ═══════════════════════════════════════════════════════════════════════════ */
 html[data-admin-theme="professional"] {
+    --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'Inter', monospace;
     --primary: #1e40af;
     --primary-rgb: 30, 64, 175;
     --primary-dark: #1e3a8a;
-    --primary-light: #dbeafe;
-    --accent: #059669;
-    --accent-warn: #d97706;
-    --border: #cbd5e1;
-    --border-light: #e2e8f0;
-    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-    --shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-    --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.1);
-    --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.12);
-    --radius-sm: 6px;
-    --radius: 8px;
-    --radius-lg: 10px;
-    --radius-xl: 12px;
-}
-
-html[data-admin-theme="professional"] .admin-card:hover,
-html[data-admin-theme="professional"] .admin-card {
-    transform: none;
-}
-
-html[data-admin-theme="professional"] .bg-glow-orb {
-    opacity: 0.35;
-}
-
-html[data-theme="dark"][data-admin-theme="professional"] {
-    --primary: #60a5fa;
-    --primary-rgb: 96, 165, 250;
-    --primary-dark: #3b82f6;
-    --primary-light: #1e3a5f;
-    --border: #334155;
-    --border-light: #1e293b;
-}
-
-/* ── 3. Minimal: Flach, monochrom, ohne Neo-Brutalismus ── */
-html[data-admin-theme="minimal"] {
-    --primary: #18181b;
-    --primary-rgb: 24, 24, 27;
-    --primary-dark: #09090b;
-    --primary-light: #f4f4f5;
-    --accent: #52525b;
-    --accent-warn: #a16207;
-    --text-primary: #09090b;
-    --text-secondary: #52525b;
-    --text-tertiary: #a1a1aa;
-    --bg-secondary: #fafafa;
-    --bg-tertiary: #f4f4f5;
-    --border: #d4d4d8;
-    --border-light: #e4e4e7;
-    --shadow-sm: none;
-    --shadow: none;
-    --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --primary-light: #eff6ff;
+    --accent: #047857;
+    --accent-warn: #b45309;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-tertiary: #94a3b8;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f1f5f9;
+    --bg-tertiary: #e2e8f0;
+    --bg-card: #ffffff;
+    --border: #94a3b8;
+    --border-light: #cbd5e1;
+    --login-gradient: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+    --shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.1);
     --radius-sm: 4px;
     --radius: 6px;
     --radius-lg: 8px;
     --radius-xl: 10px;
+    --radius-2xl: 12px;
 }
 
-html[data-admin-theme="minimal"] .admin-card,
-html[data-admin-theme="minimal"] .admin-section-modern,
-html[data-admin-theme="minimal"] .admin-theme-bar {
+html[data-admin-theme="professional"] body {
+    background-color: #f1f5f9;
+    background-image: linear-gradient(#e2e8f0 1px, transparent 1px),
+        linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+    background-size: 20px 20px;
+    letter-spacing: 0;
+    line-height: 1.5;
+}
+
+html[data-admin-theme="professional"] .bg-glow-orb {
+    display: none;
+}
+
+html[data-admin-theme="professional"] .top-nav {
+    background: #fff;
+    border-bottom: none;
+    box-shadow: 0 1px 0 #cbd5e1, 0 4px 12px rgba(15, 23, 42, 0.06);
+    padding: 0.75rem 0;
+}
+
+html[data-admin-theme="professional"] .top-nav {
+    position: sticky;
+    overflow: visible;
+}
+
+html[data-admin-theme="professional"] .top-nav::after {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, #1e40af, #3b82f6);
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+html[data-admin-theme="professional"] .top-nav nav a {
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.8125rem;
+    text-transform: none;
+}
+
+html[data-admin-theme="professional"] .top-nav nav a:hover {
+    transform: none;
+    background: #eff6ff;
+    color: #1e40af;
+}
+
+html[data-admin-theme="professional"] .user-info {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+}
+
+html[data-admin-theme="professional"] .btn {
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: #cbd5e1;
+    box-shadow: none;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+html[data-admin-theme="professional"] .btn-primary {
+    background: #1e40af;
+    border-color: #1e3a8a;
+}
+
+html[data-admin-theme="professional"] .btn-primary:hover,
+html[data-admin-theme="professional"] .btn-secondary:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.25);
+}
+
+html[data-admin-theme="professional"] .dashboard-card,
+html[data-admin-theme="professional"] .week-overview,
+html[data-admin-theme="professional"] .login-box,
+html[data-admin-theme="professional"] .admin-card,
+html[data-admin-theme="professional"] .admin-section-modern,
+html[data-admin-theme="professional"] .date-selector {
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    transform: none;
+}
+
+html[data-admin-theme="professional"] .dashboard-card:hover,
+html[data-admin-theme="professional"] .admin-card:hover {
+    transform: none;
+    border-color: #1e40af;
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.12);
+}
+
+html[data-admin-theme="professional"] .dashboard-card .card-icon {
+    border-radius: 4px;
+    background: #1e40af;
+}
+
+html[data-admin-theme="professional"] .week-table {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+html[data-admin-theme="professional"] .week-table th {
+    background: #f8fafc;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #1e40af;
+}
+
+html[data-admin-theme="professional"] .week-table td {
+    background: #fff;
+    border-color: #e2e8f0;
+}
+
+html[data-admin-theme="professional"] .week-table tbody tr:nth-child(even) td {
+    background: #f8fafc;
+}
+
+html[data-admin-theme="professional"] .slot-card {
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    box-shadow: none;
+    background: #fff;
+}
+
+html[data-admin-theme="professional"] .slot-card:hover {
+    transform: none;
+    border-color: #1e40af;
+    box-shadow: inset 0 0 0 1px #1e40af;
+}
+
+html[data-admin-theme="professional"] .slot-course-name {
+    font-style: normal;
+    font-weight: 600;
+    text-transform: none;
+    color: #0f172a;
+    font-size: 0.75rem;
+}
+
+html[data-admin-theme="professional"] .selected-date-info h3 {
+    background: #1e40af;
+    border-radius: 6px;
     box-shadow: none;
 }
 
-html[data-admin-theme="minimal"] .admin-card:hover {
-    transform: none;
-    box-shadow: var(--shadow-md);
+html[data-admin-theme="professional"] .login-box {
+    border-radius: 8px;
 }
 
-html[data-admin-theme="minimal"] .stat-card {
-    background: var(--text-primary);
+html[data-admin-theme="professional"] .dashboard-title,
+html[data-admin-theme="professional"] h2 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+}
+
+html[data-admin-theme="professional"] .week-dates {
+    background: #eff6ff;
+    color: #1e40af;
+    border-radius: 4px;
+    border: 1px solid #bfdbfe;
+}
+
+html[data-admin-theme="professional"] .form-group input,
+html[data-admin-theme="professional"] .form-group select {
+    border-radius: 4px;
+    border-color: #cbd5e1;
+}
+
+html[data-admin-theme="professional"] .message {
+    border-radius: 4px;
+    border-left-width: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. MINIMAL – Swiss / Editorial (scharf, schwarz-weiß, Mono-Akzente)
+   ═══════════════════════════════════════════════════════════════════════════ */
+html[data-admin-theme="minimal"] {
+    --font-heading: 'DM Sans', -apple-system, sans-serif;
+    --font-body: 'DM Sans', -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --primary: #000000;
+    --primary-rgb: 0, 0, 0;
+    --primary-dark: #000000;
+    --primary-light: #f4f4f5;
+    --accent: #000000;
+    --accent-warn: #000000;
+    --text-primary: #000000;
+    --text-secondary: #3f3f46;
+    --text-tertiary: #71717a;
+    --bg-primary: #ffffff;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #fafafa;
+    --bg-card: #ffffff;
+    --border: #000000;
+    --border-light: #d4d4d8;
+    --login-gradient: #ffffff;
+    --shadow-sm: none;
+    --shadow: none;
+    --shadow-md: none;
+    --shadow-lg: none;
+    --radius-sm: 0;
+    --radius: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
+    --radius-2xl: 0;
+}
+
+html[data-admin-theme="minimal"] body {
+    background: #fff;
+    letter-spacing: 0.01em;
+    line-height: 1.55;
 }
 
 html[data-admin-theme="minimal"] .bg-glow-orb {
     display: none;
+}
+
+html[data-admin-theme="minimal"] .top-nav {
+    background: #fff;
+    border-bottom: 2px solid #000;
+    box-shadow: none;
+    padding: 0.85rem 0;
+}
+
+html[data-admin-theme="minimal"] .top-nav nav a {
+    border-radius: 0;
+    font-weight: 500;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.35rem 0.65rem;
+}
+
+html[data-admin-theme="minimal"] .top-nav nav a:hover {
+    transform: none;
+    background: #000;
+    color: #fff;
+}
+
+html[data-admin-theme="minimal"] .user-info {
+    background: transparent;
+    border: 1px solid #000;
+    border-radius: 0;
+}
+
+html[data-admin-theme="minimal"] .btn {
+    border-radius: 0;
+    border: 2px solid #000;
+    box-shadow: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.72rem;
+}
+
+html[data-admin-theme="minimal"] .btn-primary {
+    background: #000;
+    color: #fff;
+}
+
+html[data-admin-theme="minimal"] .btn-primary:hover {
+    background: #fff;
+    color: #000;
+    transform: none;
+    box-shadow: none;
+}
+
+html[data-admin-theme="minimal"] .btn-secondary:hover {
+    transform: none;
+    background: #f4f4f5;
+    box-shadow: none;
+}
+
+html[data-admin-theme="minimal"] .dashboard-card,
+html[data-admin-theme="minimal"] .week-overview,
+html[data-admin-theme="minimal"] .login-box,
+html[data-admin-theme="minimal"] .admin-card,
+html[data-admin-theme="minimal"] .admin-section-modern,
+html[data-admin-theme="minimal"] .date-selector,
+html[data-admin-theme="minimal"] .modal-content,
+html[data-admin-theme="minimal"] .admin-theme-bar {
+    border-radius: 0;
+    border: 2px solid #000;
+    box-shadow: none;
+}
+
+html[data-admin-theme="minimal"] .dashboard-card:hover,
+html[data-admin-theme="minimal"] .admin-card:hover {
+    transform: none;
+    background: #000;
+    color: #fff;
+}
+
+html[data-admin-theme="minimal"] .dashboard-card:hover .card-text,
+html[data-admin-theme="minimal"] .dashboard-card:hover .dashboard-card-title,
+html[data-admin-theme="minimal"] .admin-card:hover .card-title,
+html[data-admin-theme="minimal"] .admin-card:hover .card-desc {
+    color: #fff;
+}
+
+html[data-admin-theme="minimal"] .dashboard-card .card-icon {
+    border-radius: 0;
+    background: #000;
+}
+
+html[data-admin-theme="minimal"] .week-table th {
+    background: #000;
+    color: #fff;
+    border: 1px solid #000;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+html[data-admin-theme="minimal"] .week-table td {
+    border: 1px solid #d4d4d8;
+    border-radius: 0;
+}
+
+html[data-admin-theme="minimal"] .slot-card {
+    border-radius: 0;
+    border: 1px solid #000;
+    box-shadow: none;
+    background: #fff;
+    min-height: 58px;
+}
+
+html[data-admin-theme="minimal"] .slot-card:hover {
+    transform: none;
+    background: #fafafa;
+    box-shadow: none;
+}
+
+html[data-admin-theme="minimal"] .slot-course-name {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.65rem;
+    color: #000;
+}
+
+html[data-admin-theme="minimal"] .selected-date-info h3 {
+    background: #000;
+    color: #fff;
+    border-radius: 0;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+}
+
+html[data-admin-theme="minimal"] .login-box {
+    border: 3px solid #000;
+}
+
+html[data-admin-theme="minimal"] .login-logo img {
+    border-radius: 0;
+    box-shadow: none;
+    border: 2px solid #000;
+}
+
+html[data-admin-theme="minimal"] h1,
+html[data-admin-theme="minimal"] h2,
+html[data-admin-theme="minimal"] h3,
+html[data-admin-theme="minimal"] .dashboard-title {
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+}
+
+html[data-admin-theme="minimal"] .week-dates {
+    background: #fff;
+    color: #000;
+    border: 1px solid #000;
+    border-radius: 0;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+html[data-admin-theme="minimal"] .form-group input,
+html[data-admin-theme="minimal"] .form-group select {
+    border-radius: 0;
+    border: 2px solid #000;
+}
+
+html[data-admin-theme="minimal"] .form-group input:focus {
+    box-shadow: none;
+    outline: 2px solid #000;
+    outline-offset: 2px;
+}
+
+html[data-admin-theme="minimal"] .stat-card {
+    background: #000;
+    border-radius: 0;
+}
+
+html[data-admin-theme="minimal"] .theme-switch {
+    border-radius: 0;
+    border: 2px solid #000;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. ELEGANT – Editorial Luxury (Serif, Glass, weiche Verläufe)
+   ═══════════════════════════════════════════════════════════════════════════ */
+html[data-admin-theme="elegant"] {
+    --font-heading: 'Playfair Display', Georgia, serif;
+    --font-body: 'Source Sans 3', -apple-system, sans-serif;
+    --font-mono: 'Source Sans 3', sans-serif;
+    --primary: #0f766e;
+    --primary-rgb: 15, 118, 110;
+    --primary-dark: #115e59;
+    --primary-light: rgba(204, 251, 241, 0.65);
+    --accent: #7c3aed;
+    --accent-warn: #ca8a04;
+    --text-primary: #134e4a;
+    --text-secondary: #64748b;
+    --text-tertiary: #94a3b8;
+    --bg-primary: rgba(255, 255, 255, 0.72);
+    --bg-secondary: transparent;
+    --bg-tertiary: rgba(255, 255, 255, 0.5);
+    --bg-card: rgba(255, 255, 255, 0.65);
+    --border: rgba(15, 118, 110, 0.25);
+    --border-light: rgba(15, 118, 110, 0.12);
+    --login-gradient: linear-gradient(160deg, #f0fdfa 0%, #f5f3ff 50%, #faf5ff 100%);
+    --shadow-sm: 0 4px 24px rgba(15, 118, 110, 0.08);
+    --shadow: 0 8px 32px rgba(15, 118, 110, 0.1);
+    --shadow-md: 0 12px 40px rgba(15, 118, 110, 0.12);
+    --shadow-lg: 0 20px 60px rgba(15, 118, 110, 0.15);
+    --radius-sm: 12px;
+    --radius: 16px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+    --radius-2xl: 36px;
+}
+
+html[data-admin-theme="elegant"] body {
+    background: linear-gradient(165deg, #f0fdfa 0%, #ecfeff 25%, #f5f3ff 60%, #fdf4ff 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    letter-spacing: 0.01em;
+}
+
+html[data-admin-theme="elegant"] .bg-glow-orb.orb-1 {
+    background: radial-gradient(circle, rgba(20, 184, 166, 0.35) 0%, transparent 65%);
+    width: 480px;
+    height: 480px;
+}
+
+html[data-admin-theme="elegant"] .bg-glow-orb.orb-2 {
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.25) 0%, transparent 65%);
+}
+
+html[data-admin-theme="elegant"] .top-nav {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border-bottom: 1px solid rgba(15, 118, 110, 0.15);
+    box-shadow: 0 4px 30px rgba(15, 118, 110, 0.06);
+}
+
+html[data-admin-theme="elegant"] .top-nav nav a {
+    border-radius: 999px;
+    font-weight: 500;
+}
+
+html[data-admin-theme="elegant"] .top-nav nav a:hover {
+    transform: none;
+    background: rgba(204, 251, 241, 0.6);
+    color: #0f766e;
+}
+
+html[data-admin-theme="elegant"] .user-info {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 118, 110, 0.15);
+    border-radius: 999px;
+}
+
+html[data-admin-theme="elegant"] .btn {
+    border-radius: 999px;
+    border: 1px solid transparent;
+    box-shadow: 0 4px 14px rgba(15, 118, 110, 0.2);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+html[data-admin-theme="elegant"] .btn-primary {
+    background: linear-gradient(135deg, #0f766e, #14b8a6);
+    border: none;
+}
+
+html[data-admin-theme="elegant"] .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 118, 110, 0.35);
+}
+
+html[data-admin-theme="elegant"] .btn-secondary {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(15, 118, 110, 0.2);
+}
+
+html[data-admin-theme="elegant"] .btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+html[data-admin-theme="elegant"] .dashboard-card,
+html[data-admin-theme="elegant"] .week-overview,
+html[data-admin-theme="elegant"] .login-box,
+html[data-admin-theme="elegant"] .admin-card,
+html[data-admin-theme="elegant"] .admin-section-modern,
+html[data-admin-theme="elegant"] .date-selector,
+html[data-admin-theme="elegant"] .modal-content {
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(12px) saturate(1.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-lg);
+}
+
+html[data-admin-theme="elegant"] .dashboard-card:hover,
+html[data-admin-theme="elegant"] .admin-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(15, 118, 110, 0.3);
+}
+
+html[data-admin-theme="elegant"] .dashboard-card .card-icon {
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0f766e, #2dd4bf);
+}
+
+html[data-admin-theme="elegant"] .week-table th {
+    background: rgba(15, 118, 110, 0.12);
+    color: #115e59;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+}
+
+html[data-admin-theme="elegant"] .week-table td {
+    border-color: rgba(15, 118, 110, 0.1);
+    background: rgba(255, 255, 255, 0.4);
+}
+
+html[data-admin-theme="elegant"] .slot-card {
+    border-radius: var(--radius);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 16px rgba(15, 118, 110, 0.08);
+}
+
+html[data-admin-theme="elegant"] .slot-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 28px rgba(15, 118, 110, 0.15);
+    border-color: rgba(15, 118, 110, 0.4);
+}
+
+html[data-admin-theme="elegant"] .slot-course-name {
+    font-family: var(--font-heading);
+    font-style: italic;
+    font-weight: 600;
+    text-transform: none;
+    color: #115e59;
+    font-size: 0.85rem;
+}
+
+html[data-admin-theme="elegant"] .selected-date-info h3 {
+    background: linear-gradient(135deg, #0f766e 0%, #6366f1 100%);
+    border-radius: var(--radius-xl);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+}
+
+html[data-admin-theme="elegant"] .login-box {
+    padding: 3.5rem;
+    border-radius: var(--radius-2xl);
+}
+
+html[data-admin-theme="elegant"] .login-box h2 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 2rem;
+}
+
+html[data-admin-theme="elegant"] .login-logo img {
+    border-radius: 50%;
+    box-shadow: 0 12px 40px rgba(15, 118, 110, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.9);
+}
+
+html[data-admin-theme="elegant"] h1,
+html[data-admin-theme="elegant"] h2,
+html[data-admin-theme="elegant"] h3,
+html[data-admin-theme="elegant"] .dashboard-title,
+html[data-admin-theme="elegant"] .admin-header h2 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #115e59;
+}
+
+html[data-admin-theme="elegant"] .week-dates {
+    background: rgba(204, 251, 241, 0.5);
+    color: #0f766e;
+    border-radius: 999px;
+    border: 1px solid rgba(15, 118, 110, 0.2);
+}
+
+html[data-admin-theme="elegant"] .week-nav-arrow {
+    border-radius: 50%;
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+html[data-admin-theme="elegant"] .form-group input,
+html[data-admin-theme="elegant"] .form-group select {
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(15, 118, 110, 0.2);
+}
+
+html[data-admin-theme="elegant"] .stat-card {
+    background: linear-gradient(135deg, #0f766e 0%, #6366f1 100%);
+    border-radius: var(--radius-xl);
+}
+
+html[data-admin-theme="elegant"] main.container {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Dark Mode × Theme ── */
+html[data-theme="dark"][data-admin-theme="professional"] {
+    --primary: #60a5fa;
+    --primary-rgb: 96, 165, 250;
+    --primary-dark: #3b82f6;
+    --primary-light: #1e293b;
+    --text-primary: #f1f5f9;
+    --bg-primary: #0f172a;
+    --bg-secondary: #0f172a;
+    --bg-tertiary: #1e293b;
+    --bg-card: #1e293b;
+    --border: #475569;
+    --border-light: #334155;
+}
+
+html[data-theme="dark"][data-admin-theme="professional"] body {
+    background-color: #0f172a;
+    background-image: linear-gradient(#1e293b 1px, transparent 1px),
+        linear-gradient(90deg, #1e293b 1px, transparent 1px);
 }
 
 html[data-theme="dark"][data-admin-theme="minimal"] {
@@ -205,73 +949,40 @@ html[data-theme="dark"][data-admin-theme="minimal"] {
     --text-primary: #fafafa;
     --text-secondary: #a1a1aa;
     --bg-primary: #09090b;
-    --bg-secondary: #18181b;
-    --bg-tertiary: #27272a;
-    --border: #3f3f46;
-    --border-light: #27272a;
+    --bg-secondary: #09090b;
+    --bg-tertiary: #18181b;
+    --bg-card: #09090b;
+    --border: #fafafa;
+    --border-light: #3f3f46;
 }
 
-html[data-theme="dark"][data-admin-theme="minimal"] .stat-card {
-    background: #fafafa;
-    color: #09090b;
+html[data-theme="dark"][data-admin-theme="minimal"] body {
+    background: #09090b;
 }
 
-/* ── 4. Elegant: Teal / Slate, ruhig & hochwertig ── */
-html[data-admin-theme="elegant"] {
-    --primary: #0f766e;
-    --primary-rgb: 15, 118, 110;
-    --primary-dark: #115e59;
-    --primary-light: #ccfbf1;
-    --accent: #6366f1;
-    --accent-warn: #ca8a04;
-    --text-primary: #134e4a;
-    --text-secondary: #475569;
-    --text-tertiary: #64748b;
-    --bg-secondary: #f0fdfa;
-    --bg-tertiary: #ecfeff;
-    --border: #99f6e4;
-    --border-light: #ccfbf1;
-    --shadow-sm: 0 1px 3px rgba(15, 118, 110, 0.08);
-    --shadow: 0 4px 12px rgba(15, 118, 110, 0.1);
-    --shadow-md: 0 6px 20px rgba(15, 118, 110, 0.12);
-    --shadow-lg: 0 10px 32px rgba(15, 118, 110, 0.14);
-    --radius-sm: 10px;
-    --radius: 14px;
-    --radius-lg: 18px;
-    --radius-xl: 22px;
-}
-
-html[data-admin-theme="elegant"] .admin-header h2 {
-    font-weight: 600;
-    letter-spacing: -0.03em;
-}
-
-html[data-admin-theme="elegant"] .stat-card {
-    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
-}
-
-html[data-admin-theme="elegant"] .bg-glow-orb.orb-1 {
-    background: radial-gradient(circle, rgba(20, 184, 166, 0.25) 0%, transparent 70%);
-}
-
-html[data-admin-theme="elegant"] .bg-glow-orb.orb-2 {
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+html[data-theme="dark"][data-admin-theme="minimal"] .top-nav,
+html[data-theme="dark"][data-admin-theme="minimal"] .dashboard-card,
+html[data-theme="dark"][data-admin-theme="minimal"] .slot-card {
+    border-color: #fafafa;
 }
 
 html[data-theme="dark"][data-admin-theme="elegant"] {
     --primary: #2dd4bf;
     --primary-rgb: 45, 212, 191;
     --primary-dark: #14b8a6;
-    --primary-light: #134e4a;
+    --primary-light: rgba(19, 78, 74, 0.5);
     --text-primary: #ecfdf5;
     --text-secondary: #99f6e4;
-    --bg-primary: #042f2e;
-    --bg-secondary: #064e3b;
-    --bg-tertiary: #115e59;
-    --border: #0f766e;
-    --border-light: #134e4a;
+    --bg-primary: rgba(4, 47, 46, 0.75);
+    --bg-card: rgba(4, 47, 46, 0.6);
+    --border: rgba(45, 212, 191, 0.3);
 }
 
-html[data-theme="dark"][data-admin-theme="elegant"] .stat-card {
-    background: linear-gradient(135deg, #115e59 0%, #0d9488 100%);
+html[data-theme="dark"][data-admin-theme="elegant"] body {
+    background: linear-gradient(165deg, #042f2e 0%, #0f172a 40%, #1e1b4b 100%);
+}
+
+html[data-theme="dark"][data-admin-theme="elegant"] h2,
+html[data-theme="dark"][data-admin-theme="elegant"] .dashboard-title {
+    color: #99f6e4;
 }
