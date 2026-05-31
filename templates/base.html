@@ -9,6 +9,10 @@
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const theme = savedTheme || (prefersDark ? 'dark' : 'light');
             document.documentElement.setAttribute('data-theme', theme);
+            {% if is_admin_page %}
+            const adminTheme = {{ admin_theme|tojson }};
+            document.documentElement.setAttribute('data-admin-theme', adminTheme);
+            {% endif %}
         })();
     </script>
     <meta charset="UTF-8">
@@ -19,6 +23,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260529c">
+    {% if is_admin_page %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260531a">
+    {% endif %}
     <meta http-equiv="refresh" content="600">
 
     <!-- ── Dynamisches Branding aus der Datenbank ── -->
@@ -236,6 +243,12 @@
 
                     {% if session.user_role == 'admin' %}
                     <a href="{{ url_for('admin') }}">Admin</a>
+                    {% endif %}
+
+                    {% if is_admin_page %}
+                    {% with compact=true %}
+                    {% include 'partials/admin_theme_picker.html' %}
+                    {% endwith %}
                     {% endif %}
 
                     <!-- Theme Switch Toggle -->
@@ -488,7 +501,7 @@
             if (m) m.style.display = "none";
         }
 
-        // Theme Switch
+        // Theme Switch (Hell/Dunkel)
         function toggleTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -500,6 +513,72 @@
             if (switchEl) {
                 switchEl.checked = newTheme === 'dark';
             }
+        }
+
+        // Admin-Panel Design (4 Varianten, in DB gespeichert)
+        const ADMIN_THEMES = ['classic', 'professional', 'minimal', 'elegant'];
+
+        function syncAdminThemeButtons(theme) {
+            document.querySelectorAll('.admin-theme-btn').forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-admin-theme') === theme);
+                btn.disabled = false;
+            });
+        }
+
+        function setAdminTheme(themeId, options) {
+            const opts = options || {};
+            const persist = opts.persist !== false;
+            const theme = ADMIN_THEMES.includes(themeId) ? themeId : 'classic';
+            document.documentElement.setAttribute('data-admin-theme', theme);
+            syncAdminThemeButtons(theme);
+
+            if (!persist) {
+                return;
+            }
+
+            document.querySelectorAll('.admin-theme-btn').forEach(function(btn) {
+                btn.disabled = true;
+            });
+
+            fetch('/api/admin/theme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    theme: theme,
+                    csrf_token: '{{ csrf_token }}'
+                })
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    if (typeof showToast === 'function') {
+                        showToast('Admin-Design gespeichert.', 'success', 2500);
+                    }
+                } else if (typeof showToast === 'function') {
+                    showToast(data.error || 'Speichern fehlgeschlagen.', 'error');
+                }
+            })
+            .catch(function() {
+                if (typeof showToast === 'function') {
+                    showToast('Speichern fehlgeschlagen.', 'error');
+                }
+            })
+            .finally(function() {
+                syncAdminThemeButtons(theme);
+            });
+        }
+
+        function initAdminThemePicker() {
+            setAdminTheme({{ admin_theme|tojson }}, { persist: false });
+            document.querySelectorAll('.admin-theme-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const next = btn.getAttribute('data-admin-theme');
+                    if (document.documentElement.getAttribute('data-admin-theme') === next) {
+                        return;
+                    }
+                    setAdminTheme(next);
+                });
+            });
         }
 
         // Mobile Menu Toggle
@@ -607,6 +686,10 @@
                 const currentTheme = document.documentElement.getAttribute('data-theme');
                 themeSwitch.checked = currentTheme === 'dark';
             }
+
+            {% if is_admin_page %}
+            initAdminThemePicker();
+            {% endif %}
 
             {% if session.user_role == 'admin' %}
             updateUnreadCount();

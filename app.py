@@ -515,6 +515,40 @@ def inject_dynamic_config():
     return dict(max_students=ms)
 
 
+ADMIN_THEME_IDS = frozenset({"classic", "professional", "minimal", "elegant"})
+
+
+def _resolve_admin_theme():
+    """Gespeichertes Admin-Panel-Design aus der Datenbank."""
+    from system_config import get_config
+
+    theme = get_config("admin_theme", "classic")
+    return theme if theme in ADMIN_THEME_IDS else "classic"
+
+
+def _is_admin_page():
+    """True auf Admin-Verwaltungsseiten (für Admin-Theme-Auswahl)."""
+    if session.get("user_role") != "admin":
+        return False
+    ep = request.endpoint or ""
+    if ep in ("manage_slots", "setup.reopen"):
+        return True
+    if ep.startswith("admin_dyn."):
+        return True
+    if ep == "admin" or ep.startswith("admin_"):
+        return True
+    return False
+
+
+@app.context_processor
+def inject_admin_page():
+    is_ap = _is_admin_page()
+    return dict(
+        is_admin_page=is_ap,
+        admin_theme=_resolve_admin_theme() if is_ap else "classic",
+    )
+
+
 # Hilfsfunktion: Zeitzone Europe/Berlin
 def get_berlin_tz():
     """Gibt die Zeitzone Europe/Berlin zurück"""
@@ -3990,6 +4024,27 @@ def api_mark_all_notifications_read():
 
     success = mark_all_notifications_as_read(recipient_role="admin")
     return jsonify({"success": success})
+
+
+@app.route("/api/admin/theme", methods=["POST"])
+@admin_required
+def api_save_admin_theme():
+    """Speichert das Admin-Panel-Design dauerhaft in der Datenbank."""
+    payload = request.get_json(silent=True) or {}
+    csrf_token = payload.get("csrf_token", "")
+    if not validate_csrf_token(csrf_token):
+        return jsonify({"success": False, "error": "Ungültiges Sicherheitstoken."}), 403
+
+    theme = payload.get("theme", "classic")
+    if theme not in ADMIN_THEME_IDS:
+        return jsonify({"success": False, "error": "Unbekanntes Design."}), 400
+
+    from system_config import set_config
+
+    if not set_config("admin_theme", theme, category="appearance"):
+        return jsonify({"success": False, "error": "Speichern fehlgeschlagen."}), 500
+
+    return jsonify({"success": True, "theme": theme})
 
 
 # ── Admin CMS: Inhalte bearbeiten ────────────────────────────────────────────
