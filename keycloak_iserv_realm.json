@@ -1,0 +1,78 @@
+{
+  "realm": "iserv",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "multisystem-client",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "my-secret-key",
+      "redirectUris": [
+        "*"
+      ],
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "protocolMappers": [
+        {
+          "name": "iserv-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "lehrer"
+      },
+      {
+        "name": "admin"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "mueller",
+      "enabled": true,
+      "email": "mueller@schule.de",
+      "firstName": "Herr",
+      "lastName": "Müller",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "lehrer"
+      ]
+    },
+    {
+      "username": "alex",
+      "enabled": true,
+      "email": "alex@schule.de",
+      "firstName": "Admin",
+      "lastName": "Alex",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ]
+    }
+  ]
+}

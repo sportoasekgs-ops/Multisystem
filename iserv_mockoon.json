@@ -1,0 +1,202 @@
+{
+  "uuid": "4f18f1a2-3f82-4113-918d-64de2d08a0d1",
+  "lastMigration": 32,
+  "name": "IServ Mock",
+  "endpointPrefix": "",
+  "latency": 0,
+  "port": 3000,
+  "hostname": "0.0.0.0",
+  "folders": [],
+  "routes": [
+    {
+      "uuid": "8b51d8d3-5f04-43cb-98f5-9de8319f6a61",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": ".well-known/openid-configuration",
+      "responses": [
+        {
+          "uuid": "60e1d8d3-5f04-43cb-98f5-9de8319f6a61",
+          "body": "{\n  \"issuer\": \"http://localhost:3000\",\n  \"authorization_endpoint\": \"http://localhost:3000/iserv/oauth/v2/auth\",\n  \"token_endpoint\": \"http://localhost:3000/iserv/oauth/v2/token\",\n  \"userinfo_endpoint\": \"http://localhost:3000/iserv/public/oauth/userinfo\",\n  \"jwks_uri\": \"http://localhost:3000/iserv/oauth/v2/jwks\",\n  \"scopes_supported\": [\"openid\", \"profile\", \"email\", \"roles\", \"groups\", \"iserv:roles\", \"iserv:groups\"],\n  \"response_types_supported\": [\"code\"],\n  \"subject_types_supported\": [\"public\"]\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "2c51d8d3-5f04-43cb-98f5-9de8319f6a62",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "iserv/oauth/v2/auth",
+      "responses": [
+        {
+          "uuid": "11e1d8d3-5f04-43cb-98f5-9de8319f6a62",
+          "body": "",
+          "latency": 0,
+          "statusCode": 302,
+          "label": "Redirect with Auth Code",
+          "headers": [
+            {
+              "key": "Location",
+              "value": "{{queryParam 'redirect_uri'}}?code=mock_auth_code_123&state={{queryParam 'state'}}"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "3d51d8d3-5f04-43cb-98f5-9de8319f6a63",
+      "type": "http",
+      "documentation": "",
+      "method": "post",
+      "endpoint": "iserv/oauth/v2/token",
+      "responses": [
+        {
+          "uuid": "22e1d8d3-5f04-43cb-98f5-9de8319f6a63",
+          "body": "{\n  \"access_token\": \"mock_access_token\",\n  \"token_type\": \"Bearer\",\n  \"expires_in\": 3600,\n  \"id_token\": \"mock_id_token\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    },
+    {
+      "uuid": "4e51d8d3-5f04-43cb-98f5-9de8319f6a64",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "iserv/public/oauth/userinfo",
+      "responses": [
+        {
+          "uuid": "33e1d8d3-5f04-43cb-98f5-9de8319f6a64",
+          "body": "{\n  \"sub\": \"1234567890\",\n  \"name\": \"Herr Müller\",\n  \"email\": \"mueller@schule.de\",\n  \"preferred_username\": \"mueller\",\n  \"roles\": [\n    {\n      \"id\": \"role-lehrer\",\n      \"name\": \"lehrer\",\n      \"displayName\": \"Lehrer\"\n    }\n  ],\n  \"groups\": [\n    {\n      \"id\": \"group-lehrer\",\n      \"name\": \"lehrer\"\n    }\n  ]\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Lehrer User Info",
+          "headers": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true
+        }
+      ],
+      "enabled": true,
+      "responseMode": null
+    }
+  ],
+  "rootChildren": [
+    {
+      "type": "route",
+      "uuid": "8b51d8d3-5f04-43cb-98f5-9de8319f6a61"
+    },
+    {
+      "type": "route",
+      "uuid": "2c51d8d3-5f04-43cb-98f5-9de8319f6a62"
+    },
+    {
+      "type": "route",
+      "uuid": "3d51d8d3-5f04-43cb-98f5-9de8319f6a63"
+    },
+    {
+      "type": "route",
+      "uuid": "4e51d8d3-5f04-43cb-98f5-9de8319f6a64"
+    }
+  ],
+  "proxyMode": false,
+  "proxyHost": "",
+  "proxyRemovePrefix": false,
+  "tlsOptions": {
+    "enabled": false,
+    "type": "CERT",
+    "pfxPath": "",
+    "certPath": "",
+    "keyPath": "",
+    "caPath": "",
+    "passphrase": ""
+  },
+  "cors": true,
+  "headers": [
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
+    },
+    {
+      "key": "Access-Control-Allow-Methods",
+      "value": "GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS"
+    },
+    {
+      "key": "Access-Control-Allow-Headers",
+      "value": "Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With"
+    }
+  ],
+  "proxyReqHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "proxyResHeaders": [
+    {
+      "key": "",
+      "value": ""
+    }
+  ],
+  "data": []
+}

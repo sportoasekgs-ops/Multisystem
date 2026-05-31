@@ -73,9 +73,12 @@ def _fetch_openid_metadata(iserv_domain):
     if not iserv_domain:
         return {}
 
+    iserv_domain_clean = iserv_domain.replace("https://", "").replace("http://", "")
+    base_url = iserv_domain if iserv_domain.startswith("http") else f"https://{iserv_domain}"
+    
     urls = [
-        f"https://{iserv_domain}/.well-known/openid-configuration",
-        f"https://{iserv_domain}/iserv/public/.well-known/openid-configuration",
+        f"{base_url}/.well-known/openid-configuration",
+        f"{base_url}/iserv/public/.well-known/openid-configuration",
     ]
 
     last_error = None
@@ -136,7 +139,7 @@ def init_oauth(app):
         print("=" * 70)
         return oauth, None
 
-    iserv_base_url = f"https://{iserv_domain}"
+    iserv_base_url = iserv_domain if iserv_domain.startswith("http") else f"https://{iserv_domain}"
     requested_scope = _determine_requested_scopes(iserv_domain)
 
     print("=" * 70)
@@ -187,7 +190,7 @@ def reinit_oauth(app, oauth_instance):
             name="iserv",
             client_id=client_id,
             client_secret=client_secret,
-            server_metadata_url=f"https://{iserv_domain}/.well-known/openid-configuration",
+            server_metadata_url=f"{iserv_domain if iserv_domain.startswith('http') else 'https://' + iserv_domain}/.well-known/openid-configuration",
             client_kwargs={"scope": requested_scope},
         )
         print(
