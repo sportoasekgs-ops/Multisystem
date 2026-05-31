@@ -392,11 +392,15 @@ html[data-admin-theme="professional"] .message {
    3. MINIMAL – Swiss / Editorial (scharf, schwarz-weiß, Mono-Akzente)
    ═══════════════════════════════════════════════════════════════════════════ */
 html[data-admin-theme="minimal"] {
+    /* Minimal: nur Primär- + Hintergrundfarbe aus dem CMS (kein Sekundär-Blau) */
+    --primary: var(--brand-primary);
+    --primary-dark: color-mix(in srgb, var(--brand-primary) 78%, #000000);
+    --primary-light: var(--brand-light);
     --font-heading: 'DM Sans', -apple-system, sans-serif;
     --font-body: 'DM Sans', -apple-system, sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
     --accent: var(--brand-primary);
-    --accent-warn: var(--brand-secondary);
+    --accent-warn: color-mix(in srgb, var(--brand-primary) 65%, #b45309);
     --text-primary: #000000;
     --text-secondary: #3f3f46;
     --text-tertiary: #71717a;
@@ -417,21 +421,21 @@ html[data-admin-theme="minimal"] {
     --radius-xl: 0;
     --radius-2xl: 0;
     --info-bg: var(--brand-light);
-    --info-text: var(--brand-secondary);
+    --info-text: var(--primary-dark);
     --info-border: color-mix(in srgb, var(--brand-primary) 35%, white);
     --highlight-bg: var(--brand-light);
     --highlight-border: var(--brand-primary);
-    --highlight-text: var(--brand-secondary);
-    /* Keine festen Pastell-/Blautöne in Slots – nur Color Picker */
-    --slot-course-warm: var(--brand-secondary);
+    --highlight-text: var(--primary-dark);
+    /* Keine festen Pastell-/Blautöne in Slots – nur Primärfarbe */
+    --slot-course-warm: var(--brand-primary);
     --slot-course-warm-text: #fff;
-    --slot-course-cool: var(--brand-secondary);
+    --slot-course-cool: var(--brand-primary);
     --slot-course-cool-text: #fff;
-    --slot-course-green: var(--brand-secondary);
+    --slot-course-green: var(--brand-primary);
     --slot-course-green-text: #fff;
-    --slot-course-pink: var(--brand-secondary);
+    --slot-course-pink: var(--brand-primary);
     --slot-course-pink-text: #fff;
-    --slot-course-neutral: var(--brand-secondary);
+    --slot-course-neutral: var(--brand-primary);
     --slot-course-neutral-text: #fff;
 }
 
@@ -463,7 +467,7 @@ html[data-admin-theme="minimal"] .top-nav nav a {
 
 html[data-admin-theme="minimal"] .top-nav nav a:hover {
     transform: none;
-    background: var(--brand-secondary);
+    background: var(--brand-primary);
     color: #fff;
 }
 
@@ -484,14 +488,14 @@ html[data-admin-theme="minimal"] .btn {
 }
 
 html[data-admin-theme="minimal"] .btn-primary {
-    background: var(--brand-secondary);
+    background: var(--brand-primary);
     color: #fff;
-    border-color: var(--brand-secondary);
+    border-color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .btn-primary:hover {
     background: #fff;
-    color: var(--brand-secondary);
+    color: var(--brand-primary);
     transform: none;
     box-shadow: none;
 }
@@ -531,17 +535,17 @@ html[data-admin-theme="minimal"] .admin-card:hover .card-desc {
 
 html[data-admin-theme="minimal"] .dashboard-card .card-icon {
     border-radius: 0;
-    background: var(--brand-secondary);
+    background: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .dashboard-card-title .card-text {
-    color: var(--brand-secondary);
+    color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .week-table th {
-    background: var(--brand-secondary);
+    background: var(--brand-primary);
     color: #fff;
-    border: 1px solid var(--brand-secondary);
+    border: 1px solid var(--brand-primary);
     font-family: var(--font-mono);
     font-size: 0.65rem;
     letter-spacing: 0.12em;
@@ -579,7 +583,7 @@ html[data-admin-theme="minimal"] .slot-course-name {
 }
 
 html[data-admin-theme="minimal"] .selected-date-info h3 {
-    background: var(--brand-secondary);
+    background: var(--brand-primary);
     color: #fff;
     border-radius: 0;
     font-family: var(--font-mono);
@@ -609,8 +613,8 @@ html[data-admin-theme="minimal"] .dashboard-title {
 
 html[data-admin-theme="minimal"] .week-dates {
     background: var(--brand-light);
-    color: var(--brand-secondary);
-    border: 1px solid var(--brand-secondary);
+    color: var(--brand-primary);
+    border: 1px solid var(--brand-primary);
     border-radius: 0;
     font-family: var(--font-mono);
     font-size: 0.75rem;
@@ -629,40 +633,40 @@ html[data-admin-theme="minimal"] .form-group input:focus {
 }
 
 html[data-admin-theme="minimal"] .stat-card {
-    background: var(--brand-secondary);
+    background: var(--brand-primary);
     border-radius: 0;
 }
 
 /* Heute-Spalte & Akzente */
 html[data-admin-theme="minimal"] .week-table th.today-column {
-    background: var(--brand-secondary);
-    border-bottom-color: var(--brand-secondary);
+    background: var(--brand-primary);
+    border-bottom-color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .week-table td.today-column {
     background: color-mix(in srgb, var(--brand-primary) 8%, white);
-    border-left-color: var(--brand-secondary);
-    border-right-color: var(--brand-secondary);
+    border-left-color: var(--brand-primary);
+    border-right-color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .week-nav-arrow:hover {
-    background: var(--brand-secondary);
-    border-color: var(--brand-secondary);
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
     color: #fff;
 }
 
 html[data-admin-theme="minimal"] .mark-all-read {
-    color: var(--brand-secondary);
+    color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .help-card-exclusive {
     background: var(--brand-light);
-    border-color: var(--brand-secondary);
+    border-color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .help-card-exclusive h4,
 html[data-admin-theme="minimal"] .exclusive-note {
-    color: var(--brand-secondary);
+    color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .exclusive-note {
@@ -671,26 +675,26 @@ html[data-admin-theme="minimal"] .exclusive-note {
 
 html[data-admin-theme="minimal"] .slot-type-label.type-fest {
     background: var(--brand-light);
-    color: var(--brand-secondary);
-    border: 1px solid var(--brand-secondary);
+    color: var(--brand-primary);
+    border: 1px solid var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .progress-bar-fill {
-    background: var(--brand-secondary);
+    background: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .btn-iserv {
-    background: var(--brand-secondary);
-    border: 2px solid var(--brand-secondary);
+    background: var(--brand-primary);
+    border: 2px solid var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .slot-btn-primary {
-    background: var(--brand-secondary);
+    background: var(--brand-primary);
     color: #fff;
 }
 
 html[data-admin-theme="minimal"] .slot-btn-primary:hover {
-    background: var(--brand-primary);
+    background: var(--primary-dark);
 }
 
 html[data-admin-theme="minimal"] .slot-btn-success {
@@ -698,35 +702,48 @@ html[data-admin-theme="minimal"] .slot-btn-success {
 }
 
 html[data-admin-theme="minimal"] .widget-item:hover {
-    border-color: var(--brand-secondary);
+    border-color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .widget-badge.badge-primary {
     background: var(--brand-light);
-    color: var(--brand-secondary);
+    color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .slot-card[class*="course-"] {
-    border-color: var(--brand-secondary);
-}
-
-html[data-admin-theme="minimal"] .slot-card[class*="course-"]:hover {
     border-color: var(--brand-primary);
 }
 
-html[data-admin-theme="minimal"] .book-btn {
-    background: var(--brand-secondary);
+html[data-admin-theme="minimal"] .slot-card[class*="course-"]:hover {
+    border-color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .book-btn,
+html[data-admin-theme="minimal"] a.book-btn {
+    background: var(--brand-primary);
+    background-image: none;
     box-shadow: none;
 }
 
-html[data-admin-theme="minimal"] .book-btn:hover {
-    background: var(--brand-primary);
+html[data-admin-theme="minimal"] .book-btn:hover,
+html[data-admin-theme="minimal"] a.book-btn:hover {
+    background: var(--primary-dark);
     box-shadow: none;
 }
 
 html[data-admin-theme="minimal"] .slot-availability .book-link,
 html[data-admin-theme="minimal"] .slot-availability .booked-indicator {
-    color: var(--brand-secondary);
+    color: var(--brand-primary);
+}
+
+html[data-admin-theme="minimal"] .contact-info-box {
+    background: var(--brand-primary);
+    background-image: none;
+}
+
+html[data-admin-theme="minimal"] .exclusive-header {
+    background: var(--brand-primary);
+    background-image: none;
 }
 
 html[data-admin-theme="minimal"] .toast.info {
@@ -741,12 +758,27 @@ html[data-admin-theme="minimal"] .clickable-slot:hover .slot-card {
 html[data-admin-theme="minimal"] .form-group input:focus,
 html[data-admin-theme="minimal"] .form-group select:focus,
 html[data-admin-theme="minimal"] .form-group textarea:focus {
-    border-color: var(--brand-secondary);
-    outline-color: var(--brand-secondary);
+    border-color: var(--brand-primary);
+    outline-color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .toast.success {
     border-left-color: var(--brand-primary);
+}
+
+/* Absicherung: keine blauen Standardfarben aus style.css (z. B. #82b4d4) */
+html[data-admin-theme="minimal"] .week-overview .course-tag,
+html[data-admin-theme="minimal"] .week-overview .slot-card[class*="course-"] .course-tag {
+    background: var(--brand-primary);
+    color: #fff;
+    border-color: transparent;
+}
+
+html[data-admin-theme="minimal"] .week-overview .selected-date-info h3,
+html[data-admin-theme="minimal"] .week-overview .week-table th,
+html[data-admin-theme="minimal"] .week-overview .book-btn {
+    background-color: var(--brand-primary);
+    background-image: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
