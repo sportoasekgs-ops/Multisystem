@@ -35,7 +35,7 @@ Slotra ist eine webbasierte Buchungsplattform für Schulen und pädagogische Ang
 | Zettel, Excel, E-Mail-Chaos bei Slot-Buchungen | Zentraler Wochenplan mit Live-Kapazität |
 | Unklar, wer wann gebucht hat | „Meine Buchungen“ + Admin-Übersicht |
 | Feste Kurse vs. freie Module | Farbige Slots, feste und freie Angebote konfigurierbar |
-| Jede Schule sieht anders aus | Branding (Logo, Farben) + vier komplette Designs |
+| Jede Schule sieht anders aus | Branding (Logo, Farben) + fünf komplette Designs |
 | DSGVO bei Schüler*innennamen | Namen gekürzt, fremde Buchungen verschleiert |
 
 Der Name **Slotra** setzt sich aus **Slot** (Zeitfenster) und einer kurzen, merkfähigen Endung zusammen – als eigenständiger Markenname, nicht als bestehende Schul-Suite.
@@ -94,7 +94,7 @@ Admins sehen zusätzlich die Design-Auswahl in der Navigation und können das **
 
 ## Seiten-Designs (Themes)
 
-Vier visuell **stark unterschiedliche** Designs – nicht nur andere Farben:
+Fünf visuell **stark unterschiedliche** Designs – nicht nur andere Farben:
 
 | Theme | Charakter |
 |-------|-----------|
@@ -102,6 +102,7 @@ Vier visuell **stark unterschiedliche** Designs – nicht nur andere Farben:
 | **Professionell** | Corporate: Raster-Hintergrund, Inter, sachliche Tabellen |
 | **Minimal** | Swiss: Schwarz-Weiß, eckig, Mono-Typografie – Branding als Akzent |
 | **Elegant** | Glass / Serif: weiche Verläufe, Playfair Display, Blur-Karten |
+| **Slotra 2.0** | Soft UI: große Radien, weiche Schatten, Inter, pill-förmige Akzente |
 
 **Farben** kommen immer aus dem CMS-Branding (Primär-, Sekundär-, Hintergrundfarbe). Layout und Typografie ändern sich pro Theme.
 
@@ -262,7 +263,7 @@ Im CMS-Tab **Branding** legst du fest:
 - **Sekundärfarbe** → dunklere Variante / Hover
 - **Hintergrundfarbe** → helle Flächen, Login-Hintergrund, Verläufe
 
-Alle vier Themes nutzen diese Werte; das jeweilige Layout bleibt theme-spezifisch.
+Alle fünf Themes nutzen diese Werte; das jeweilige Layout bleibt theme-spezifisch.
 
 ---
 

@@ -52,6 +52,17 @@
     --info-bg: #EFF6FF;
     --info-border: #BFDBFE;
     --info-text: #1E40AF;
+    /* Kurs-Slot-Farben (Themes können überschreiben, z. B. Minimal → Branding) */
+    --slot-course-warm: #e8a87c;
+    --slot-course-warm-text: #5d3a1a;
+    --slot-course-cool: #82b4d4;
+    --slot-course-cool-text: #1e3a4f;
+    --slot-course-green: #7abfa8;
+    --slot-course-green-text: #1e4036;
+    --slot-course-pink: #d98fa0;
+    --slot-course-pink-text: #5d1e2e;
+    --slot-course-neutral: #b0b8bb;
+    --slot-course-neutral-text: #3a4042;
     --warning-bg: #FFFBEB;
     --warning-border: #FDE68A;
     --warning-text: #92400E;
@@ -1811,60 +1822,60 @@ details.help-section[open] .toggle-arrow {
 /* Gruppe 1: Warm (Orange) – Wochenstart, Motorik */
 .course-wochenstart,
 .course-motorik {
-    border-color: #e8a87c;
+    border-color: var(--slot-course-warm);
 }
 .course-wochenstart .course-tag,
 .course-motorik .course-tag {
-    background: #e8a87c;
-    color: #5d3a1a;
+    background: var(--slot-course-warm);
+    color: var(--slot-course-warm-text);
 }
 
-/* Gruppe 2: Blau – Koordination, Atem, Bodyscan */
+/* Gruppe 2: Koordination, Atem, Bodyscan */
 .course-koordination,
 .course-atem,
 .course-bodyscan {
-    border-color: #82b4d4;
+    border-color: var(--slot-course-cool);
 }
 .course-koordination .course-tag,
 .course-atem .course-tag,
 .course-bodyscan .course-tag {
-    background: #82b4d4;
-    color: #1e3a4f;
+    background: var(--slot-course-cool);
+    color: var(--slot-course-cool-text);
 }
 
-/* Gruppe 3: Grün – Sozial, Fitness, Ruhe */
+/* Gruppe 3: Sozial, Fitness, Ruhe */
 .course-sozial,
 .course-fitness,
 .course-ruhe {
-    border-color: #7abfa8;
+    border-color: var(--slot-course-green);
 }
 .course-sozial .course-tag,
 .course-fitness .course-tag,
 .course-ruhe .course-tag {
-    background: #7abfa8;
-    color: #1e4036;
+    background: var(--slot-course-green);
+    color: var(--slot-course-green-text);
 }
 
-/* Gruppe 4: Pink/Primary – Turnen, Konflikt */
+/* Gruppe 4: Turnen, Konflikt */
 .course-turnen,
 .course-konflikt {
-    border-color: #d98fa0;
+    border-color: var(--slot-course-pink);
 }
 .course-turnen .course-tag,
 .course-konflikt .course-tag {
-    background: #d98fa0;
-    color: #5d1e2e;
+    background: var(--slot-course-pink);
+    color: var(--slot-course-pink-text);
 }
 
-/* Gruppe 5: Neutral – Freie Wahl, Default */
+/* Gruppe 5: Freie Wahl, Default */
 .course-frei,
 .course-default {
-    border-color: #b0b8bb;
+    border-color: var(--slot-course-neutral);
 }
 .course-frei .course-tag,
 .course-default .course-tag {
-    background: #b0b8bb;
-    color: #3a4042;
+    background: var(--slot-course-neutral);
+    color: var(--slot-course-neutral-text);
 }
 
 /* Admin Block Button in neuen Karten */

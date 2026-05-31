@@ -422,6 +422,17 @@ html[data-admin-theme="minimal"] {
     --highlight-bg: var(--brand-light);
     --highlight-border: var(--brand-primary);
     --highlight-text: var(--brand-secondary);
+    /* Keine festen Pastell-/Blautöne in Slots – nur Color Picker */
+    --slot-course-warm: var(--brand-secondary);
+    --slot-course-warm-text: #fff;
+    --slot-course-cool: var(--brand-secondary);
+    --slot-course-cool-text: #fff;
+    --slot-course-green: var(--brand-secondary);
+    --slot-course-green-text: #fff;
+    --slot-course-pink: var(--brand-secondary);
+    --slot-course-pink-text: #fff;
+    --slot-course-neutral: var(--brand-secondary);
+    --slot-course-neutral-text: #fff;
 }
 
 html[data-admin-theme="minimal"] body {
@@ -452,7 +463,7 @@ html[data-admin-theme="minimal"] .top-nav nav a {
 
 html[data-admin-theme="minimal"] .top-nav nav a:hover {
     transform: none;
-    background: var(--primary-dark);
+    background: var(--brand-secondary);
     color: #fff;
 }
 
@@ -473,14 +484,14 @@ html[data-admin-theme="minimal"] .btn {
 }
 
 html[data-admin-theme="minimal"] .btn-primary {
-    background: var(--primary-dark);
+    background: var(--brand-secondary);
     color: #fff;
-    border-color: var(--primary-dark);
+    border-color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .btn-primary:hover {
     background: #fff;
-    color: var(--primary-dark);
+    color: var(--brand-secondary);
     transform: none;
     box-shadow: none;
 }
@@ -520,13 +531,17 @@ html[data-admin-theme="minimal"] .admin-card:hover .card-desc {
 
 html[data-admin-theme="minimal"] .dashboard-card .card-icon {
     border-radius: 0;
-    background: var(--primary-dark);
+    background: var(--brand-secondary);
+}
+
+html[data-admin-theme="minimal"] .dashboard-card-title .card-text {
+    color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .week-table th {
-    background: var(--primary-dark);
+    background: var(--brand-secondary);
     color: #fff;
-    border: 1px solid var(--primary-dark);
+    border: 1px solid var(--brand-secondary);
     font-family: var(--font-mono);
     font-size: 0.65rem;
     letter-spacing: 0.12em;
@@ -564,7 +579,7 @@ html[data-admin-theme="minimal"] .slot-course-name {
 }
 
 html[data-admin-theme="minimal"] .selected-date-info h3 {
-    background: var(--primary-dark);
+    background: var(--brand-secondary);
     color: #fff;
     border-radius: 0;
     font-family: var(--font-mono);
@@ -593,9 +608,9 @@ html[data-admin-theme="minimal"] .dashboard-title {
 }
 
 html[data-admin-theme="minimal"] .week-dates {
-    background: var(--primary-light);
-    color: var(--primary-dark);
-    border: 1px solid var(--primary-dark);
+    background: var(--brand-light);
+    color: var(--brand-secondary);
+    border: 1px solid var(--brand-secondary);
     border-radius: 0;
     font-family: var(--font-mono);
     font-size: 0.75rem;
@@ -614,40 +629,40 @@ html[data-admin-theme="minimal"] .form-group input:focus {
 }
 
 html[data-admin-theme="minimal"] .stat-card {
-    background: var(--primary-dark);
+    background: var(--brand-secondary);
     border-radius: 0;
 }
 
 /* Heute-Spalte & Akzente */
 html[data-admin-theme="minimal"] .week-table th.today-column {
-    background: var(--primary-dark);
-    border-bottom-color: var(--primary-dark);
+    background: var(--brand-secondary);
+    border-bottom-color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .week-table td.today-column {
     background: color-mix(in srgb, var(--brand-primary) 8%, white);
-    border-left-color: var(--primary-dark);
-    border-right-color: var(--primary-dark);
+    border-left-color: var(--brand-secondary);
+    border-right-color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .week-nav-arrow:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
+    background: var(--brand-secondary);
+    border-color: var(--brand-secondary);
     color: #fff;
 }
 
 html[data-admin-theme="minimal"] .mark-all-read {
-    color: var(--primary-dark);
+    color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .help-card-exclusive {
-    background: var(--primary-light);
-    border-color: var(--primary-dark);
+    background: var(--brand-light);
+    border-color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .help-card-exclusive h4,
 html[data-admin-theme="minimal"] .exclusive-note {
-    color: var(--primary-dark);
+    color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .exclusive-note {
@@ -655,73 +670,63 @@ html[data-admin-theme="minimal"] .exclusive-note {
 }
 
 html[data-admin-theme="minimal"] .slot-type-label.type-fest {
-    background: var(--primary-light);
-    color: var(--primary-dark);
-    border: 1px solid var(--primary-dark);
+    background: var(--brand-light);
+    color: var(--brand-secondary);
+    border: 1px solid var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .progress-bar-fill {
-    background: var(--primary-dark);
+    background: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .btn-iserv {
-    background: var(--primary-dark);
-    border: 2px solid var(--primary-dark);
+    background: var(--brand-secondary);
+    border: 2px solid var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .slot-btn-primary {
-    background: var(--primary-dark);
+    background: var(--brand-secondary);
     color: #fff;
 }
 
 html[data-admin-theme="minimal"] .slot-btn-primary:hover {
-    background: var(--primary);
+    background: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .slot-btn-success {
-    background: var(--primary);
+    background: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .widget-item:hover {
-    border-color: var(--primary-dark);
+    border-color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .widget-badge.badge-primary {
-    background: var(--primary-light);
-    color: var(--primary-dark);
+    background: var(--brand-light);
+    color: var(--brand-secondary);
 }
 
-/* Keine festen Pastell-/Blautöne aus style.css, nur Color-Picker-Branding */
 html[data-admin-theme="minimal"] .slot-card[class*="course-"] {
-    border-color: var(--primary-dark);
-}
-
-html[data-admin-theme="minimal"] .slot-card[class*="course-"] .course-tag {
-    background: var(--primary-dark);
-    color: #fff;
-}
-
-html[data-admin-theme="minimal"] .slot-card[class*="course-"] .course-tag .tag-icon {
-    color: inherit;
+    border-color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .slot-card[class*="course-"]:hover {
-    border-color: var(--primary);
+    border-color: var(--brand-primary);
 }
 
-html[data-admin-theme="minimal"] .week-overview .book-btn {
-    background: var(--primary-dark);
+html[data-admin-theme="minimal"] .book-btn {
+    background: var(--brand-secondary);
     box-shadow: none;
 }
 
-html[data-admin-theme="minimal"] .week-overview .book-btn:hover {
-    background: var(--primary);
+html[data-admin-theme="minimal"] .book-btn:hover {
+    background: var(--brand-primary);
     box-shadow: none;
 }
 
-html[data-admin-theme="minimal"] .week-overview .slot-availability .book-link,
-html[data-admin-theme="minimal"] .week-overview .slot-availability .booked-indicator {
-    color: var(--primary-dark);
+html[data-admin-theme="minimal"] .slot-availability .book-link,
+html[data-admin-theme="minimal"] .slot-availability .booked-indicator {
+    color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .toast.info {
@@ -729,15 +734,15 @@ html[data-admin-theme="minimal"] .toast.info {
 }
 
 html[data-admin-theme="minimal"] .clickable-slot:hover .slot-card {
-    border-color: var(--primary);
+    border-color: var(--brand-primary);
     box-shadow: none;
 }
 
 html[data-admin-theme="minimal"] .form-group input:focus,
 html[data-admin-theme="minimal"] .form-group select:focus,
 html[data-admin-theme="minimal"] .form-group textarea:focus {
-    border-color: var(--primary-dark);
-    outline-color: var(--primary-dark);
+    border-color: var(--brand-secondary);
+    outline-color: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] .toast.success {
@@ -971,6 +976,490 @@ html[data-admin-theme="elegant"] .stat-card {
 }
 
 html[data-admin-theme="elegant"] main.container {
+    position: relative;
+    z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. SLOTRA 2.0 – Soft UI (rund, luftig, Branding-Akzente)
+   ═══════════════════════════════════════════════════════════════════════════ */
+html[data-admin-theme="slotra2"] {
+    --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'Inter', monospace;
+    --text-primary: #1a1a2e;
+    --text-secondary: #5c5c7a;
+    --text-tertiary: #9494a8;
+    --bg-primary: #ffffff;
+    --bg-secondary: #faf9fb;
+    --bg-tertiary: #f3f2f5;
+    --bg-card: #ffffff;
+    --border: #e8e6ed;
+    --border-light: #efedf2;
+    --login-gradient: linear-gradient(180deg, var(--brand-light) 0%, #faf9fb 100%);
+    --shadow-sm: 0 2px 10px rgba(26, 26, 46, 0.05);
+    --shadow: 0 8px 28px rgba(26, 26, 46, 0.07);
+    --shadow-md: 0 12px 40px rgba(26, 26, 46, 0.09);
+    --shadow-lg: 0 20px 52px rgba(26, 26, 46, 0.11);
+    --radius-sm: 10px;
+    --radius: 14px;
+    --radius-lg: 20px;
+    --radius-xl: 24px;
+    --radius-2xl: 28px;
+    --info-bg: var(--brand-light);
+    --info-border: color-mix(in srgb, var(--brand-primary) 28%, white);
+    --info-text: var(--brand-secondary);
+    --highlight-bg: var(--brand-light);
+    --highlight-border: color-mix(in srgb, var(--brand-primary) 35%, white);
+    --highlight-text: var(--brand-secondary);
+    --slot-course-warm: var(--brand-primary);
+    --slot-course-warm-text: #fff;
+    --slot-course-cool: var(--brand-primary);
+    --slot-course-cool-text: #fff;
+    --slot-course-green: var(--brand-primary);
+    --slot-course-green-text: #fff;
+    --slot-course-pink: var(--brand-primary);
+    --slot-course-pink-text: #fff;
+    --slot-course-neutral: var(--brand-primary);
+    --slot-course-neutral-text: #fff;
+}
+
+html[data-admin-theme="slotra2"] body {
+    background: var(--bg-secondary);
+    letter-spacing: -0.01em;
+    line-height: 1.55;
+}
+
+html[data-admin-theme="slotra2"] .bg-glow-orb {
+    opacity: 0.35;
+    background: radial-gradient(circle, rgb(var(--primary-rgb) / 0.12) 0%, transparent 70%);
+}
+
+html[data-admin-theme="slotra2"] .top-nav {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    padding: 0.75rem 0;
+}
+
+html[data-admin-theme="slotra2"] .top-nav nav a {
+    border-radius: 999px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 0.45rem 0.9rem;
+}
+
+html[data-admin-theme="slotra2"] .top-nav nav a:hover {
+    transform: none;
+    background: var(--brand-light);
+    color: var(--brand-secondary);
+}
+
+html[data-admin-theme="slotra2"] .user-info {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-light);
+    border-radius: 999px;
+}
+
+html[data-admin-theme="slotra2"] .btn {
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    font-size: 0.875rem;
+    box-shadow: var(--shadow-sm);
+}
+
+html[data-admin-theme="slotra2"] .btn-primary {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    color: #fff;
+}
+
+html[data-admin-theme="slotra2"] .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgb(var(--primary-rgb) / 0.28);
+}
+
+html[data-admin-theme="slotra2"] .btn-secondary {
+    background: #fff;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+html[data-admin-theme="slotra2"] .btn-secondary:hover {
+    border-color: color-mix(in srgb, var(--brand-primary) 40%, var(--border));
+    background: var(--brand-light);
+}
+
+html[data-admin-theme="slotra2"] .dashboard-card,
+html[data-admin-theme="slotra2"] .login-box,
+html[data-admin-theme="slotra2"] .admin-card,
+html[data-admin-theme="slotra2"] .admin-section-modern,
+html[data-admin-theme="slotra2"] .date-selector,
+html[data-admin-theme="slotra2"] .modal-content,
+html[data-admin-theme="slotra2"] .dashboard-widget {
+    background: #fff;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+}
+
+html[data-admin-theme="slotra2"] .week-overview {
+    background: #fff;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-md);
+    padding: 1.5rem 1.35rem 1.75rem;
+    max-width: 960px;
+}
+
+html[data-admin-theme="slotra2"] .dashboard-card:hover,
+html[data-admin-theme="slotra2"] .admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--border-light));
+}
+
+html[data-admin-theme="slotra2"] .dashboard-card .card-icon {
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    box-shadow: 0 6px 16px rgb(var(--primary-rgb) / 0.25);
+}
+
+html[data-admin-theme="slotra2"] .dashboard-card-title .card-text {
+    color: var(--brand-secondary);
+    font-weight: 600;
+}
+
+html[data-admin-theme="slotra2"] .week-header-with-nav {
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.25rem;
+}
+
+html[data-admin-theme="slotra2"] .week-title {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+html[data-admin-theme="slotra2"] .week-dates {
+    background: var(--brand-light);
+    color: var(--brand-secondary);
+    border: 1px solid color-mix(in srgb, var(--brand-primary) 18%, white);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+html[data-admin-theme="slotra2"] .week-nav-arrow {
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+html[data-admin-theme="slotra2"] .week-nav-arrow:hover {
+    background: var(--brand-light);
+    border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--border));
+    color: var(--brand-secondary);
+    transform: none;
+}
+
+html[data-admin-theme="slotra2"] .week-table {
+    border-collapse: separate;
+    border-spacing: 0 0.35rem;
+}
+
+html[data-admin-theme="slotra2"] .week-table th {
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border: none;
+    padding-bottom: 0.5rem;
+}
+
+html[data-admin-theme="slotra2"] .week-table th:first-child {
+    color: var(--text-tertiary);
+}
+
+html[data-admin-theme="slotra2"] .week-day-header {
+    align-items: center;
+}
+
+html[data-admin-theme="slotra2"] .week-day-header .day-name {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+html[data-admin-theme="slotra2"] .week-day-header.today-header .day-name {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    color: #fff;
+    box-shadow: 0 4px 14px rgb(var(--primary-rgb) / 0.28);
+}
+
+html[data-admin-theme="slotra2"] .week-day-header .day-date {
+    font-size: 0.68rem;
+    margin-top: 0.25rem;
+    opacity: 0.85;
+}
+
+html[data-admin-theme="slotra2"] .week-table th.today-column {
+    background: transparent;
+    border: none;
+}
+
+html[data-admin-theme="slotra2"] .week-table td {
+    border: none;
+    background: transparent;
+    padding: 0.2rem;
+    vertical-align: top;
+}
+
+html[data-admin-theme="slotra2"] .week-table td:first-child {
+    font-weight: 600;
+    color: var(--text-tertiary);
+    font-size: 0.8rem;
+    vertical-align: middle;
+}
+
+html[data-admin-theme="slotra2"] .week-table td.today-column {
+    background: transparent;
+    border: none;
+}
+
+html[data-admin-theme="slotra2"] .selected-date-info h3 {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    color: #fff;
+    border-radius: var(--radius-xl);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    box-shadow: 0 10px 28px rgb(var(--primary-rgb) / 0.22);
+    padding: 1rem 1.5rem;
+}
+
+html[data-admin-theme="slotra2"] .slot-card {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+    padding: 0.55rem 0.6rem;
+    min-height: 62px;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+html[data-admin-theme="slotra2"] .slot-card:hover {
+    transform: none;
+    border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--border));
+    box-shadow: var(--shadow);
+}
+
+html[data-admin-theme="slotra2"] .slot-card.slot-has-bookings {
+    background: var(--brand-light);
+    border-color: color-mix(in srgb, var(--brand-primary) 32%, white);
+    box-shadow: 0 4px 16px rgb(var(--primary-rgb) / 0.1);
+}
+
+html[data-admin-theme="slotra2"] .slot-card.slot-full {
+    opacity: 0.72;
+    background: var(--bg-tertiary);
+    border-color: var(--border-light);
+    border-style: solid;
+}
+
+html[data-admin-theme="slotra2"] .slot-card.slot-full .slot-course-name,
+html[data-admin-theme="slotra2"] .slot-card.slot-full .slot-availability,
+html[data-admin-theme="slotra2"] .slot-card.slot-full .course-tag {
+    color: var(--text-tertiary);
+}
+
+html[data-admin-theme="slotra2"] .slot-card.slot-full .course-tag {
+    background: var(--border);
+}
+
+html[data-admin-theme="slotra2"] .slot-course-name {
+    font-weight: 600;
+    font-size: 0.72rem;
+    color: var(--text-primary);
+    text-transform: none;
+    letter-spacing: 0;
+    font-style: normal;
+}
+
+html[data-admin-theme="slotra2"] .slot-card[class*="course-"] {
+    border-color: color-mix(in srgb, var(--brand-primary) 22%, var(--border));
+}
+
+html[data-admin-theme="slotra2"] .course-tag {
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    color: #fff;
+    border: none;
+}
+
+html[data-admin-theme="slotra2"] .book-btn {
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 0.5rem 0.65rem;
+    margin-top: 0.45rem;
+    box-shadow: 0 4px 14px rgb(var(--primary-rgb) / 0.22);
+}
+
+html[data-admin-theme="slotra2"] .book-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgb(var(--primary-rgb) / 0.3);
+    background: linear-gradient(135deg, var(--brand-secondary), var(--brand-primary));
+}
+
+html[data-admin-theme="slotra2"] .slot-availability .book-link,
+html[data-admin-theme="slotra2"] .slot-availability .booked-indicator {
+    color: var(--brand-secondary);
+    font-weight: 600;
+}
+
+html[data-admin-theme="slotra2"] .slot-booking-bar {
+    background: color-mix(in srgb, var(--brand-primary) 12%, white);
+    border-radius: 999px;
+    height: 5px;
+}
+
+html[data-admin-theme="slotra2"] .slot-booking-bar-fill.bar-low,
+html[data-admin-theme="slotra2"] .slot-booking-bar-fill.bar-high {
+    background: var(--brand-primary);
+}
+
+html[data-admin-theme="slotra2"] .pending-exclusive-hint {
+    background: var(--brand-light);
+    border: 1px solid color-mix(in srgb, var(--brand-primary) 28%, white);
+    border-radius: var(--radius);
+    color: var(--brand-secondary);
+}
+
+html[data-admin-theme="slotra2"] .exclusive-header {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    border-radius: var(--radius);
+}
+
+html[data-admin-theme="slotra2"] .period-exclusive {
+    background: var(--brand-light) !important;
+    border: 1px solid color-mix(in srgb, var(--brand-primary) 30%, white) !important;
+    border-radius: var(--radius);
+}
+
+html[data-admin-theme="slotra2"] .widget-item {
+    border-radius: var(--radius);
+    border: 1px solid var(--border-light);
+}
+
+html[data-admin-theme="slotra2"] .widget-item:hover {
+    border-color: color-mix(in srgb, var(--brand-primary) 30%, var(--border-light));
+    background: var(--brand-light);
+}
+
+html[data-admin-theme="slotra2"] .widget-badge.badge-primary {
+    background: var(--brand-light);
+    color: var(--brand-secondary);
+    border-radius: 999px;
+}
+
+html[data-admin-theme="slotra2"] .widget-badge.badge-warning {
+    border-radius: 999px;
+}
+
+html[data-admin-theme="slotra2"] .form-group input,
+html[data-admin-theme="slotra2"] .form-group select,
+html[data-admin-theme="slotra2"] .form-group textarea {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+html[data-admin-theme="slotra2"] .form-group input:focus,
+html[data-admin-theme="slotra2"] .form-group select:focus,
+html[data-admin-theme="slotra2"] .form-group textarea:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgb(var(--primary-rgb) / 0.15);
+    outline: none;
+}
+
+html[data-admin-theme="slotra2"] .login-box {
+    border-radius: var(--radius-2xl);
+    padding: 2.5rem;
+}
+
+html[data-admin-theme="slotra2"] .login-logo img {
+    border-radius: 50%;
+    box-shadow: var(--shadow-md);
+}
+
+html[data-admin-theme="slotra2"] h1,
+html[data-admin-theme="slotra2"] h2,
+html[data-admin-theme="slotra2"] h3,
+html[data-admin-theme="slotra2"] .dashboard-title {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+}
+
+html[data-admin-theme="slotra2"] .stat-card {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+}
+
+html[data-admin-theme="slotra2"] .help-card,
+html[data-admin-theme="slotra2"] .help-card-exclusive {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+}
+
+html[data-admin-theme="slotra2"] .help-card-exclusive {
+    background: var(--brand-light);
+    border-color: color-mix(in srgb, var(--brand-primary) 25%, white);
+}
+
+html[data-admin-theme="slotra2"] .notification-dropdown {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-light);
+}
+
+html[data-admin-theme="slotra2"] .toast.info {
+    border-left-color: var(--brand-primary);
+}
+
+html[data-admin-theme="slotra2"] .toast.success {
+    border-left-color: var(--brand-primary);
+}
+
+html[data-admin-theme="slotra2"] .clickable-slot:hover .slot-card {
+    border-color: var(--brand-primary);
+    box-shadow: var(--shadow);
+}
+
+html[data-admin-theme="slotra2"] main.container {
     position: relative;
     z-index: 1;
 }

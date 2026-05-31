@@ -20,11 +20,13 @@
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
     {% elif admin_theme == 'elegant' %}
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    {% elif admin_theme == 'slotra2' %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     {% else %}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     {% endif %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260529c">
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260601e">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260602a">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260602a">
     <meta http-equiv="refresh" content="600">
 
     <!-- ── Dynamisches Branding aus der Datenbank (für alle Themes) ── -->
@@ -502,7 +504,7 @@
         }
 
         // Seiten-Design (4 Varianten, systemweit in DB gespeichert)
-        const ADMIN_THEMES = ['classic', 'professional', 'minimal', 'elegant'];
+        const ADMIN_THEMES = ['classic', 'professional', 'minimal', 'elegant', 'slotra2'];
 
         function syncAdminThemeSelect(theme) {
             const select = document.getElementById('adminThemeSelect');

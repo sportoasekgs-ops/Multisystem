@@ -515,7 +515,7 @@ def inject_dynamic_config():
     return dict(max_students=ms)
 
 
-ADMIN_THEME_IDS = frozenset({"classic", "professional", "minimal", "elegant"})
+ADMIN_THEME_IDS = frozenset({"classic", "professional", "minimal", "elegant", "slotra2"})
 
 
 def _resolve_admin_theme():
