@@ -554,7 +554,7 @@
                     {% else %}
                         <div class="widget-empty">
                             <p>Keine anstehenden Buchungen.</p>
-                            <span class="widget-hint">Klicke im Wochenplan auf „Jetzt buchen“, um einen Termin zu reservieren.</span>
+                            <span class="widget-hint">Klicke im Wochenplan auf „Buchen“, um einen Termin zu reservieren.</span>
                         </div>
                     {% endif %}
                 </div>
@@ -814,7 +814,7 @@
                                 <a href="{{ url_for('book', date_str=day.date, period=p_num) }}"
                                    class="book-btn"
                                    data-book-url="{{ url_for('book', date_str=day.date, period=p_num) }}">
-                                    📝 Jetzt buchen
+                                    📝 Buchen
                                 </a>
                                 {% endif %}
                                 {% if user_role == 'admin' and not slot.is_past %}
@@ -1384,7 +1384,7 @@ Tagesübersicht:
                                     const bookingList = document.querySelector('.my-bookings-widget .widget-list');
                                     if (bookingList && bookingList.children.length === 0) {
                                         const widgetBody = document.querySelector('.my-bookings-widget .widget-body');
-                                        widgetBody.innerHTML = '<div class="widget-empty"><p>Keine anstehenden Buchungen.</p><span class="widget-hint">Klicke im Wochenplan auf „Jetzt buchen“, um einen Termin zu reservieren.</span></div>';
+                                        widgetBody.innerHTML = '<div class="widget-empty"><p>Keine anstehenden Buchungen.</p><span class="widget-hint">Klicke im Wochenplan auf „Buchen“, um einen Termin zu reservieren.</span></div>';
                                     }
                                     
                                     // Kurzer Delay für weiches Erlebnis vor dem Neuladen der Tabelle
