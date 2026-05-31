@@ -9,10 +9,7 @@
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const theme = savedTheme || (prefersDark ? 'dark' : 'light');
             document.documentElement.setAttribute('data-theme', theme);
-            {% if is_admin_page %}
-            const adminTheme = {{ admin_theme|tojson }};
-            document.documentElement.setAttribute('data-admin-theme', adminTheme);
-            {% endif %}
+            document.documentElement.setAttribute('data-admin-theme', {{ admin_theme|tojson }});
         })();
     </script>
     <meta charset="UTF-8">
@@ -23,9 +20,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260529c">
-    {% if is_admin_page %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260531a">
-    {% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260531b">
     <meta http-equiv="refresh" content="600">
 
     <!-- ── Dynamisches Branding aus der Datenbank ── -->
@@ -245,7 +240,7 @@
                     <a href="{{ url_for('admin') }}">Admin</a>
                     {% endif %}
 
-                    {% if is_admin_page %}
+                    {% if session.user_role == 'admin' %}
                     {% with compact=true %}
                     {% include 'partials/admin_theme_picker.html' %}
                     {% endwith %}
@@ -515,7 +510,7 @@
             }
         }
 
-        // Admin-Panel Design (4 Varianten, in DB gespeichert)
+        // Seiten-Design (4 Varianten, systemweit in DB gespeichert)
         const ADMIN_THEMES = ['classic', 'professional', 'minimal', 'elegant'];
 
         function syncAdminThemeButtons(theme) {
@@ -552,7 +547,7 @@
             .then(function(data) {
                 if (data.success) {
                     if (typeof showToast === 'function') {
-                        showToast('Admin-Design gespeichert.', 'success', 2500);
+                        showToast('Design gespeichert – gilt für die gesamte Seite.', 'success', 3000);
                     }
                 } else if (typeof showToast === 'function') {
                     showToast(data.error || 'Speichern fehlgeschlagen.', 'error');
@@ -687,7 +682,7 @@
                 themeSwitch.checked = currentTheme === 'dark';
             }
 
-            {% if is_admin_page %}
+            {% if session.user_role == 'admin' %}
             initAdminThemePicker();
             {% endif %}
 
