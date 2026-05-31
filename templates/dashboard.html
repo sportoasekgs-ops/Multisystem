@@ -685,12 +685,6 @@
                                 <span class="exclusive-teacher"
                                     >von {{ exc_booking.teacher_name }}</span
                                 >
-                                {% if exc_booking.notes %}
-                                <div class="booking-note-snippet booking-note-snippet--compact">
-                                    <span class="notes-icon">📝</span>
-                                    <span class="notes-text">{{ exc_booking.notes }}</span>
-                                </div>
-                                {% endif %}
                                 {% else %}
                                 <span class="exclusive-student"
                                     >Reserviert</span
@@ -779,17 +773,10 @@
                                 </div>
 
                                 {% if slot.pending_exclusive %}
-                                {% set can_see_pending_note = (user_role == 'admin') or (slot.pending_exclusive.teacher_id == current_user_id) %}
                                 <div class="pending-exclusive-hint">
                                     <span class="pending-icon">⏳</span>
                                     <span class="pending-text">Einzelbuchung angefragt</span>
                                 </div>
-                                {% if slot.pending_exclusive.notes and can_see_pending_note %}
-                                <div class="booking-note-snippet booking-note-snippet--slot">
-                                    <span class="notes-icon">📝</span>
-                                    <span class="notes-text">{{ slot.pending_exclusive.notes }}</span>
-                                </div>
-                                {% endif %}
                                 {% endif %}
 
                                 {% if slot.bookings %}

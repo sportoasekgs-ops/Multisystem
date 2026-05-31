@@ -416,6 +416,12 @@ html[data-admin-theme="minimal"] {
     --radius-lg: 0;
     --radius-xl: 0;
     --radius-2xl: 0;
+    --info-bg: var(--brand-light);
+    --info-text: var(--brand-secondary);
+    --info-border: color-mix(in srgb, var(--brand-primary) 35%, white);
+    --highlight-bg: var(--brand-light);
+    --highlight-border: var(--brand-primary);
+    --highlight-text: var(--brand-secondary);
 }
 
 html[data-admin-theme="minimal"] body {
@@ -612,16 +618,6 @@ html[data-admin-theme="minimal"] .stat-card {
     border-radius: 0;
 }
 
-/* Semantische Flächen aus Branding (kein Standard-Blau) */
-html[data-admin-theme="minimal"] {
-    --info-bg: var(--brand-light);
-    --info-text: var(--brand-secondary);
-    --info-border: color-mix(in srgb, var(--brand-primary) 35%, white);
-    --highlight-bg: var(--brand-light);
-    --highlight-border: var(--brand-primary);
-    --highlight-text: var(--brand-secondary);
-}
-
 /* Heute-Spalte & Akzente */
 html[data-admin-theme="minimal"] .week-table th.today-column {
     background: var(--primary-dark);
@@ -695,40 +691,41 @@ html[data-admin-theme="minimal"] .widget-badge.badge-primary {
     color: var(--primary-dark);
 }
 
-/* Kursfarben: festes Blau/Grün/etc. → Branding */
+/* Keine festen Pastell-/Blautöne aus style.css, nur Color-Picker-Branding */
 html[data-admin-theme="minimal"] .slot-card[class*="course-"] {
-    border-color: color-mix(in srgb, var(--brand-primary) 45%, #d4d4d8);
-}
-
-html[data-admin-theme="minimal"] .course-wochenstart,
-html[data-admin-theme="minimal"] .course-motorik,
-html[data-admin-theme="minimal"] .course-koordination,
-html[data-admin-theme="minimal"] .course-atem,
-html[data-admin-theme="minimal"] .course-bodyscan,
-html[data-admin-theme="minimal"] .course-sozial,
-html[data-admin-theme="minimal"] .course-fitness,
-html[data-admin-theme="minimal"] .course-ruhe,
-html[data-admin-theme="minimal"] .course-turnen,
-html[data-admin-theme="minimal"] .course-konflikt,
-html[data-admin-theme="minimal"] .course-frei,
-html[data-admin-theme="minimal"] .course-default {
     border-color: var(--primary-dark);
 }
 
-html[data-admin-theme="minimal"] .course-wochenstart .course-tag,
-html[data-admin-theme="minimal"] .course-motorik .course-tag,
-html[data-admin-theme="minimal"] .course-koordination .course-tag,
-html[data-admin-theme="minimal"] .course-atem .course-tag,
-html[data-admin-theme="minimal"] .course-bodyscan .course-tag,
-html[data-admin-theme="minimal"] .course-sozial .course-tag,
-html[data-admin-theme="minimal"] .course-fitness .course-tag,
-html[data-admin-theme="minimal"] .course-ruhe .course-tag,
-html[data-admin-theme="minimal"] .course-turnen .course-tag,
-html[data-admin-theme="minimal"] .course-konflikt .course-tag,
-html[data-admin-theme="minimal"] .course-frei .course-tag,
-html[data-admin-theme="minimal"] .course-default .course-tag {
+html[data-admin-theme="minimal"] .slot-card[class*="course-"] .course-tag {
     background: var(--primary-dark);
     color: #fff;
+}
+
+html[data-admin-theme="minimal"] .slot-card[class*="course-"] .course-tag .tag-icon {
+    color: inherit;
+}
+
+html[data-admin-theme="minimal"] .slot-card[class*="course-"]:hover {
+    border-color: var(--primary);
+}
+
+html[data-admin-theme="minimal"] .week-overview .book-btn {
+    background: var(--primary-dark);
+    box-shadow: none;
+}
+
+html[data-admin-theme="minimal"] .week-overview .book-btn:hover {
+    background: var(--primary);
+    box-shadow: none;
+}
+
+html[data-admin-theme="minimal"] .week-overview .slot-availability .book-link,
+html[data-admin-theme="minimal"] .week-overview .slot-availability .booked-indicator {
+    color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .toast.info {
+    border-left-color: var(--brand-primary);
 }
 
 html[data-admin-theme="minimal"] .clickable-slot:hover .slot-card {
@@ -744,10 +741,6 @@ html[data-admin-theme="minimal"] .form-group textarea:focus {
 }
 
 html[data-admin-theme="minimal"] .toast.success {
-    border-left-color: var(--brand-primary);
-}
-
-html[data-admin-theme="minimal"] .toast.info {
     border-left-color: var(--brand-primary);
 }
 
