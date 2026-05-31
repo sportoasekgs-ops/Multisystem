@@ -5,10 +5,6 @@
     <script>
         // Theme sofort beim Laden initialisieren, um Flashen zu verhindern
         (function() {
-            const savedTheme = localStorage.getItem('theme');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', theme);
             document.documentElement.setAttribute('data-admin-theme', {{ admin_theme|tojson }});
         })();
     </script>
@@ -28,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     {% endif %}
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260529c">
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260601c">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260601d">
     <meta http-equiv="refresh" content="600">
 
     <!-- ── Dynamisches Branding aus der Datenbank (für alle Themes) ── -->
@@ -255,17 +251,10 @@
                     <a href="{{ url_for('admin') }}">Admin</a>
                     {% endif %}
 
+                    <div class="nav-tools">
                     {% if session.user_role == 'admin' %}
-                    {% with compact=true %}
                     {% include 'partials/admin_theme_picker.html' %}
-                    {% endwith %}
                     {% endif %}
-
-                    <!-- Theme Switch Toggle -->
-                    <label class="theme-switch" title="Design umschalten">
-                        <input type="checkbox" class="theme-switch-input" id="themeSwitch" onchange="toggleTheme()">
-                        <span class="theme-switch-slider"></span>
-                    </label>
 
                     <div class="user-info">
                         <span>{{ session.user_name or session.user_email }}</span>
@@ -278,6 +267,7 @@
                     </div>
 
                     <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
+                    </div>
                 </div>
 
                 {% if session.user_role == 'admin' %}
@@ -511,28 +501,15 @@
             if (m) m.style.display = "none";
         }
 
-        // Theme Switch (Hell/Dunkel)
-        function toggleTheme() {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            // Sync checkbox state
-            const switchEl = document.getElementById('themeSwitch');
-            if (switchEl) {
-                switchEl.checked = newTheme === 'dark';
-            }
-        }
-
         // Seiten-Design (4 Varianten, systemweit in DB gespeichert)
         const ADMIN_THEMES = ['classic', 'professional', 'minimal', 'elegant'];
 
-        function syncAdminThemeButtons(theme) {
-            document.querySelectorAll('.admin-theme-btn').forEach(function(btn) {
-                btn.classList.toggle('active', btn.getAttribute('data-admin-theme') === theme);
-                btn.disabled = false;
-            });
+        function syncAdminThemeSelect(theme) {
+            const select = document.getElementById('adminThemeSelect');
+            if (select) {
+                select.value = theme;
+                select.disabled = false;
+            }
         }
 
         function setAdminTheme(themeId, options) {
@@ -540,15 +517,16 @@
             const persist = opts.persist !== false;
             const theme = ADMIN_THEMES.includes(themeId) ? themeId : 'classic';
             document.documentElement.setAttribute('data-admin-theme', theme);
-            syncAdminThemeButtons(theme);
+            syncAdminThemeSelect(theme);
 
             if (!persist) {
                 return;
             }
 
-            document.querySelectorAll('.admin-theme-btn').forEach(function(btn) {
-                btn.disabled = true;
-            });
+            const select = document.getElementById('adminThemeSelect');
+            if (select) {
+                select.disabled = true;
+            }
 
             fetch('/api/admin/theme', {
                 method: 'POST',
@@ -575,20 +553,22 @@
                 }
             })
             .finally(function() {
-                syncAdminThemeButtons(theme);
+                syncAdminThemeSelect(theme);
             });
         }
 
         function initAdminThemePicker() {
+            const select = document.getElementById('adminThemeSelect');
+            if (!select) {
+                return;
+            }
             setAdminTheme({{ admin_theme|tojson }}, { persist: false });
-            document.querySelectorAll('.admin-theme-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const next = btn.getAttribute('data-admin-theme');
-                    if (document.documentElement.getAttribute('data-admin-theme') === next) {
-                        return;
-                    }
-                    setAdminTheme(next);
-                });
+            select.addEventListener('change', function() {
+                const next = select.value;
+                if (document.documentElement.getAttribute('data-admin-theme') === next) {
+                    return;
+                }
+                setAdminTheme(next);
             });
         }
 
@@ -691,13 +671,6 @@
 
         // Initial loading and polling
         document.addEventListener("DOMContentLoaded", function () {
-            // Checkbox-Status an aktuellen Theme-Status anpassen
-            const themeSwitch = document.getElementById('themeSwitch');
-            if (themeSwitch) {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                themeSwitch.checked = currentTheme === 'dark';
-            }
-
             {% if session.user_role == 'admin' %}
             initAdminThemePicker();
             {% endif %}

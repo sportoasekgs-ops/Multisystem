@@ -1,17 +1,9 @@
-<div class="admin-theme-bar{% if compact %} nav-admin-theme{% endif %}" role="group" aria-label="Seiten-Design wählen">
-    <span class="admin-theme-bar-label">🎨 Seiten-Design</span>
-    <div class="admin-theme-options">
-        <button type="button" class="admin-theme-btn" data-admin-theme="classic" title="Neo-Brutalist mit euren Branding-Farben aus dem CMS">
-            <span class="admin-theme-swatch admin-theme-swatch--classic"></span> Klassisch
-        </button>
-        <button type="button" class="admin-theme-btn" data-admin-theme="professional" title="Corporate: Raster, Inter – Akzentfarbe aus Branding">
-            <span class="admin-theme-swatch admin-theme-swatch--professional"></span> Professionell
-        </button>
-        <button type="button" class="admin-theme-btn" data-admin-theme="minimal" title="Swiss: eckig, Mono – Branding-Farbe als Akzent">
-            <span class="admin-theme-swatch admin-theme-swatch--minimal"></span> Minimal
-        </button>
-        <button type="button" class="admin-theme-btn" data-admin-theme="elegant" title="Luxury: Serifen, Glass – Verläufe in Branding-Farben">
-            <span class="admin-theme-swatch admin-theme-swatch--elegant"></span> Elegant
-        </button>
-    </div>
+<div class="nav-theme-picker" role="group" aria-label="Seiten-Design wählen">
+    <label class="nav-theme-picker-label" for="adminThemeSelect">Design</label>
+    <select id="adminThemeSelect" class="admin-theme-select" title="Seiten-Design für alle Nutzer">
+        <option value="classic">Klassisch</option>
+        <option value="professional">Professionell</option>
+        <option value="minimal">Minimal</option>
+        <option value="elegant">Elegant</option>
+    </select>
 </div>

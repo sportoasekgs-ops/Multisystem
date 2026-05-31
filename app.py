@@ -1435,6 +1435,7 @@ def dashboard():
             "offer_label": booking_dict.get("offer_label", "N/A"),
             "is_exclusive": booking_dict.get("is_exclusive", False),
             "is_approved": booking_dict.get("is_approved", True),
+            "notes": (booking_dict.get("notes") or "").strip() or None,
         }
         bookings_by_date_period[key].append(booking_info)
 
@@ -1652,6 +1653,7 @@ def dashboard():
                     "is_approved": booking.is_approved,
                     "students_str": students_str,
                     "is_class_booking": is_class_booking,
+                    "notes": (getattr(booking, "notes", None) or "").strip() or None,
                 }
             )
 
@@ -1703,6 +1705,7 @@ def dashboard():
                         "teacher_name": p_booking.teacher_name,
                         "students_str": students_str,
                         "offer_label": p_booking.offer_label,
+                        "notes": (p_booking.notes or "").strip() or None,
                     }
                 )
 
@@ -2507,6 +2510,9 @@ def meine_buchungen():
                 "modify_reason": modify_reason,
                 "is_past": is_past,
                 "created_at_formatted": created_at_formatted,
+                "notes": (booking_dict.get("notes") or "").strip() or None,
+                "is_exclusive": booking_dict.get("is_exclusive", False),
+                "is_approved": booking_dict.get("is_approved", True),
             }
         )
 

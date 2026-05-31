@@ -64,53 +64,6 @@
     --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Dark Mode - Premium Dark Design */
-[data-theme="dark"] {
-    /* ERS Pink bleibt Primärfarbe, etwas heller für Dark Mode */
-    --primary: #F06292;
-    --primary-rgb: 240, 98, 146;
-    --primary-dark: #E91E63;
-    --primary-light: #311B28;
-    --accent: #81C784;
-    --accent-warn: #FFB74D;
-    /* Dunkle Grautöne */
-    --text-primary: #F0F0F5;
-    --text-secondary: #A0A0B2;
-    --text-tertiary: #6B6B80;
-    --bg-primary: #111117;
-    --bg-secondary: #18181f;
-    --bg-tertiary: #222230;
-    --border: #2c2c3a;
-    --border-light: #232330;
-    /* Schatten */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 0 transparent;
-    /* Spezielle Farben */
-    --login-gradient: #18181f;
-    --success-bg: #1B3B1B;
-    --success-text: #81C784;
-    --error-bg: #3B1B1B;
-    --error-text: #EF9A9A;
-    --blocked-bg: #3B1B1B;
-    --blocked-text: #EF9A9A;
-    --error: #F87171;
-    /* Karten & Inputs */
-    --bg-card: #1c1c28;
-    --bg-input: #222230;
-    --info-bg: #1E2A3A;
-    --info-border: #1D4ED8;
-    --info-text: #93C5FD;
-    --warning-bg: #2A2010;
-    --warning-border: #92400E;
-    --warning-text: #FCD34D;
-    --highlight-bg: #0F2A1A;
-    --highlight-border: #166534;
-    --highlight-text: #86EFAC;
-}
-
 * {
     margin: 0;
     padding: 0;
@@ -238,6 +191,20 @@ body {
     background: var(--bg-tertiary);
     color: var(--text-primary);
     transform: translateY(-1px);
+}
+
+/* Rechte Nav-Gruppe: Design-Dropdown, Nutzer, Logout */
+.nav-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-left: 1.25rem;
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--border-light);
+}
+
+.nav-tools .user-info {
+    margin-left: 0;
 }
 
 /* User Info in Navigation */
@@ -496,6 +463,62 @@ body {
     color: #666;
     font-style: italic;
     margin-top: 0.3rem;
+}
+
+/* Notizen (Einzelbuchungen) – kompakt in Widgets/Slots */
+.booking-note-snippet {
+    margin-top: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    background: var(--warning-bg, #fffbeb);
+    border: 1px solid var(--warning-border, #fde68a);
+    border-left: 3px solid var(--accent-warn, #f59e0b);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--warning-text, #92400e);
+}
+
+.booking-note-snippet .notes-text {
+    color: inherit;
+    font-style: normal;
+    word-break: break-word;
+}
+
+.booking-note-snippet--compact {
+    margin-top: 0.35rem;
+    font-size: 0.7rem;
+}
+
+.booking-note-snippet--slot {
+    margin-bottom: 0.35rem;
+}
+
+.exclusive-info .booking-note-snippet {
+    width: 100%;
+    text-align: left;
+}
+
+.booking-notes .notes-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin-bottom: 0.2rem;
+}
+
+.booking-exclusive-status {
+    margin-top: 0.5rem;
+}
+
+[data-theme="dark"] .booking-note-snippet {
+    background: var(--warning-bg);
+    border-color: var(--warning-border);
+    color: var(--warning-text);
 }
 
 .pending-actions {
@@ -2427,9 +2450,27 @@ details.help-section[open] .toggle-arrow {
         background: rgba(220, 38, 38, 0.1) !important;
     }
     
-    .nav-links-wrapper .theme-switch {
-        align-self: center;
-        margin: 0.75rem 0;
+    .nav-links-wrapper .nav-tools {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+        margin-left: 0;
+        padding: 0.85rem 0.25rem 0;
+        border-left: none;
+        border-top: 1px solid var(--border-light);
+        margin-top: 0.35rem;
+    }
+
+    .nav-links-wrapper .nav-theme-picker {
+        width: 100%;
+        padding: 0 0.25rem;
+    }
+
+    .nav-links-wrapper .admin-theme-select {
+        flex: 1;
+        width: 100%;
+        max-width: none;
     }
 
     .notification-dropdown {
@@ -3559,73 +3600,7 @@ footer {
     }
 }
 
-/* ===== Dark Mode Toggle Switch ===== */
-.theme-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-left: 0.5rem;
-}
-
-.theme-switch {
-    position: relative;
-    width: 52px;
-    height: 28px;
-    background: var(--bg-tertiary);
-    border-radius: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid var(--border);
-    flex-shrink: 0;
-    margin: 0 0.5rem;
-}
-
-.theme-switch:hover {
-    border-color: var(--primary);
-}
-
-.theme-switch-input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-}
-
-.theme-switch-slider {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 20px;
-    height: 20px;
-    background: var(--bg-primary);
-    border-radius: 50%;
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    box-shadow: var(--shadow-sm);
-}
-
-.theme-switch-slider::before {
-    content: '☀️';
-}
-
-.theme-switch-input:checked + .theme-switch-slider {
-    transform: translateX(24px);
-    background: var(--primary);
-}
-
-.theme-switch-input:checked + .theme-switch-slider::before {
-    content: '🌙';
-}
-
-[data-theme="dark"] .theme-switch {
-    background: var(--primary-light);
-    border-color: var(--primary);
-}
-
-/* Dark Mode spezifische Anpassungen */
+/* Dark Mode spezifische Anpassungen (legacy, nicht mehr aktiv) */
 [data-theme="dark"] .message-success {
     border-color: var(--accent);
     color: var(--success-text);

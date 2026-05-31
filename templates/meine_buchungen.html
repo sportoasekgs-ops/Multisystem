@@ -61,6 +61,26 @@
                     {% endif %}
                 </div>
                 
+                {% if booking.is_exclusive %}
+                <div class="booking-exclusive-status">
+                    {% if booking.is_approved %}
+                    <span class="badge-status approved">🔒 Einzelbuchung (genehmigt)</span>
+                    {% else %}
+                    <span class="badge-status pending">⏳ Einzelbuchung (wartet auf Freigabe)</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if booking.notes %}
+                <div class="booking-notes">
+                    <span class="notes-icon">📝</span>
+                    <div class="notes-body">
+                        <span class="notes-label">Notiz zur Einzelbuchung</span>
+                        <span class="notes-text">{{ booking.notes }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="booking-meta">
                     <span class="created-at">Gebucht am: {{ booking.created_at_formatted }}</span>
                 </div>

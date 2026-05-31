@@ -1,122 +1,54 @@
 /* ===== Seiten-Themes: komplette visuelle Welten (data-admin-theme auf <html>) ===== */
 
-/* ── Theme-Auswahl UI ── */
-.admin-theme-bar {
+/* ── Seiten-Design (Dropdown in der Navigation) ── */
+.nav-theme-picker {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem 0.75rem;
-    margin-bottom: 1.5rem;
-    padding: 0.75rem 1rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
+    gap: 0.5rem;
+    padding: 0.2rem 0.35rem 0.2rem 0.65rem;
 }
 
-.admin-theme-bar-label {
-    font-size: 0.8rem;
+.nav-theme-picker-label {
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-secondary);
-    margin-right: 0.25rem;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
 }
 
-.admin-theme-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    justify-content: center;
-}
-
-.admin-theme-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.75rem;
+.admin-theme-select {
+    min-width: 9rem;
+    max-width: 11rem;
+    padding: 0.4rem 1.85rem 0.4rem 0.65rem;
     font-size: 0.78rem;
     font-weight: 600;
     font-family: var(--font-body);
-    color: var(--text-secondary);
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-light);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.admin-theme-btn:hover {
-    border-color: var(--primary);
+    line-height: 1.25;
     color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.55rem center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    appearance: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.admin-theme-btn.active {
+.admin-theme-select:hover:not(:disabled) {
     border-color: var(--primary);
-    background: var(--primary-light);
-    color: var(--primary-dark);
 }
 
-.admin-theme-swatch {
-    width: 14px;
-    height: 14px;
-    border-radius: 4px;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    flex-shrink: 0;
+.admin-theme-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
-.admin-theme-swatch--classic {
-    background: linear-gradient(135deg, #e91e63 40%, #fff 40% 60%, #475569 60%);
-    border-radius: 0;
-    box-shadow: 2px 2px 0 #475569;
-}
-
-.admin-theme-swatch--professional {
-    background: linear-gradient(180deg, #1e40af 0%, #dbeafe 100%);
-    border-radius: 2px;
-}
-
-.admin-theme-swatch--minimal {
-    background: #fff;
-    border: 2px solid #18181b;
-    border-radius: 0;
-}
-
-.admin-theme-swatch--elegant {
-    background: linear-gradient(135deg, #ccfbf1, #ede9fe);
-    border-radius: 50%;
-}
-
-.nav-admin-theme {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.15rem 0;
-}
-
-.nav-admin-theme .admin-theme-btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.7rem;
-}
-
-.nav-admin-theme .admin-theme-bar-label {
-    display: none;
-}
-
-@media (max-width: 768px) {
-    .nav-admin-theme {
-        flex-wrap: wrap;
-        justify-content: center;
-        width: 100%;
-        padding: 0.5rem 0;
-        border-top: 1px solid var(--border-light);
-        margin-top: 0.5rem;
-    }
-
-    .nav-admin-theme .admin-theme-bar-label {
-        display: block;
-        width: 100%;
-        text-align: center;
-        margin: 0;
-    }
+.admin-theme-select:disabled {
+    opacity: 0.65;
+    cursor: wait;
 }
 
 /* Akzentfarben: immer aus CMS-Branding (Color Picker) */
@@ -560,7 +492,7 @@ html[data-admin-theme="minimal"] .admin-card,
 html[data-admin-theme="minimal"] .admin-section-modern,
 html[data-admin-theme="minimal"] .date-selector,
 html[data-admin-theme="minimal"] .modal-content,
-html[data-admin-theme="minimal"] .admin-theme-bar {
+html[data-admin-theme="minimal"] .nav-theme-picker .admin-theme-select {
     border-radius: 0;
     border: 2px solid #000;
     box-shadow: none;
@@ -680,9 +612,143 @@ html[data-admin-theme="minimal"] .stat-card {
     border-radius: 0;
 }
 
-html[data-admin-theme="minimal"] .theme-switch {
-    border-radius: 0;
-    border: 2px solid #000;
+/* Semantische Flächen aus Branding (kein Standard-Blau) */
+html[data-admin-theme="minimal"] {
+    --info-bg: var(--brand-light);
+    --info-text: var(--brand-secondary);
+    --info-border: color-mix(in srgb, var(--brand-primary) 35%, white);
+    --highlight-bg: var(--brand-light);
+    --highlight-border: var(--brand-primary);
+    --highlight-text: var(--brand-secondary);
+}
+
+/* Heute-Spalte & Akzente */
+html[data-admin-theme="minimal"] .week-table th.today-column {
+    background: var(--primary-dark);
+    border-bottom-color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .week-table td.today-column {
+    background: color-mix(in srgb, var(--brand-primary) 8%, white);
+    border-left-color: var(--primary-dark);
+    border-right-color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .week-nav-arrow:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: #fff;
+}
+
+html[data-admin-theme="minimal"] .mark-all-read {
+    color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .help-card-exclusive {
+    background: var(--primary-light);
+    border-color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .help-card-exclusive h4,
+html[data-admin-theme="minimal"] .exclusive-note {
+    color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .exclusive-note {
+    background: color-mix(in srgb, var(--brand-primary) 10%, white);
+}
+
+html[data-admin-theme="minimal"] .slot-type-label.type-fest {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    border: 1px solid var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .progress-bar-fill {
+    background: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .btn-iserv {
+    background: var(--primary-dark);
+    border: 2px solid var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .slot-btn-primary {
+    background: var(--primary-dark);
+    color: #fff;
+}
+
+html[data-admin-theme="minimal"] .slot-btn-primary:hover {
+    background: var(--primary);
+}
+
+html[data-admin-theme="minimal"] .slot-btn-success {
+    background: var(--primary);
+}
+
+html[data-admin-theme="minimal"] .widget-item:hover {
+    border-color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .widget-badge.badge-primary {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+/* Kursfarben: festes Blau/Grün/etc. → Branding */
+html[data-admin-theme="minimal"] .slot-card[class*="course-"] {
+    border-color: color-mix(in srgb, var(--brand-primary) 45%, #d4d4d8);
+}
+
+html[data-admin-theme="minimal"] .course-wochenstart,
+html[data-admin-theme="minimal"] .course-motorik,
+html[data-admin-theme="minimal"] .course-koordination,
+html[data-admin-theme="minimal"] .course-atem,
+html[data-admin-theme="minimal"] .course-bodyscan,
+html[data-admin-theme="minimal"] .course-sozial,
+html[data-admin-theme="minimal"] .course-fitness,
+html[data-admin-theme="minimal"] .course-ruhe,
+html[data-admin-theme="minimal"] .course-turnen,
+html[data-admin-theme="minimal"] .course-konflikt,
+html[data-admin-theme="minimal"] .course-frei,
+html[data-admin-theme="minimal"] .course-default {
+    border-color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .course-wochenstart .course-tag,
+html[data-admin-theme="minimal"] .course-motorik .course-tag,
+html[data-admin-theme="minimal"] .course-koordination .course-tag,
+html[data-admin-theme="minimal"] .course-atem .course-tag,
+html[data-admin-theme="minimal"] .course-bodyscan .course-tag,
+html[data-admin-theme="minimal"] .course-sozial .course-tag,
+html[data-admin-theme="minimal"] .course-fitness .course-tag,
+html[data-admin-theme="minimal"] .course-ruhe .course-tag,
+html[data-admin-theme="minimal"] .course-turnen .course-tag,
+html[data-admin-theme="minimal"] .course-konflikt .course-tag,
+html[data-admin-theme="minimal"] .course-frei .course-tag,
+html[data-admin-theme="minimal"] .course-default .course-tag {
+    background: var(--primary-dark);
+    color: #fff;
+}
+
+html[data-admin-theme="minimal"] .clickable-slot:hover .slot-card {
+    border-color: var(--primary);
+    box-shadow: none;
+}
+
+html[data-admin-theme="minimal"] .form-group input:focus,
+html[data-admin-theme="minimal"] .form-group select:focus,
+html[data-admin-theme="minimal"] .form-group textarea:focus {
+    border-color: var(--primary-dark);
+    outline-color: var(--primary-dark);
+}
+
+html[data-admin-theme="minimal"] .toast.success {
+    border-left-color: var(--brand-primary);
+}
+
+html[data-admin-theme="minimal"] .toast.info {
+    border-left-color: var(--brand-primary);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -914,61 +980,6 @@ html[data-admin-theme="elegant"] .stat-card {
 html[data-admin-theme="elegant"] main.container {
     position: relative;
     z-index: 1;
-}
-
-/* ── Dark Mode × Theme (Branding-Farben bleiben, nur neutrale Flächen) ── */
-html[data-theme="dark"][data-admin-theme="professional"] {
-    --text-primary: #f1f5f9;
-    --bg-primary: #0f172a;
-    --bg-secondary: #0f172a;
-    --bg-tertiary: #1e293b;
-    --bg-card: #1e293b;
-    --border: #475569;
-    --border-light: #334155;
-}
-
-html[data-theme="dark"][data-admin-theme="professional"] body {
-    background-color: #0f172a;
-    background-image: linear-gradient(#1e293b 1px, transparent 1px),
-        linear-gradient(90deg, #1e293b 1px, transparent 1px);
-}
-
-html[data-theme="dark"][data-admin-theme="minimal"] {
-    --text-primary: #fafafa;
-    --text-secondary: #a1a1aa;
-    --bg-primary: #09090b;
-    --bg-secondary: #09090b;
-    --bg-tertiary: #18181b;
-    --bg-card: #09090b;
-    --border: #3f3f46;
-    --border-light: #27272a;
-}
-
-html[data-theme="dark"][data-admin-theme="minimal"] body {
-    background: #09090b;
-}
-
-html[data-theme="dark"][data-admin-theme="minimal"] .top-nav,
-html[data-theme="dark"][data-admin-theme="minimal"] .dashboard-card,
-html[data-theme="dark"][data-admin-theme="minimal"] .slot-card {
-    border-color: var(--border);
-}
-
-html[data-theme="dark"][data-admin-theme="elegant"] {
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --bg-primary: rgba(15, 23, 42, 0.75);
-    --bg-card: rgba(15, 23, 42, 0.6);
-    --border: rgb(var(--primary-rgb) / 0.35);
-}
-
-html[data-theme="dark"][data-admin-theme="elegant"] body {
-    background: linear-gradient(165deg, color-mix(in srgb, var(--brand-primary) 35%, #020617) 0%, #0f172a 50%, #020617 100%);
-}
-
-html[data-theme="dark"][data-admin-theme="elegant"] h2,
-html[data-theme="dark"][data-admin-theme="elegant"] .dashboard-title {
-    color: var(--primary-light);
 }
 
 /* Toast: immer lesbar (unabhängig vom Theme-Text) */

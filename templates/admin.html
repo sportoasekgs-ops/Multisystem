@@ -124,8 +124,9 @@
                         {{ booking.offer_label }}
                     </div>
                     {% if booking.notes %}
-                    <div class="pending-notes">
-                        📝 {{ booking.notes }}
+                    <div class="booking-note-snippet">
+                        <span class="notes-icon">📝</span>
+                        <span class="notes-text">{{ booking.notes }}</span>
                     </div>
                     {% endif %}
                 </div>
