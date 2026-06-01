@@ -686,6 +686,13 @@ def get_all_custom_slot_names():
     return [s.to_dict() for s in slots]
 
 
+def is_holiday_blocked_reason(reason):
+    """True wenn der Sperrgrund Schulferien ist (nicht z. B. Beratung/Fortbildung)."""
+    if not reason:
+        return False
+    return "ferien" in str(reason).strip().lower()
+
+
 def is_slot_blocked(date, period):
     """Prüft, ob ein Slot für ein bestimmtes Datum und Stunde blockiert ist"""
     blocked = BlockedSlot.query.filter_by(date=date, period=period).first()

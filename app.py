@@ -82,14 +82,28 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config["SESSION_COOKIE_SAMESITE"] = "None"
 app.config["SESSION_COOKIE_SECURE"] = True
 
+_iserv_domain_cache = None
+_iserv_domain_loaded = False
+
+
+def invalidate_iserv_domain_cache():
+    """Nach CMS-Änderung der IServ-Domain den Prozess-Cache leeren."""
+    global _iserv_domain_cache, _iserv_domain_loaded
+    _iserv_domain_cache = None
+    _iserv_domain_loaded = False
+
 
 @app.after_request
 def add_iframe_headers(response):
     """Erlaubt Einbettung in IServ iFrame"""
+    global _iserv_domain_cache, _iserv_domain_loaded
     try:
-        from system_config import get_config
+        if not _iserv_domain_loaded:
+            from system_config import get_config
 
-        iserv_domain = get_config("iserv_domain", "")
+            _iserv_domain_cache = get_config("iserv_domain", "")
+            _iserv_domain_loaded = True
+        iserv_domain = _iserv_domain_cache or ""
         if iserv_domain:
             origin = f"https://{iserv_domain}"
             response.headers["X-Frame-Options"] = f"ALLOW-FROM {origin}"
@@ -572,7 +586,7 @@ def admin_required(f):
 
 
 # Hilfsfunktion: Gibt Informationen über eine Stunde zurück
-def get_period_info(weekday, period):
+def get_period_info(weekday, period, fixed_offers=None):
     """
     Gibt Informationen über eine Stunde zurück (fest/frei, Bezeichnung)
     weekday: z.B. "Mon", "Tue", ...
@@ -580,7 +594,8 @@ def get_period_info(weekday, period):
     """
     from models import get_custom_slot_name
 
-    fixed_offers = get_fixed_offers()
+    if fixed_offers is None:
+        fixed_offers = get_fixed_offers()
     if weekday in fixed_offers and period in fixed_offers[weekday]:
         custom_label = get_custom_slot_name(weekday, period)
         label = custom_label if custom_label else fixed_offers[weekday][period]
@@ -1310,13 +1325,27 @@ def dashboard():
     weekday_name_de = weekday_names_de.get(weekday_name, weekday_name)
 
     # Erstelle Stundenplan für den Tag
-    from models import get_blocked_slot, is_slot_blocked
+    from models import Booking, get_blocked_slot, is_holiday_blocked_reason, is_slot_blocked
+
+    period_times = get_period_times()
+    period_keys = sorted(period_times.keys())
+    fixed_offers = get_fixed_offers()
+    max_students = get_max_students()
+
+    student_counts_today = {}
+    for booking in Booking.query.filter_by(date=selected_date_str).all():
+        students = (
+            json.loads(booking.students_json) if booking.students_json else []
+        )
+        student_counts_today[booking.period] = (
+            student_counts_today.get(booking.period, 0) + len(students)
+        )
 
     schedule = []
-    for period in sorted(get_period_times().keys()):
-        period_info = get_period_info(weekday, period)
-        student_count = count_students_for_period(selected_date_str, period)
-        available = get_max_students() - student_count
+    for period in period_keys:
+        period_info = get_period_info(weekday, period, fixed_offers=fixed_offers)
+        student_count = student_counts_today.get(period, 0)
+        available = max_students - student_count
 
         # Prüfe, ob Slot blockiert ist
         blocked_slot = get_blocked_slot(selected_date_str, period)
@@ -1341,10 +1370,11 @@ def dashboard():
             if not time_message:
                 time_message = "Buchungen sind am Wochenende nicht möglich."
 
+        pt = period_times[period]
         schedule.append(
             {
                 "period": period,
-                "time": f"{_get_period_dict(period)['start']} - {_get_period_dict(period)['end']}",
+                "time": f"{pt['start']} - {pt['end']}",
                 "type": period_info["type"],
                 "label": period_info["label"],
                 "booked": student_count,
@@ -1456,8 +1486,8 @@ def dashboard():
         day_date_str = day_date.strftime("%Y-%m-%d")
 
         day_schedule = []
-        for period in sorted(get_period_times().keys()):
-            info = get_period_info(wd, period)
+        for period in period_keys:
+            info = get_period_info(wd, period, fixed_offers=fixed_offers)
             key = f"{day_date_str}_{period}"
             period_bookings = bookings_by_date_period.get(key, [])
             blocked_slot = blocked_by_date_period.get(key)
@@ -1470,7 +1500,7 @@ def dashboard():
             if exclusive_booking:
                 available = 0
             else:
-                available = get_max_students() - total_students
+                available = max_students - total_students
 
             # Prüfe, ob Termin in der Vergangenheit liegt
             is_past = is_past_date(day_date, period)
@@ -1527,7 +1557,7 @@ def dashboard():
             }
         )
 
-    # Hole anstehende blockierte Slots für den Liveticker (ab heute)
+    # Hole anstehende blockierte Slots für den Liveticker (ab heute, ohne Ferien)
     from models import BlockedSlot, User
 
     today_str = datetime.now(get_berlin_tz()).strftime("%Y-%m-%d")
@@ -1536,12 +1566,14 @@ def dashboard():
         .outerjoin(User, BlockedSlot.blocked_by == User.id)
         .filter(BlockedSlot.date >= today_str)
         .order_by(BlockedSlot.date, BlockedSlot.period)
-        .limit(15)
+        .limit(80)
         .all()
     )
 
     upcoming_blocked = []
     for blocked, username in upcoming_query:
+        if is_holiday_blocked_reason(blocked.reason):
+            continue
         try:
             date_obj = datetime.strptime(blocked.date, "%Y-%m-%d")
             wd_de = {
@@ -1569,6 +1601,8 @@ def dashboard():
                 "blocked_by_name": username or "System",
             }
         )
+        if len(upcoming_blocked) >= 15:
+            break
 
     # Hole eigene anstehende Buchungen & ausstehende Exklusiv-Anfragen
     from models import Booking
@@ -4284,6 +4318,7 @@ def admin_cms_save():
             os.environ["ISERV_DOMAIN"] = new_domain
         if new_client_id:
             os.environ["ISERV_CLIENT_ID"] = new_client_id
+        invalidate_iserv_domain_cache()
         flash("IServ-Konfiguration gespeichert. ✅", "success")
 
     elif section == "demo":

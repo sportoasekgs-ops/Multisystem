@@ -57,12 +57,39 @@ def seed_initial_data():
         print(f"[DynConfig] Seeding fehlgeschlagen: {e}")
 
 
+def _query_active_periods_cached():
+    """Aktive Stunden einmal pro Request laden."""
+    try:
+        from flask import g, has_request_context
+
+        if has_request_context():
+            if hasattr(g, "_periods_cache"):
+                return g._periods_cache
+            from models import Period
+
+            result = (
+                Period.query.filter_by(is_active=True)
+                .order_by(Period.sort_order, Period.number)
+                .all()
+            )
+            g._periods_cache = result
+            return result
+    except Exception:
+        pass
+    from models import Period
+
+    return (
+        Period.query.filter_by(is_active=True)
+        .order_by(Period.sort_order, Period.number)
+        .all()
+    )
+
+
 def get_period_times():
     """Gibt alle Stunden als Dict zurück: {number: {'start': '...', 'end': '...', 'name': '...'}}"""
-    from models import Period
     from system_config import is_setup_complete
     try:
-        periods = Period.query.filter_by(is_active=True).order_by(Period.sort_order).all()
+        periods = _query_active_periods_cached()
         if not periods:
             # Fallback nur wenn Setup abgeschlossen (Upgrade alter Installation)
             if is_setup_complete():
@@ -87,16 +114,34 @@ def get_period(number):
 
 def get_fixed_offers():
     """Feste Angebote aus DB. Leeres Dict wenn keine Kurse – KEIN Fallback auf Defaults."""
-    from models import Course
     try:
-        courses = Course.query.filter_by(course_type='fixed', is_active=True).all()
-        result = {wd: {} for wd in ('Mon', 'Tue', 'Wed', 'Thu', 'Fri')}
+        from flask import g, has_request_context
+
+        if has_request_context():
+            if hasattr(g, "_fixed_offers_cache"):
+                return g._fixed_offers_cache
+    except Exception:
+        pass
+
+    from models import Course
+
+    try:
+        courses = Course.query.filter_by(course_type="fixed", is_active=True).all()
+        result = {wd: {} for wd in ("Mon", "Tue", "Wed", "Thu", "Fri")}
         for c in courses:
             if c.weekday and c.period_number is not None:
                 result.setdefault(c.weekday, {})[c.period_number] = c.name
-        return result
     except Exception:
-        return {wd: {} for wd in ('Mon', 'Tue', 'Wed', 'Thu', 'Fri')}
+        result = {wd: {} for wd in ("Mon", "Tue", "Wed", "Thu", "Fri")}
+
+    try:
+        from flask import g, has_request_context
+
+        if has_request_context():
+            g._fixed_offers_cache = result
+    except Exception:
+        pass
+    return result
 
 
 def get_free_courses():

@@ -6,14 +6,39 @@ Alle App-Einstellungen werden hier gespeichert und gelesen.
 from database import db
 
 
+def _request_cache():
+    """Request-level cache – ein DB-Query pro Key pro Request."""
+    try:
+        from flask import g, has_request_context
+
+        if not has_request_context():
+            return None
+        if not hasattr(g, "_syscfg_cache"):
+            g._syscfg_cache = {}
+        return g._syscfg_cache
+    except Exception:
+        return None
+
+
+def _invalidate_config_cache_key(key):
+    cache = _request_cache()
+    if cache is not None and key in cache:
+        del cache[key]
+
+
 def get_config(key, default=None):
-    """Liest einen Konfigurations-Wert aus der Datenbank."""
+    """Liest einen Konfigurations-Wert aus der Datenbank (mit Request-Cache)."""
+    cache = _request_cache()
+    if cache is not None and key in cache:
+        v = cache[key]
+        return default if v is None else v
     try:
         from models import SystemConfig
         entry = SystemConfig.query.filter_by(key=key).first()
-        if entry is not None and entry.value is not None:
-            return entry.value
-        return default
+        value = entry.value if (entry is not None and entry.value is not None) else None
+        if cache is not None:
+            cache[key] = value
+        return default if value is None else value
     except Exception:
         return default
 
@@ -32,6 +57,7 @@ def set_config(key, value, category='general'):
             entry = SystemConfig(key=key, value=str(value) if value is not None else None, category=category)
             db.session.add(entry)
         db.session.commit()
+        _invalidate_config_cache_key(key)
         return True
     except Exception as e:
         db.session.rollback()
@@ -54,6 +80,8 @@ def set_configs(data_dict, category='general'):
                 entry = SystemConfig(key=key, value=str(value) if value is not None else None, category=category)
                 db.session.add(entry)
         db.session.commit()
+        for key in data_dict:
+            _invalidate_config_cache_key(key)
         return True
     except Exception as e:
         db.session.rollback()
