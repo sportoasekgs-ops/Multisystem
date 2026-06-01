@@ -653,8 +653,9 @@
                     {% else %}
                     {% for slot_idx in range(week_overview[0].schedule|length) %}
                     {% set p_num = week_overview[0].schedule[slot_idx].period %}
-                    <tr>
-                        <td class="period-row-label"><strong>{{ week_overview[0].schedule[slot_idx].period_label }}</strong></td>
+                    {% set row_slot = week_overview[0].schedule[slot_idx] %}
+                    <tr{% if row_slot.type == 'pause' %} class="week-row-pause"{% endif %}>
+                        <td class="period-row-label"><strong>{{ row_slot.period_label }}</strong></td>
                         {% for day in week_overview %}
                         <td
                             class="{% if day.is_today %}today-column{% endif %} {% if day.schedule[slot_idx].blocked %}period-blocked{% elif day.schedule[slot_idx].is_exclusive %}period-exclusive{% elif day.schedule[slot_idx].is_weekend %}period-past{% elif day.schedule[slot_idx].is_past %}period-past{% else %}period-{{ day.schedule[slot_idx].type }}{% endif %} {% if day.schedule[slot_idx].can_book %}clickable-slot{% endif %}"

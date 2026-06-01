@@ -5789,20 +5789,54 @@ footer {
     font-size: 0.8rem;
 }
 
-/* Große Pausen im Wochenplan */
+/* Große Pausen im Wochenplan (dezent warm, nicht zu grell) */
 .week-table .period-row-label {
     font-size: 0.78rem;
     line-height: 1.25;
     max-width: 5.5rem;
 }
 
+.week-table tr.week-row-pause td:first-child {
+    background: color-mix(in srgb, #d4a574 16%, var(--bg-secondary));
+    border-right: 2px solid color-mix(in srgb, #c9954a 28%, transparent);
+    color: color-mix(in srgb, #6b5428 75%, var(--text-primary));
+}
+
+.week-table td.period-pause {
+    background: color-mix(in srgb, #e8c992 11%, var(--bg-card));
+}
+
+.week-table td.period-pause.today-column {
+    background: color-mix(in srgb, #e8c992 16%, var(--bg-card));
+}
+
 .slot-card.course-pause {
-    border-left: 3px solid #ff9800;
-    background: rgba(255, 152, 0, 0.08);
+    border-color: color-mix(in srgb, #d4a574 40%, var(--border));
+    border-left: 4px solid color-mix(in srgb, #c9954a 70%, #d4a574);
+    background: linear-gradient(
+        145deg,
+        color-mix(in srgb, #f7edd9 70%, #fff) 0%,
+        color-mix(in srgb, #f0e2c8 45%, var(--bg-card)) 100%
+    );
+    box-shadow: 0 1px 3px color-mix(in srgb, #c9954a 12%, transparent);
+}
+
+.slot-card.course-pause .slot-course-name {
+    color: color-mix(in srgb, #6b5428 80%, var(--text-primary));
+}
+
+.course-pause .course-tag {
+    background: color-mix(in srgb, #e8c992 35%, var(--bg-tertiary));
+    color: color-mix(in srgb, #7a5c28 88%, var(--text-secondary));
+    border: 1px solid color-mix(in srgb, #d4a574 32%, transparent);
 }
 
 .period-pause.clickable-slot {
     cursor: pointer;
+}
+
+.period-pause:not(.clickable-slot) .slot-card.course-pause {
+    opacity: 0.97;
 }
 
 .widget-empty {

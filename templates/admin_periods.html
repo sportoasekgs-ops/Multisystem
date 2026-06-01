@@ -130,7 +130,14 @@
 }
 .kind-lesson { background: var(--primary-light); color: var(--primary-dark); }
 .kind-break { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border-light); }
-.period-row-break td { background: var(--bg-secondary); }
+.period-row-break td {
+    background: color-mix(in srgb, #e8c992 14%, var(--bg-secondary));
+}
+.period-row-break .kind-break {
+    background: color-mix(in srgb, #e8c992 40%, var(--bg-tertiary));
+    color: color-mix(in srgb, #7a5c28 90%, var(--text-secondary));
+    border-color: color-mix(in srgb, #d4a574 35%, var(--border-light));
+}
 .break-setup-card {
     border-left: 4px solid var(--primary);
     margin-bottom: 1.5rem;
