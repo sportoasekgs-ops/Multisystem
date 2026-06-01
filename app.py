@@ -269,12 +269,14 @@ if _BOOTSTRAP_MODE:
 if not _BOOTSTRAP_MODE:
     from demo_mode import get_demo_bookings_for_week, is_demo_mode
     from dynamic_config import (
+        format_period_label,
         get_booking_advance_minutes,
         get_fixed_offers,
         get_free_courses,
         get_max_students,
         get_period_times,
         get_school_classes_list,
+        is_break_period,
         seed_initial_data,
     )
     from dynamic_config import (
@@ -349,6 +351,32 @@ if not _BOOTSTRAP_MODE:
                         conn.execute(text("ALTER TABLE blocked_slots ADD COLUMN icon VARCHAR(10) DEFAULT '🔧'"))
                         conn.commit()
                     print("[MIGRATION] Spalte erfolgreich hinzugefügt.")
+            if db.engine.dialect.has_table(db.engine.connect(), "periods"):
+                period_columns = [
+                    col["name"] for col in inspector.get_columns("periods")
+                ]
+                if "period_kind" not in period_columns:
+                    print("[MIGRATION] Füge Spalte 'period_kind' zu 'periods' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+
+                        conn.execute(
+                            text(
+                                "ALTER TABLE periods ADD COLUMN period_kind VARCHAR(20) DEFAULT 'lesson'"
+                            )
+                        )
+                        conn.commit()
+                if "after_lesson" not in period_columns:
+                    print("[MIGRATION] Füge Spalte 'after_lesson' zu 'periods' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+
+                        conn.execute(
+                            text(
+                                "ALTER TABLE periods ADD COLUMN after_lesson INTEGER"
+                            )
+                        )
+                        conn.commit()
         except Exception as e:
             print(f"[MIGRATION] Fehler bei der Auto-Migration: {e}")
         # --------------------------------------------------------------------------------
@@ -590,9 +618,13 @@ def get_period_info(weekday, period, fixed_offers=None):
     """
     Gibt Informationen über eine Stunde zurück (fest/frei, Bezeichnung)
     weekday: z.B. "Mon", "Tue", ...
-    period: 1-6
+    period: interne Slot-Nummer (Unterricht oder große Pause)
     """
     from models import get_custom_slot_name
+
+    if is_break_period(period):
+        pinfo = _get_period_dict(period)
+        return {"type": "pause", "label": pinfo.get("name", "Große Pause")}
 
     if fixed_offers is None:
         fixed_offers = get_fixed_offers()
@@ -1374,6 +1406,7 @@ def dashboard():
         schedule.append(
             {
                 "period": period,
+                "period_label": format_period_label(period),
                 "time": f"{pt['start']} - {pt['end']}",
                 "type": period_info["type"],
                 "label": period_info["label"],
@@ -1522,6 +1555,7 @@ def dashboard():
             day_schedule.append(
                 {
                     "period": period,
+                    "period_label": format_period_label(period),
                     "type": info["type"],
                     "label": info["label"],
                     "bookings": period_bookings,
@@ -1595,6 +1629,7 @@ def dashboard():
                 "date": blocked.date,
                 "date_formatted": date_formatted,
                 "period": blocked.period,
+                "period_label": format_period_label(blocked.period),
                 "reason": blocked.reason,
                 "icon": blocked.icon or "🔧",
                 "blocked_by_id": blocked.blocked_by,
@@ -1682,6 +1717,7 @@ def dashboard():
                     "date": booking.date,
                     "date_formatted": date_formatted,
                     "period": booking.period,
+                    "period_label": format_period_label(booking.period),
                     "offer_label": booking.offer_label,
                     "is_exclusive": booking.is_exclusive,
                     "is_approved": booking.is_approved,
@@ -2049,8 +2085,9 @@ def book(date_str, period):
         flash("Ungültiges Datum.", "error")
         return redirect(url_for("dashboard"))
 
-    if period < 1 or period > 6:
-        flash("Ungültige Stunde.", "error")
+    period_times = get_period_times()
+    if period not in period_times:
+        flash("Ungültiges Zeitfenster.", "error")
         return redirect(url_for("dashboard"))
 
     # Prüfe, ob Termin in der Vergangenheit liegt
@@ -2534,6 +2571,7 @@ def meine_buchungen():
                     booking_dict["weekday"], booking_dict["weekday"]
                 ),
                 "period": booking_dict["period"],
+                "period_label": format_period_label(booking_dict["period"]),
                 "period_time": f"{_get_period_dict(booking_dict['period'])['start']} - {_get_period_dict(booking_dict['period'])['end']}",
                 "teacher_name": booking_dict.get("teacher_name", "N/A"),
                 "teacher_class": booking_dict.get("teacher_class", "N/A"),

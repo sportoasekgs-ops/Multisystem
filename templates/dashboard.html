@@ -523,10 +523,11 @@
                     {% if upcoming_bookings %}
                         <div class="widget-list">
                             {% for booking in upcoming_bookings %}
-                                <div class="widget-item booking-item">
+                                <div class="widget-item booking-item booking-item-compact">
                                     <div class="widget-details">
                                         <div class="booking-time">
-                                            <strong>{{ booking.date_formatted }}</strong> — {{ booking.period }}. Std.
+                                            <strong>{{ booking.date_formatted }}</strong>
+                                            <span class="booking-period-label">{{ booking.period_label }}</span>
                                         </div>
                                         <div class="booking-offer">
                                             {{ booking.offer_label }}
@@ -539,18 +540,12 @@
                                             {% endif %}
                                         </div>
                                         {% if booking.is_class_booking %}
-                                        <div class="booking-students" title="{{ booking.students_str }}">
+                                        <div class="booking-students booking-students-inline" title="{{ booking.students_str }}">
                                             🏫 {{ booking.students_str }}
                                         </div>
-                                        {% else %}
-                                        <div class="booking-students" title="{{ booking.students_str }}">
-                                            Schüler: {{ booking.students_str }}
-                                        </div>
-                                        {% endif %}
-                                        {% if booking.notes %}
-                                        <div class="booking-note-snippet" title="{{ booking.notes }}">
-                                            <span class="notes-icon">📝</span>
-                                            <span class="notes-text">{{ booking.notes }}</span>
+                                        {% elif booking.students_str %}
+                                        <div class="booking-students booking-students-inline" title="{{ booking.students_str }}">
+                                            {{ booking.students_str }}
                                         </div>
                                         {% endif %}
                                     </div>
@@ -659,7 +654,7 @@
                     {% for slot_idx in range(week_overview[0].schedule|length) %}
                     {% set p_num = week_overview[0].schedule[slot_idx].period %}
                     <tr>
-                        <td><strong>{{ p_num }}.</strong></td>
+                        <td class="period-row-label"><strong>{{ week_overview[0].schedule[slot_idx].period_label }}</strong></td>
                         {% for day in week_overview %}
                         <td
                             class="{% if day.is_today %}today-column{% endif %} {% if day.schedule[slot_idx].blocked %}period-blocked{% elif day.schedule[slot_idx].is_exclusive %}period-exclusive{% elif day.schedule[slot_idx].is_weekend %}period-past{% elif day.schedule[slot_idx].is_past %}period-past{% else %}period-{{ day.schedule[slot_idx].type }}{% endif %} {% if day.schedule[slot_idx].can_book %}clickable-slot{% endif %}"
@@ -731,7 +726,8 @@
                             day.schedule[slot_idx] %} {% set label = slot.label
                             %} {% set course_class = 'course-frei' %} {% set
                             course_icon = '⭐' %} {% set course_tag = 'Flexibel'
-                            %} {% if slot.type == 'fest' %} {% if 'Wochenstart'
+                            %} {% if slot.type == 'pause' %} {% set course_class = 'course-pause' %} {% set course_icon = '☕' %} {% set course_tag = 'Pause' %}
+                            {% elif slot.type == 'fest' %} {% if 'Wochenstart'
                             in label %} {% set course_class =
                             'course-wochenstart' %} {% set course_icon = '☀️' %}
                             {% set course_tag = 'Energie' %} {% elif 'Konflikt'
@@ -769,6 +765,7 @@
                             <div class="slot-card {{ course_class }} {% if slot.bookings %}slot-has-bookings{% endif %} {% if slot.available == 0 and not slot.is_past and not slot.is_exclusive %}slot-full{% endif %}">
                                 <div class="slot-course-name">
                                     {% if slot.type == 'fest' %}{{ label }}{%
+                                    elif slot.type == 'pause' %}{{ label }}{%
                                     else %}Freie Wahl{% endif %}
                                 </div>
 
@@ -867,7 +864,7 @@
                             <div class="ticker-icon">{{ block.icon }}</div>
                             <div class="ticker-details">
                                 <div class="ticker-time">
-                                    <strong>{{ block.date_formatted }}</strong> — {{ block.period }}. Stunde
+                                    <strong>{{ block.date_formatted }}</strong> — {{ block.period_label|default(block.period ~ '. Stunde') }}
                                 </div>
                                 <div class="ticker-reason">{{ block.reason }}</div>
                                 <div class="ticker-author">

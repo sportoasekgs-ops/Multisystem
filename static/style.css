@@ -5664,6 +5664,147 @@ footer {
     color: #059669;
 }
 
+/* Kompakte „Meine Buchungen“ (Dashboard-Widget) */
+.my-bookings-widget .widget-list {
+    gap: 0.35rem;
+}
+
+.my-bookings-widget .widget-item.booking-item-compact {
+    padding: 0.45rem 0.55rem;
+    gap: 0.4rem;
+    align-items: flex-start;
+}
+
+.my-bookings-widget .booking-time {
+    font-size: 0.72rem;
+    margin-bottom: 0.1rem;
+    line-height: 1.35;
+}
+
+.my-bookings-widget .booking-period-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.my-bookings-widget .booking-offer {
+    font-size: 0.78rem;
+    line-height: 1.3;
+}
+
+.my-bookings-widget .booking-students-inline {
+    font-size: 0.68rem;
+    margin-top: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.my-bookings-widget .btn-cancel-booking {
+    width: 22px;
+    height: 22px;
+    font-size: 0.85rem;
+}
+
+/* Kompakte „Meine Buchungen“-Seite */
+.my-bookings-page .bookings-list {
+    gap: 0.5rem;
+}
+
+.my-bookings-page .booking-card-compact {
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.my-bookings-page .booking-card-compact:hover {
+    transform: none;
+}
+
+.my-bookings-page .booking-header-compact {
+    padding: 0.55rem 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.my-bookings-page .booking-header-compact .booking-date-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.my-bookings-page .booking-header-compact .booking-weekday {
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.my-bookings-page .booking-header-compact .booking-date,
+.my-bookings-page .booking-header-compact .period-time {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    display: inline;
+}
+
+.my-bookings-page .booking-header-compact .period-time::before {
+    content: " · ";
+}
+
+.my-bookings-page .booking-header-compact .period-badge {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.55rem;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.my-bookings-page .booking-body-compact {
+    padding: 0.5rem 0.75rem 0.65rem;
+}
+
+.my-bookings-page .booking-offer-compact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.my-bookings-page .booking-offer-compact .offer-label {
+    font-size: 0.88rem;
+}
+
+.my-bookings-page .booking-students .students-list {
+    margin: 0.25rem 0 0;
+    padding-left: 1rem;
+    font-size: 0.82rem;
+}
+
+.my-bookings-page .booking-actions {
+    padding: 0.45rem 0.75rem;
+    gap: 0.5rem;
+}
+
+.my-bookings-page .booking-actions .btn {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8rem;
+}
+
+/* Große Pausen im Wochenplan */
+.week-table .period-row-label {
+    font-size: 0.78rem;
+    line-height: 1.25;
+    max-width: 5.5rem;
+}
+
+.slot-card.course-pause {
+    border-left: 3px solid #ff9800;
+    background: rgba(255, 152, 0, 0.08);
+}
+
+.period-pause.clickable-slot {
+    cursor: pointer;
+}
+
 .widget-empty {
     text-align: center;
     padding: 1.5rem 1rem;

@@ -185,6 +185,8 @@ class Period(db.Model):
     end_time = db.Column(db.String(5), nullable=False)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
+    period_kind = db.Column(db.String(20), nullable=False, default="lesson")
+    after_lesson = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
         return {
@@ -195,6 +197,8 @@ class Period(db.Model):
             "end": self.end_time,
             "sort_order": self.sort_order,
             "is_active": self.is_active,
+            "period_kind": self.period_kind or "lesson",
+            "after_lesson": self.after_lesson,
         }
 
 

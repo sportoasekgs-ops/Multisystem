@@ -13,27 +13,32 @@ _BUILTIN_TEMPLATES = [
         'name': 'Standard Halbtagsschule (6 Stunden)',
         'description': 'Klassischer Schulvormittag von 7:50–13:10 Uhr',
         'periods': [
-            {'number': 1, 'name': '1. Stunde', 'start': '07:50', 'end': '08:35'},
-            {'number': 2, 'name': '2. Stunde', 'start': '08:35', 'end': '09:20'},
-            {'number': 3, 'name': '3. Stunde', 'start': '09:40', 'end': '10:25'},
-            {'number': 4, 'name': '4. Stunde', 'start': '10:25', 'end': '11:10'},
-            {'number': 5, 'name': '5. Stunde', 'start': '11:30', 'end': '12:15'},
-            {'number': 6, 'name': '6. Stunde', 'start': '12:15', 'end': '13:00'},
+            {'number': 1, 'name': '1. Stunde', 'start': '07:50', 'end': '08:35', 'kind': 'lesson'},
+            {'number': 2, 'name': '2. Stunde', 'start': '08:35', 'end': '09:20', 'kind': 'lesson'},
+            {'number': 3, 'name': 'Große Pause', 'start': '09:20', 'end': '09:40', 'kind': 'break', 'after_lesson': 2},
+            {'number': 4, 'name': '3. Stunde', 'start': '09:40', 'end': '10:25', 'kind': 'lesson'},
+            {'number': 5, 'name': '4. Stunde', 'start': '10:25', 'end': '11:10', 'kind': 'lesson'},
+            {'number': 6, 'name': 'Große Pause', 'start': '11:10', 'end': '11:30', 'kind': 'break', 'after_lesson': 4},
+            {'number': 7, 'name': '5. Stunde', 'start': '11:30', 'end': '12:15', 'kind': 'lesson'},
+            {'number': 8, 'name': '6. Stunde', 'start': '12:15', 'end': '13:00', 'kind': 'lesson'},
         ],
     },
     {
         'id': 'builtin_8',
         'name': 'Ganztagsschule (8 Stunden)',
-        'description': 'Ganztag von 7:50–15:10 Uhr mit Mittagspause',
+        'description': 'Ganztag von 7:50–15:10 Uhr mit großen Pausen',
         'periods': [
-            {'number': 1, 'name': '1. Stunde', 'start': '07:50', 'end': '08:35'},
-            {'number': 2, 'name': '2. Stunde', 'start': '08:35', 'end': '09:20'},
-            {'number': 3, 'name': '3. Stunde', 'start': '09:40', 'end': '10:25'},
-            {'number': 4, 'name': '4. Stunde', 'start': '10:25', 'end': '11:10'},
-            {'number': 5, 'name': '5. Stunde', 'start': '11:30', 'end': '12:15'},
-            {'number': 6, 'name': '6. Stunde', 'start': '12:15', 'end': '13:00'},
-            {'number': 7, 'name': '7. Stunde', 'start': '14:00', 'end': '14:45'},
-            {'number': 8, 'name': '8. Stunde', 'start': '14:45', 'end': '15:30'},
+            {'number': 1, 'name': '1. Stunde', 'start': '07:50', 'end': '08:35', 'kind': 'lesson'},
+            {'number': 2, 'name': '2. Stunde', 'start': '08:35', 'end': '09:20', 'kind': 'lesson'},
+            {'number': 3, 'name': 'Große Pause', 'start': '09:20', 'end': '09:40', 'kind': 'break', 'after_lesson': 2},
+            {'number': 4, 'name': '3. Stunde', 'start': '09:40', 'end': '10:25', 'kind': 'lesson'},
+            {'number': 5, 'name': '4. Stunde', 'start': '10:25', 'end': '11:10', 'kind': 'lesson'},
+            {'number': 6, 'name': 'Große Pause', 'start': '11:10', 'end': '11:30', 'kind': 'break', 'after_lesson': 4},
+            {'number': 7, 'name': '5. Stunde', 'start': '11:30', 'end': '12:15', 'kind': 'lesson'},
+            {'number': 8, 'name': '6. Stunde', 'start': '12:15', 'end': '13:00', 'kind': 'lesson'},
+            {'number': 9, 'name': 'Mittagspause', 'start': '13:00', 'end': '14:00', 'kind': 'break', 'after_lesson': 6},
+            {'number': 10, 'name': '7. Stunde', 'start': '14:00', 'end': '14:45', 'kind': 'lesson'},
+            {'number': 11, 'name': '8. Stunde', 'start': '14:45', 'end': '15:30', 'kind': 'lesson'},
         ],
     },
     {
@@ -64,6 +69,97 @@ def _validate_csrf(token):
     return token == session.get('csrf_token')
 
 
+def _after_periods_changed():
+    from dynamic_config import invalidate_periods_cache
+
+    invalidate_periods_cache()
+
+
+def _parse_hm(time_str):
+    parts = (time_str or '00:00').strip().split(':')
+    return int(parts[0]) * 60 + int(parts[1])
+
+
+def _format_hm(total_minutes):
+    total_minutes = max(0, int(total_minutes))
+    return f'{total_minutes // 60:02d}:{total_minutes % 60:02d}'
+
+
+def _next_period_number():
+    from models import Period
+
+    max_n = db.session.query(db.func.max(Period.number)).scalar()
+    return (max_n or 0) + 1
+
+
+def _count_lessons():
+    from sqlalchemy import or_
+
+    from models import Period
+
+    return (
+        Period.query.filter_by(is_active=True)
+        .filter(or_(Period.period_kind == 'lesson', Period.period_kind.is_(None)))
+        .count()
+    )
+
+
+def _ordered_periods():
+    from models import Period
+
+    return (
+        Period.query.filter_by(is_active=True)
+        .order_by(Period.sort_order, Period.number)
+        .all()
+    )
+
+
+def _is_lesson(period):
+    return (period.period_kind or 'lesson') != 'break'
+
+
+def _insert_break_after_lesson(after_lesson_n, start_time, end_time, name='Große Pause'):
+    """Fügt eine Pause nach der N-ten Unterrichtsstunde ein (sort_order + interne Nr. automatisch)."""
+    from models import Period
+
+    ordered = _ordered_periods()
+    lesson_count = 0
+    anchor = None
+
+    for p in ordered:
+        if _is_lesson(p):
+            lesson_count += 1
+            if lesson_count == after_lesson_n:
+                anchor = p
+                break
+
+    if anchor is None:
+        return False, f'Es gibt keine {after_lesson_n}. Unterrichtsstunde im Stundenplan.'
+
+    pos = ordered.index(anchor)
+    if pos + 1 < len(ordered):
+        nxt = ordered[pos + 1]
+        if not _is_lesson(nxt) and (nxt.after_lesson == after_lesson_n or nxt.after_lesson is None):
+            return False, f'Nach der {after_lesson_n}. Stunde ist bereits eine Pause eingetragen.'
+
+    insert_sort = anchor.sort_order + 1
+    for p in Period.query.filter(Period.sort_order >= insert_sort).all():
+        p.sort_order += 1
+
+    new_p = Period(
+        number=_next_period_number(),
+        name=name.strip() or 'Große Pause',
+        start_time=start_time,
+        end_time=end_time,
+        sort_order=insert_sort,
+        is_active=True,
+        period_kind='break',
+        after_lesson=after_lesson_n,
+    )
+    db.session.add(new_p)
+    return True, None
+
+
 # ─── Stunden (Periods) ────────────────────────────────────────────────────────
 
 @admin_dyn_bp.route('/periods')
@@ -74,10 +170,15 @@ def periods():
     from models import Period, PeriodTemplate
     all_periods = Period.query.order_by(Period.sort_order, Period.number).all()
     saved_templates = PeriodTemplate.query.order_by(PeriodTemplate.created_at.desc()).all()
-    return render_template('admin_periods.html',
-                           periods=all_periods,
-                           saved_templates=saved_templates,
-                           builtin_templates=_BUILTIN_TEMPLATES)
+    lesson_count = sum(1 for p in all_periods if p.is_active and _is_lesson(p))
+    return render_template(
+        'admin_periods.html',
+        periods=all_periods,
+        saved_templates=saved_templates,
+        builtin_templates=_BUILTIN_TEMPLATES,
+        lesson_count=lesson_count,
+        next_period_number=_next_period_number(),
+    )
 
 
 @admin_dyn_bp.route('/periods/add', methods=['POST'])
@@ -104,17 +205,140 @@ def periods_add():
             flash(f'Stunde {number} existiert bereits.', 'error')
             return redirect(url_for('admin_dyn.periods'))
 
+        period_kind = request.form.get('period_kind', 'lesson')
+        if period_kind not in ('lesson', 'break'):
+            period_kind = 'lesson'
+
+        max_sort = db.session.query(db.func.max(Period.sort_order)).scalar() or 0
         p = Period(
             number=number,
             name=name,
             start_time=start_time,
             end_time=end_time,
-            sort_order=number,
+            sort_order=max_sort + 1,
             is_active=True,
+            period_kind=period_kind,
         )
         db.session.add(p)
         db.session.commit()
-        flash(f'Stunde {number} ({name}) hinzugefügt.', 'success')
+        _after_periods_changed()
+        kind_label = 'Große Pause' if period_kind == 'break' else 'Stunde'
+        flash(f'{kind_label} {number} ({name}) hinzugefügt.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler: {e}', 'error')
+    return redirect(url_for('admin_dyn.periods'))
+
+
+@admin_dyn_bp.route('/periods/insert-break', methods=['POST'])
+def periods_insert_break():
+    """Große Pause nach einer Unterrichtsstunde einfügen (ohne manuelle Slot-Nr.)."""
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    try:
+        after_lesson = int(request.form.get('after_lesson', 0))
+        start_time = request.form.get('start_time', '').strip()
+        end_time = request.form.get('end_time', '').strip()
+        name = request.form.get('name', 'Große Pause').strip()
+
+        if after_lesson < 1:
+            flash('Bitte wählen Sie, nach welcher Unterrichtsstunde die Pause kommt.', 'error')
+            return redirect(url_for('admin_dyn.periods'))
+
+        if not start_time or not end_time:
+            from models import Period
+
+            ordered = _ordered_periods()
+            lesson_count = 0
+            anchor = None
+            for p in ordered:
+                if _is_lesson(p):
+                    lesson_count += 1
+                    if lesson_count == after_lesson:
+                        anchor = p
+                        break
+            if anchor:
+                start_time = anchor.end_time
+                duration = int(request.form.get('pause_minutes', 20) or 20)
+                end_time = _format_hm(_parse_hm(start_time) + duration)
+            else:
+                flash('Zeiten konnten nicht ermittelt werden – bitte Beginn und Ende angeben.', 'error')
+                return redirect(url_for('admin_dyn.periods'))
+
+        ok, err = _insert_break_after_lesson(after_lesson, start_time, end_time, name)
+        if ok:
+            db.session.commit()
+            _after_periods_changed()
+            flash(
+                f'Große Pause nach der {after_lesson}. Stunde eingefügt ({start_time}–{end_time}).',
+                'success',
+            )
+        else:
+            db.session.rollback()
+            flash(err or 'Pause konnte nicht eingefügt werden.', 'error')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler: {e}', 'error')
+    return redirect(url_for('admin_dyn.periods'))
+
+
+@admin_dyn_bp.route('/periods/setup-standard-breaks', methods=['POST'])
+def periods_setup_standard_breaks():
+    """Legt große Pausen nach 2., 4., 6. … Stunde an (typischer Schulrhythmus)."""
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.periods'))
+
+    try:
+        pause_minutes = int(request.form.get('pause_minutes', 20) or 20)
+        pause_minutes = max(5, min(90, pause_minutes))
+        selected = request.form.getlist('after_lesson', type=int)
+        if not selected:
+            selected = [2, 4, 6, 8]
+
+        lesson_count = _count_lessons()
+        targets = sorted({n for n in selected if 1 <= n <= lesson_count})
+        if not targets:
+            flash('Keine passenden Unterrichtsstunden für die gewählten Pausen.', 'error')
+            return redirect(url_for('admin_dyn.periods'))
+
+        added = 0
+        skipped = []
+        for after_n in targets:
+            ordered = _ordered_periods()
+            anchor = None
+            lc = 0
+            for p in ordered:
+                if _is_lesson(p):
+                    lc += 1
+                    if lc == after_n:
+                        anchor = p
+                        break
+            if not anchor:
+                skipped.append(str(after_n))
+                continue
+            start_time = anchor.end_time
+            end_time = _format_hm(_parse_hm(start_time) + pause_minutes)
+            ok, err = _insert_break_after_lesson(after_n, start_time, end_time)
+            if ok:
+                added += 1
+            elif err:
+                skipped.append(f'{after_n}. ({err})')
+
+        db.session.commit()
+        _after_periods_changed()
+        msg = f'{added} große Pause(n) eingefügt.'
+        if skipped:
+            msg += f' Übersprungen: {", ".join(skipped)}.'
+        flash(msg, 'success' if added else 'warning')
     except Exception as e:
         db.session.rollback()
         flash(f'Fehler: {e}', 'error')
@@ -137,8 +361,16 @@ def periods_edit(period_id):
         p.start_time = request.form.get('start_time', p.start_time).strip()
         p.end_time = request.form.get('end_time', p.end_time).strip()
         p.is_active = request.form.get('is_active') == '1'
+        period_kind = request.form.get('period_kind', p.period_kind or 'lesson')
+        p.period_kind = period_kind if period_kind in ('lesson', 'break') else 'lesson'
+        if p.period_kind == 'break':
+            raw_after = request.form.get('after_lesson', '').strip()
+            p.after_lesson = int(raw_after) if raw_after else p.after_lesson
+        else:
+            p.after_lesson = None
         db.session.commit()
-        flash('Stunde aktualisiert.', 'success')
+        _after_periods_changed()
+        flash('Zeitfenster aktualisiert.', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Fehler: {e}', 'error')
@@ -159,6 +391,7 @@ def periods_delete(period_id):
     try:
         db.session.delete(p)
         db.session.commit()
+        _after_periods_changed()
         flash(f'Stunde {p.number} gelöscht.', 'success')
     except Exception as e:
         db.session.rollback()
@@ -190,7 +423,17 @@ def periods_templates_save():
         flash('Keine Stunden vorhanden – Vorlage kann nicht gespeichert werden.', 'error')
         return redirect(url_for('admin_dyn.periods'))
 
-    periods_data = [{'number': p.number, 'name': p.name, 'start': p.start_time, 'end': p.end_time} for p in periods]
+    periods_data = [
+        {
+            'number': p.number,
+            'name': p.name,
+            'start': p.start_time,
+            'end': p.end_time,
+            'kind': p.period_kind or 'lesson',
+            'after_lesson': p.after_lesson,
+        }
+        for p in periods
+    ]
 
     try:
         tmpl = PeriodTemplate(
@@ -269,17 +512,20 @@ def _apply_period_template(periods_data, name):
     from models import Period
     try:
         Period.query.delete()
-        for p in periods_data:
+        for idx, p in enumerate(periods_data):
             period = Period(
                 number=p['number'],
                 name=p['name'],
                 start_time=p['start'],
                 end_time=p['end'],
-                sort_order=p['number'],
+                sort_order=idx + 1,
                 is_active=True,
+                period_kind=p.get('kind', 'lesson'),
+                after_lesson=p.get('after_lesson'),
             )
             db.session.add(period)
         db.session.commit()
+        _after_periods_changed()
         flash(f'Vorlage „{name}" geladen – {len(periods_data)} Stunden übernommen.', 'success')
     except Exception as e:
         db.session.rollback()
@@ -295,7 +541,11 @@ def courses():
         return redirect(url_for('dashboard'))
     from models import Course, Period
     all_courses = Course.query.order_by(Course.course_type.desc(), Course.weekday, Course.period_number, Course.sort_order).all()
-    all_periods = Period.query.filter_by(is_active=True).order_by(Period.number).all()
+    all_periods = (
+        Period.query.filter_by(is_active=True)
+        .order_by(Period.sort_order, Period.number)
+        .all()
+    )
     weekdays = [('Mon', 'Montag'), ('Tue', 'Dienstag'), ('Wed', 'Mittwoch'), ('Thu', 'Donnerstag'), ('Fri', 'Freitag')]
     return render_template('admin_courses.html', courses=all_courses, periods=all_periods, weekdays=weekdays)
 
@@ -326,6 +576,13 @@ def courses_add():
         if course_type == 'fixed' and (not weekday or period_number is None):
             flash('Für feste Kurse bitte Wochentag und Stunde angeben.', 'error')
             return redirect(url_for('admin_dyn.courses'))
+
+        if course_type == 'fixed' and period_number is not None:
+            from dynamic_config import is_break_period
+
+            if is_break_period(period_number):
+                flash('Feste Kurse können nicht in großen Pausen gebucht werden.', 'error')
+                return redirect(url_for('admin_dyn.courses'))
 
         max_order = db.session.query(db.func.max(Course.sort_order)).scalar() or 0
         c = Course(

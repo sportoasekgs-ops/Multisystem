@@ -8,16 +8,47 @@ from database import db
 
 
 _DEFAULT_PERIOD_TIMES = {
-    1: {"start": "07:50", "end": "08:35", "name": "1. Stunde"},
-    2: {"start": "08:35", "end": "09:20", "name": "2. Stunde"},
-    3: {"start": "09:40", "end": "10:25", "name": "3. Stunde"},
-    4: {"start": "10:25", "end": "11:20", "name": "4. Stunde"},
-    5: {"start": "11:40", "end": "12:25", "name": "5. Stunde"},
-    6: {"start": "12:25", "end": "13:10", "name": "6. Stunde"},
+    1: {"start": "07:50", "end": "08:35", "name": "1. Stunde", "kind": "lesson"},
+    2: {"start": "08:35", "end": "09:20", "name": "2. Stunde", "kind": "lesson"},
+    3: {"start": "09:20", "end": "09:40", "name": "Große Pause", "kind": "break"},
+    4: {"start": "09:40", "end": "10:25", "name": "3. Stunde", "kind": "lesson"},
+    5: {"start": "10:25", "end": "11:10", "name": "4. Stunde", "kind": "lesson"},
+    6: {"start": "11:10", "end": "11:30", "name": "Große Pause", "kind": "break"},
+    7: {"start": "11:30", "end": "12:15", "name": "5. Stunde", "kind": "lesson"},
+    8: {"start": "12:15", "end": "13:00", "name": "6. Stunde", "kind": "lesson"},
 }
 
 _DEFAULT_MAX_STUDENTS = 5
 _DEFAULT_ADVANCE_MINUTES = 60
+
+
+def invalidate_periods_cache():
+    """Request-Cache für Stunden/Kurse nach Admin-Änderungen leeren."""
+    try:
+        from flask import g, has_request_context
+
+        if has_request_context():
+            for attr in ("_periods_cache", "_fixed_offers_cache"):
+                if hasattr(g, attr):
+                    delattr(g, attr)
+    except Exception:
+        pass
+
+
+def _period_entry(p):
+    kind = getattr(p, "period_kind", None) or "lesson"
+    after_lesson = getattr(p, "after_lesson", None)
+    name = p.name
+    if kind == "break" and after_lesson:
+        name = f"{p.name} (nach {after_lesson}. Stunde)"
+    return {
+        "start": p.start_time,
+        "end": p.end_time,
+        "name": name,
+        "kind": kind,
+        "is_break": kind == "break",
+        "after_lesson": after_lesson,
+    }
 
 
 def seed_initial_data():
@@ -32,21 +63,29 @@ def seed_initial_data():
     from system_config import get_config, set_config, is_setup_complete
 
     try:
-        if get_config('max_students_per_period') is None:
-            set_config('max_students_per_period', str(_DEFAULT_MAX_STUDENTS), category='booking')
-        if get_config('booking_advance_minutes') is None:
-            set_config('booking_advance_minutes', str(_DEFAULT_ADVANCE_MINUTES), category='booking')
+        if get_config("max_students_per_period") is None:
+            set_config(
+                "max_students_per_period",
+                str(_DEFAULT_MAX_STUDENTS),
+                category="booking",
+            )
+        if get_config("booking_advance_minutes") is None:
+            set_config(
+                "booking_advance_minutes",
+                str(_DEFAULT_ADVANCE_MINUTES),
+                category="booking",
+            )
 
-        # Stunden nur bei Upgrades (Setup abgeschlossen, aber Tabelle leer)
         if is_setup_complete() and Period.query.count() == 0:
             for num, data in _DEFAULT_PERIOD_TIMES.items():
                 p = Period(
                     number=num,
-                    name=data['name'],
-                    start_time=data['start'],
-                    end_time=data['end'],
+                    name=data["name"],
+                    start_time=data["start"],
+                    end_time=data["end"],
                     sort_order=num,
                     is_active=True,
+                    period_kind=data.get("kind", "lesson"),
                 )
                 db.session.add(p)
             print("[DynConfig] Stunden aus Defaults eingesät (Upgrade alter Installation).")
@@ -58,7 +97,7 @@ def seed_initial_data():
 
 
 def _query_active_periods_cached():
-    """Aktive Stunden einmal pro Request laden."""
+    """Aktive Zeitfenster einmal pro Request laden."""
     try:
         from flask import g, has_request_context
 
@@ -86,30 +125,53 @@ def _query_active_periods_cached():
 
 
 def get_period_times():
-    """Gibt alle Stunden als Dict zurück: {number: {'start': '...', 'end': '...', 'name': '...'}}"""
+    """Alle aktiven Zeitfenster (Unterricht + große Pausen), sortiert."""
     from system_config import is_setup_complete
+
     try:
         periods = _query_active_periods_cached()
         if not periods:
-            # Fallback nur wenn Setup abgeschlossen (Upgrade alter Installation)
             if is_setup_complete():
                 return _DEFAULT_PERIOD_TIMES
-            # Nach Ersteinrichtung: keine Stunden → leeres Dict → Dashboard zeigt nichts
             return {}
-        return {p.number: {'start': p.start_time, 'end': p.end_time, 'name': p.name} for p in periods}
+        return {p.number: _period_entry(p) for p in periods}
     except Exception:
         return _DEFAULT_PERIOD_TIMES
 
 
+def is_break_period(number):
+    data = get_period_times().get(number, {})
+    return data.get("is_break", False)
+
+
 def get_period(number):
     from models import Period
+
     try:
         p = Period.query.filter_by(number=number, is_active=True).first()
         if p:
-            return {'start': p.start_time, 'end': p.end_time, 'name': p.name}
+            return _period_entry(p)
     except Exception:
         pass
-    return _DEFAULT_PERIOD_TIMES.get(number, {'start': '?', 'end': '?', 'name': f'{number}. Stunde'})
+    fallback = _DEFAULT_PERIOD_TIMES.get(number)
+    if fallback:
+        return dict(fallback)
+    return {
+        "start": "?",
+        "end": "?",
+        "name": f"{number}. Stunde",
+        "kind": "lesson",
+        "is_break": False,
+    }
+
+
+def format_period_label(number, include_time=False):
+    """Kurzes Anzeige-Label (Name der Stunde/Pause, optional mit Uhrzeit)."""
+    p = get_period(number)
+    name = p.get("name") or f"{number}. Stunde"
+    if include_time and p.get("start") and p.get("end"):
+        return f"{name} ({p['start']}–{p['end']})"
+    return name
 
 
 def get_fixed_offers():
@@ -147,8 +209,13 @@ def get_fixed_offers():
 def get_free_courses():
     """Freie Module aus DB. Leere Liste wenn keine – KEIN Fallback auf Defaults."""
     from models import Course
+
     try:
-        courses = Course.query.filter_by(course_type='free', is_active=True).order_by(Course.sort_order).all()
+        courses = (
+            Course.query.filter_by(course_type="free", is_active=True)
+            .order_by(Course.sort_order)
+            .all()
+        )
         return [c.name for c in courses]
     except Exception:
         return []
@@ -157,8 +224,13 @@ def get_free_courses():
 def get_school_classes_list():
     """Schulklassen aus DB. Leere Liste wenn keine – KEIN Fallback auf Defaults."""
     from models import SchoolClass
+
     try:
-        classes = SchoolClass.query.filter_by(is_active=True).order_by(SchoolClass.sort_order, SchoolClass.name).all()
+        classes = (
+            SchoolClass.query.filter_by(is_active=True)
+            .order_by(SchoolClass.sort_order, SchoolClass.name)
+            .all()
+        )
         return [sc.name for sc in classes]
     except Exception:
         return []
@@ -166,8 +238,9 @@ def get_school_classes_list():
 
 def get_max_students():
     from system_config import get_config
+
     try:
-        val = get_config('max_students_per_period')
+        val = get_config("max_students_per_period")
         if val is not None:
             return int(val)
     except Exception:
@@ -177,8 +250,9 @@ def get_max_students():
 
 def get_booking_advance_minutes():
     from system_config import get_config
+
     try:
-        val = get_config('booking_advance_minutes')
+        val = get_config("booking_advance_minutes")
         if val is not None:
             return int(val)
     except Exception:

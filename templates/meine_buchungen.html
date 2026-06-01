@@ -19,23 +19,23 @@
     {% if bookings %}
     <div class="bookings-list">
         {% for booking in bookings %}
-        <div class="booking-card {% if booking.is_past %}booking-past{% endif %} {% if not booking.can_modify %}booking-locked{% endif %}">
-            <div class="booking-header">
+        <div class="booking-card booking-card-compact {% if booking.is_past %}booking-past{% endif %} {% if not booking.can_modify %}booking-locked{% endif %}">
+            <div class="booking-header booking-header-compact">
                 <div class="booking-date-info">
                     <span class="booking-weekday">{{ booking.weekday_name }}</span>
                     <span class="booking-date">{{ booking.date_formatted }}</span>
+                    <span class="period-time">{{ booking.period_time }}</span>
                 </div>
                 <div class="booking-period">
-                    <span class="period-badge">{{ booking.period }}. Stunde</span>
-                    <span class="period-time">{{ booking.period_time }}</span>
+                    <span class="period-badge">{{ booking.period_label }}</span>
                 </div>
             </div>
             
-            <div class="booking-body">
-                <div class="booking-offer">
+            <div class="booking-body booking-body-compact">
+                <div class="booking-offer booking-offer-compact">
                     <span class="offer-label">{{ booking.offer_label|course_emoji }} {{ booking.offer_label }}</span>
                     <span class="offer-type-badge {% if booking.offer_type == 'fest' %}type-fest{% else %}type-frei{% endif %}">
-                        {{ 'Festes Angebot' if booking.offer_type == 'fest' else 'Freies Modul' }}
+                        {{ 'Fest' if booking.offer_type == 'fest' else 'Frei' }}
                     </span>
                 </div>
                 

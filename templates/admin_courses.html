@@ -80,7 +80,7 @@
                             <label style="font-size:.8rem;color:#666;">Stunde</label><br>
                             <select name="period_number" style="padding:.45rem;border:1px solid #ddd;border-radius:6px;">
                                 {% for p in periods %}
-                                <option value="{{ p.number }}" {% if c.period_number == p.number %}selected{% endif %}>{{ p.number }}. Stunde</option>
+                                <option value="{{ p.number }}" {% if c.period_number == p.number %}selected{% endif %}>{{ p.name }}{% if p.period_kind == 'break' and p.after_lesson %} (nach {{ p.after_lesson }}. St.){% endif %}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -162,7 +162,7 @@
                     <label style="font-size:.85rem;color:#666;">Stunde</label><br>
                     <select name="period_number" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;">
                         {% for p in periods %}
-                        <option value="{{ p.number }}">{{ p.number }}. Stunde</option>
+                        <option value="{{ p.number }}">{{ p.name }}{% if p.period_kind == 'break' and p.after_lesson %} (nach {{ p.after_lesson }}. St.){% endif %}</option>
                         {% endfor %}
                     </select>
                 </div>
