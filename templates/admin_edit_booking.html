@@ -18,7 +18,7 @@
             <div class="form-group">
                 <label for="period">Stunde:</label>
                 <select id="period" name="period" required onchange="updatePeriodInfo()">
-                    {% for p in period_times.keys()|sort %}
+                    {% for p in period_order %}
                     <option value="{{ p }}" {% if booking and booking.period == p %}selected{% endif %}>
                         {{ p }}. Stunde ({{ period_times[p].start }} - {{ period_times[p].end }})
                     </option>

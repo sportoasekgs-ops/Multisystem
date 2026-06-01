@@ -72,7 +72,7 @@
                 <div class="form-group">
                     <label>Stunden:</label>
                     <div class="periods-grid">
-                        {% for i in period_times.keys()|sort %}
+                        {% for i in period_order %}
                         <label class="period-checkbox">
                             <input type="checkbox" name="periods" value="{{ i }}">
                             <span>{{ i }}.</span>
@@ -110,7 +110,7 @@
                 <div class="form-group">
                     <label>Stunden:</label>
                     <div class="periods-grid">
-                        {% for i in period_times.keys()|sort %}
+                        {% for i in period_order %}
                         <label class="period-checkbox">
                             <input type="checkbox" name="periods" value="{{ i }}">
                             <span>{{ i }}.</span>

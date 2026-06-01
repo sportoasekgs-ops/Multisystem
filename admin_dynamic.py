@@ -118,6 +118,40 @@ def _is_lesson(period):
     return (period.period_kind or 'lesson') != 'break'
 
 
+STANDARD_BREAK_AFTER = [2, 4, 6, 8]
+
+
+def _break_for_after_lesson(after_lesson_n):
+    from models import Period
+
+    return (
+        Period.query.filter_by(
+            is_active=True, period_kind='break', after_lesson=after_lesson_n
+        )
+        .first()
+    )
+
+
+def _anchor_lesson(after_lesson_n):
+    lesson_count = 0
+    for p in _ordered_periods():
+        if _is_lesson(p):
+            lesson_count += 1
+            if lesson_count == after_lesson_n:
+                return p
+    return None
+
+
+def _delete_period_and_compact_sort(period):
+    from models import Period
+
+    deleted_sort = period.sort_order
+    db.session.delete(period)
+    db.session.flush()
+    for other in Period.query.filter(Period.sort_order > deleted_sort).all():
+        other.sort_order -= 1
+
+
 def _insert_break_after_lesson(after_lesson_n, start_time, end_time, name='Große Pause'):
     """Fügt eine Pause nach der N-ten Unterrichtsstunde ein (sort_order + interne Nr. automatisch)."""
     from models import Period
@@ -171,12 +205,18 @@ def periods():
     all_periods = Period.query.order_by(Period.sort_order, Period.number).all()
     saved_templates = PeriodTemplate.query.order_by(PeriodTemplate.created_at.desc()).all()
     lesson_count = sum(1 for p in all_periods if p.is_active and _is_lesson(p))
+    break_after_lessons = {
+        p.after_lesson
+        for p in all_periods
+        if p.is_active and (p.period_kind or 'lesson') == 'break' and p.after_lesson
+    }
     return render_template(
         'admin_periods.html',
         periods=all_periods,
         saved_templates=saved_templates,
         builtin_templates=_BUILTIN_TEMPLATES,
         lesson_count=lesson_count,
+        break_after_lessons=break_after_lessons,
         next_period_number=_next_period_number(),
     )
 
@@ -289,7 +329,7 @@ def periods_insert_break():
 
 @admin_dyn_bp.route('/periods/setup-standard-breaks', methods=['POST'])
 def periods_setup_standard_breaks():
-    """Legt große Pausen nach 2., 4., 6. … Stunde an (typischer Schulrhythmus)."""
+    """Große Pausen nach 2./4./6./8. Stunde anlegen oder entfernen (Checkboxen speichern)."""
     if not _admin_required():
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
@@ -300,28 +340,26 @@ def periods_setup_standard_breaks():
     try:
         pause_minutes = int(request.form.get('pause_minutes', 20) or 20)
         pause_minutes = max(5, min(90, pause_minutes))
-        selected = request.form.getlist('after_lesson', type=int)
-        if not selected:
-            selected = [2, 4, 6, 8]
-
         lesson_count = _count_lessons()
-        targets = sorted({n for n in selected if 1 <= n <= lesson_count})
-        if not targets:
-            flash('Keine passenden Unterrichtsstunden für die gewählten Pausen.', 'error')
-            return redirect(url_for('admin_dyn.periods'))
+        allowed = {n for n in STANDARD_BREAK_AFTER if n <= lesson_count}
+        selected = {
+            n for n in request.form.getlist('after_lesson', type=int) if n in allowed
+        }
 
         added = 0
+        removed = 0
         skipped = []
-        for after_n in targets:
-            ordered = _ordered_periods()
-            anchor = None
-            lc = 0
-            for p in ordered:
-                if _is_lesson(p):
-                    lc += 1
-                    if lc == after_n:
-                        anchor = p
-                        break
+
+        for after_n in sorted(allowed):
+            existing = _break_for_after_lesson(after_n)
+            if after_n not in selected:
+                if existing:
+                    _delete_period_and_compact_sort(existing)
+                    removed += 1
+                continue
+            if existing:
+                continue
+            anchor = _anchor_lesson(after_n)
             if not anchor:
                 skipped.append(str(after_n))
                 continue
@@ -335,10 +373,15 @@ def periods_setup_standard_breaks():
 
         db.session.commit()
         _after_periods_changed()
-        msg = f'{added} große Pause(n) eingefügt.'
+        parts = []
+        if added:
+            parts.append(f'{added} Pause(n) angelegt')
+        if removed:
+            parts.append(f'{removed} Pause(n) entfernt')
+        msg = (', '.join(parts) + '.') if parts else 'Keine Änderungen an den Pausen.'
         if skipped:
             msg += f' Übersprungen: {", ".join(skipped)}.'
-        flash(msg, 'success' if added else 'warning')
+        flash(msg, 'success' if (added or removed) else 'warning')
     except Exception as e:
         db.session.rollback()
         flash(f'Fehler: {e}', 'error')
@@ -389,10 +432,11 @@ def periods_delete(period_id):
     from models import Period
     p = Period.query.get_or_404(period_id)
     try:
-        db.session.delete(p)
+        num = p.number
+        _delete_period_and_compact_sort(p)
         db.session.commit()
         _after_periods_changed()
-        flash(f'Stunde {p.number} gelöscht.', 'success')
+        flash(f'Zeitfenster {num} gelöscht.', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Fehler: {e}', 'error')

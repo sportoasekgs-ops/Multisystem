@@ -291,34 +291,35 @@
         {% endif %}
     </div>
 
-    <!-- ═══ GROSSE PAUSEN EINFÜGEN ═══════════════════════════════════════════ -->
+    <!-- ═══ GROSSE PAUSEN VERWALTEN ═══════════════════════════════════════════ -->
     <div class="section-card break-setup-card">
-        <h3>☕ Große Pausen einfügen</h3>
+        <h3>☕ Große Pausen</h3>
         <p style="font-size:.88rem;color:var(--text-secondary);margin:-.25rem 0 1rem;line-height:1.5;">
-            Pausen kommen <strong>nach der 2., 4., 6. oder 8. Unterrichtsstunde</strong> – Sie müssen keine freie Slot-Nummer suchen.
-            Die Reihenfolge im Wochenplan wird automatisch angepasst; Buchungen bleiben an den Unterrichtsstunden hängen.
+            Haken setzen = Pause <strong>nach</strong> dieser Unterrichtsstunde; Haken entfernen = Pause löschen.
+            Anschließend <strong>Speichern</strong> klicken. Die Reihenfolge im Wochenplan passt sich automatisch an.
         </p>
         {% if lesson_count < 1 %}
         <div class="warn-box">⚠️ Zuerst Unterrichtsstunden anlegen oder eine Vorlage laden, dann Pausen einfügen.</div>
         {% else %}
         <form method="POST" action="{{ url_for('admin_dyn.periods_setup_standard_breaks') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <p style="font-size:.85rem;font-weight:600;margin:0 0 .35rem;">Schnell: typischer Schulrhythmus</p>
+            <p style="font-size:.85rem;font-weight:600;margin:0 0 .35rem;">Pause nach Unterrichtsstunde</p>
             <div class="break-setup-grid">
                 {% for n in [2, 4, 6, 8] %}
                 {% if n <= lesson_count %}
-                <label><input type="checkbox" name="after_lesson" value="{{ n }}" checked> nach {{ n }}. Stunde</label>
+                <label><input type="checkbox" name="after_lesson" value="{{ n }}"
+                    {% if n in break_after_lessons %}checked{% endif %}> nach {{ n }}. Stunde</label>
                 {% endif %}
                 {% endfor %}
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;">
                 <div>
-                    <label style="font-size:.78rem;color:var(--text-secondary);">Pausendauer (Min.)</label><br>
+                    <label style="font-size:.78rem;color:var(--text-secondary);">Pausendauer (Min., nur für neu angelegte Pausen)</label><br>
                     <input type="number" name="pause_minutes" value="20" min="5" max="90" style="width:80px;padding:.5rem;border:1px solid var(--border);border-radius:6px;">
                 </div>
-                <button type="submit" class="btn-load" style="width:auto;padding:.55rem 1.2rem;">☕ Pausen anlegen</button>
+                <button type="submit" class="btn btn-primary" style="padding:.55rem 1.4rem;">💾 Speichern</button>
             </div>
-            <p class="form-hint" style="margin-top:.65rem;">Beginn = Ende der jeweiligen Stunde, Ende = Beginn + Dauer. Bereits vorhandene Pausen werden übersprungen.</p>
+            <p class="form-hint" style="margin-top:.65rem;">Neue Pausen: Beginn = Ende der Stunde, Ende = Beginn + Dauer. Bestehende Pausen behalten ihre Uhrzeiten.</p>
         </form>
 
         <form method="POST" action="{{ url_for('admin_dyn.periods_insert_break') }}" class="insert-break-form">

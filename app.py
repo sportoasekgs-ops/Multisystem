@@ -170,6 +170,19 @@ def inject_csrf_token():
     return dict(csrf_token=generate_csrf_token())
 
 
+@app.context_processor
+def inject_period_order():
+    """Stunden/Pausen in Anzeigereihenfolge (sort_order), nicht nach interner Nummer."""
+    if _BOOTSTRAP_MODE:
+        return {}
+    try:
+        from dynamic_config import get_ordered_period_numbers
+
+        return dict(period_order=get_ordered_period_numbers())
+    except Exception:
+        return dict(period_order=[])
+
+
 # Datenbank-Konfiguration
 # Reihenfolge: lokale Datei (buchungssystem_local.json) → DATABASE_URL Env-Var
 from local_config import get_database_url, is_database_configured, set_database_url
@@ -274,6 +287,7 @@ if not _BOOTSTRAP_MODE:
         get_fixed_offers,
         get_free_courses,
         get_max_students,
+        get_ordered_period_numbers,
         get_period_times,
         get_school_classes_list,
         is_break_period,
@@ -1360,7 +1374,7 @@ def dashboard():
     from models import Booking, get_blocked_slot, is_holiday_blocked_reason, is_slot_blocked
 
     period_times = get_period_times()
-    period_keys = sorted(period_times.keys())
+    period_keys = get_ordered_period_numbers()
     fixed_offers = get_fixed_offers()
     max_students = get_max_students()
 
@@ -3836,7 +3850,7 @@ def export_occupancy_report():
         day_str = day_date.strftime("%Y-%m-%d")
         day_formatted = day_date.strftime("%d.%m.%Y")
 
-        for period in sorted(period_times.keys()):
+        for period in get_ordered_period_numbers():
             info = get_period_info(wd, period)
             key = f"{day_str}_{period}"
             kurs = info.get('label', 'Freie Wahl') if info.get('type') == 'fest' else 'Freie Wahl'

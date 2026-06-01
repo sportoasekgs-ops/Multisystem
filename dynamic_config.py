@@ -139,6 +139,21 @@ def get_period_times():
         return _DEFAULT_PERIOD_TIMES
 
 
+def get_ordered_period_numbers():
+    """Interne Perioden-Nummern in Anzeigereihenfolge (sort_order), nicht nach Nummer."""
+    from system_config import is_setup_complete
+
+    try:
+        periods = _query_active_periods_cached()
+        if periods:
+            return [p.number for p in periods]
+        if is_setup_complete():
+            return list(_DEFAULT_PERIOD_TIMES.keys())
+        return []
+    except Exception:
+        return list(_DEFAULT_PERIOD_TIMES.keys())
+
+
 def is_break_period(number):
     data = get_period_times().get(number, {})
     return data.get("is_break", False)
