@@ -1566,10 +1566,12 @@ def dashboard():
                 and not exclusive_booking
             )
 
+            pt = period_times.get(period, {})
             day_schedule.append(
                 {
                     "period": period,
                     "period_label": format_period_label(period),
+                    "time": f"{pt.get('start', '?')} - {pt.get('end', '?')}",
                     "type": info["type"],
                     "label": info["label"],
                     "bookings": period_bookings,
