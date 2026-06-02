@@ -2597,8 +2597,8 @@ details.help-section[open] .toggle-arrow {
     /* Erste Spalte (Stunde) - fixiert */
     .week-table th:first-child,
     .week-table td:first-child {
-        width: 45px;
-        min-width: 45px;
+        width: 62px;
+        min-width: 62px;
         position: sticky;
         left: 0;
         background: var(--bg-primary);
@@ -2923,8 +2923,8 @@ details.help-section[open] .toggle-arrow {
     
     .week-table th:first-child,
     .week-table td:first-child {
-        width: 36px;
-        min-width: 36px;
+        width: 58px;
+        min-width: 58px;
         font-size: 0.65rem;
     }
     
@@ -5790,11 +5790,6 @@ footer {
 }
 
 /* Große Pausen im Wochenplan – ganze Zeile/Spalte warm hervorgehoben */
-.week-table th:first-child,
-.week-table td:first-child {
-    width: 10%;
-}
-
 .week-table .period-row-label {
     font-size: 0.78rem;
     line-height: 1.3;
@@ -5828,13 +5823,16 @@ footer {
     font-family: var(--font-mono, ui-monospace, monospace);
     color: color-mix(in srgb, #7a5c28 95%, var(--text-secondary));
     letter-spacing: 0.02em;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .week-table tr.week-row-pause td {
-    background: color-mix(in srgb, #edd9b0 32%, var(--bg-primary));
+    background: color-mix(in srgb, #edd9b0 40%, var(--bg-primary));
     border-top: 2px solid color-mix(in srgb, #c9954a 40%, var(--border-light));
     border-bottom: 2px solid color-mix(in srgb, #c9954a 40%, var(--border-light));
+    border-left-color: color-mix(in srgb, #d9b067 35%, var(--border-light));
+    border-right-color: color-mix(in srgb, #d9b067 35%, var(--border-light));
     padding-top: 0.35rem;
     padding-bottom: 0.35rem;
 }
@@ -5859,6 +5857,37 @@ footer {
 
 .week-table tr.week-row-pause td:first-child:hover {
     background: color-mix(in srgb, #dcc08a 48%, var(--bg-secondary));
+}
+
+@media (max-width: 900px) {
+    .week-table .period-row-label {
+        padding: 0.42rem 0.25rem;
+        line-height: 1.2;
+    }
+
+    .week-table .period-row-label-pause .period-row-label-title {
+        font-size: 0.68rem;
+        margin-bottom: 0.12rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .week-table .period-row-label-pause .period-row-time {
+        font-size: 0.58rem;
+        letter-spacing: 0;
+        line-height: 1.1;
+        white-space: normal;
+    }
+}
+
+@media (max-width: 480px) {
+    .week-table .period-row-label-pause .period-row-label-title {
+        font-size: 0.62rem;
+    }
+
+    .week-table .period-row-label-pause .period-row-time {
+        font-size: 0.52rem;
+    }
 }
 
 .week-table td.period-pause .slot-card.course-pause {
