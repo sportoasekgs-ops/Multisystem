@@ -4659,7 +4659,7 @@ footer {
 
 /* ===== Meine Buchungen Seite ===== */
 .my-bookings-page {
-    max-width: 900px;
+    max-width: 1220px;
     margin: 0 auto;
     padding: 1rem 0;
 }
@@ -5709,12 +5709,16 @@ footer {
 
 /* Kompakte „Meine Buchungen“-Seite */
 .my-bookings-page .bookings-list {
-    gap: 0.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 0.65rem;
+    align-items: start;
 }
 
 .my-bookings-page .booking-card-compact {
     border-radius: var(--radius);
     box-shadow: var(--shadow-sm);
+    height: 100%;
 }
 
 .my-bookings-page .booking-card-compact:hover {
@@ -5787,6 +5791,24 @@ footer {
 .my-bookings-page .booking-actions .btn {
     padding: 0.35rem 0.65rem;
     font-size: 0.8rem;
+}
+
+@media (max-width: 900px) {
+    .my-bookings-page {
+        max-width: 100%;
+    }
+
+    .my-bookings-page .bookings-list {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 0.55rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .my-bookings-page .bookings-list {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
 }
 
 /* Große Pausen im Wochenplan – ganze Zeile/Spalte warm hervorgehoben */
