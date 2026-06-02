@@ -5273,6 +5273,8 @@ footer {
 .dashboard-layout {
     display: grid;
     grid-template-columns: 1fr;
+    --dashboard-side-width: 290px;
+    --dashboard-side-width-tablet: 280px;
     gap: 1.5rem;
     max-width: 1550px;
     margin: 0 auto;
@@ -5294,7 +5296,7 @@ footer {
 
 @media (min-width: 1024px) and (max-width: 1279px) {
     .dashboard-layout {
-        grid-template-columns: 280px 1fr;
+        grid-template-columns: var(--dashboard-side-width-tablet) 1fr;
     }
     .dashboard-ticker {
         grid-column: span 2;
@@ -5303,7 +5305,7 @@ footer {
 
 @media (min-width: 1280px) {
     .dashboard-layout {
-        grid-template-columns: 290px 1fr 290px;
+        grid-template-columns: var(--dashboard-side-width) 1fr var(--dashboard-side-width);
         padding: 0;
     }
     .dashboard-ticker {
@@ -6215,6 +6217,41 @@ footer {
     padding: 0 1rem;
 }
 
+.calendar-width-control {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.dashboard-control-bar.edit-mode-active .calendar-width-control {
+    display: inline-flex;
+}
+
+.calendar-width-control label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.calendar-width-control input[type="range"] {
+    width: 110px;
+}
+
+.calendar-width-control .calendar-width-value {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 58px;
+    text-align: right;
+}
+
 .edit-mode-btn {
     display: inline-flex;
     align-items: center;
@@ -6820,6 +6857,41 @@ footer {
     max-width: 1550px;
     margin: 0 auto 0.75rem;
     padding: 0 1rem;
+}
+
+.calendar-width-control {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.dashboard-control-bar.edit-mode-active .calendar-width-control {
+    display: inline-flex;
+}
+
+.calendar-width-control label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.calendar-width-control input[type="range"] {
+    width: 110px;
+}
+
+.calendar-width-control .calendar-width-value {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    min-width: 58px;
+    text-align: right;
 }
 
 .edit-mode-btn {

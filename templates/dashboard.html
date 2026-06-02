@@ -449,6 +449,20 @@
                 <label for="toggle-occupancy">Auslastungs-Widget</label>
             </div>
         </div>
+        <div class="calendar-width-control" id="calendarWidthControl">
+            <label for="calendarWidthRange">Kalenderbreite</label>
+            <input
+                type="range"
+                id="calendarWidthRange"
+                min="240"
+                max="360"
+                step="10"
+                value="290"
+                oninput="setCalendarWidth(this.value, true)"
+                onchange="setCalendarWidth(this.value, true)"
+            />
+            <span class="calendar-width-value" id="calendarWidthValue">Standard</span>
+        </div>
         <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()" title="Widget-Layout anpassen">
             <span class="btn-icon">⚙️</span>
             <span class="btn-text">Layout anpassen</span>
@@ -1445,17 +1459,46 @@ function toggleEditMode() {
     isEditMode = !isEditMode;
     const btn = document.getElementById('editModeBtn');
     const layout = document.getElementById('dashboardLayout');
+    const controlBar = document.querySelector('.dashboard-control-bar');
     
     if (isEditMode) {
         btn.classList.add('active');
         layout.classList.add('edit-mode-active');
+        if (controlBar) controlBar.classList.add('edit-mode-active');
         enableDragAndDrop();
     } else {
         btn.classList.remove('active');
         layout.classList.remove('edit-mode-active');
+        if (controlBar) controlBar.classList.remove('edit-mode-active');
         disableDragAndDrop();
         saveWidgetLayout();
     }
+}
+
+function setCalendarWidth(rawValue, persist = false) {
+    const layout = document.getElementById('dashboardLayout');
+    const valueLabel = document.getElementById('calendarWidthValue');
+    const range = document.getElementById('calendarWidthRange');
+    const width = Math.max(240, Math.min(360, parseInt(rawValue, 10) || 290));
+
+    if (!layout) return;
+    layout.style.setProperty('--dashboard-side-width', `${width}px`);
+    layout.style.setProperty('--dashboard-side-width-tablet', `${Math.max(width - 10, 240)}px`);
+
+    if (valueLabel) {
+        valueLabel.textContent = width === 290 ? 'Standard' : `${width}px`;
+    }
+    if (range && parseInt(range.value, 10) !== width) {
+        range.value = String(width);
+    }
+    if (persist) {
+        localStorage.setItem('dashboard_calendar_side_width', String(width));
+    }
+}
+
+function restoreCalendarWidth() {
+    const saved = localStorage.getItem('dashboard_calendar_side_width');
+    setCalendarWidth(saved || 290, false);
 }
 
 // Layout Saving & Restoring
@@ -1656,6 +1699,7 @@ function downloadCSV(dateStr) {
 // Restore layout on load
 document.addEventListener('DOMContentLoaded', () => {
     restoreWidgetLayout();
+    restoreCalendarWidth();
 });
 
 </script>
