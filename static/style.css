@@ -6975,3 +6975,92 @@ footer {
         display: none !important;
     }
 }
+
+/* ==========================================
+   Admin Quick-Access Split Menu (Base styles for all themes)
+   ========================================== */
+.admin-menu-dropdown-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.admin-menu-split-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+}
+
+.admin-plus-btn {
+    background: rgba(var(--primary-rgb), 0.08);
+    border: 1px solid var(--border-light);
+    color: var(--primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
+}
+
+.admin-plus-btn:hover {
+    background: rgba(var(--primary-rgb), 0.18);
+}
+
+.admin-menu-split-link .nav-link-admin {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0 !important;
+}
+
+.admin-quick-menu {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 1050;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.admin-quick-menu.show {
+    display: flex;
+}
+
+.admin-quick-menu a {
+    display: block !important;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 500 !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    color: var(--text-secondary) !important;
+    border-bottom: 1px solid var(--border-light) !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+    transform: none !important;
+    background: transparent !important;
+}
+
+.admin-quick-menu a:last-child {
+    border-bottom: none !important;
+}
+
+.admin-quick-menu a:hover {
+    background: rgba(var(--primary-rgb), 0.06) !important;
+    color: var(--primary) !important;
+    transform: none !important;
+}

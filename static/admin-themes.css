@@ -1680,101 +1680,117 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         overflow-y: auto;
     }
 
-    /* Rearrange main dashboard flow using display:contents to flatten hierarchy */
+    /* Rearrange main dashboard flow using CSS Grid (Desktop layout) */
     html[data-admin-theme="slotra-reloaded"] .dashboard {
-        display: flex;
-        flex-direction: column;
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 1.5rem !important;
+        align-items: start !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-top-section {
-        order: 0;
-        margin-bottom: 0.75rem;
+        grid-column: span 4 !important;
+        margin-bottom: 0.25rem !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .help-section {
-        order: 1;
-        margin-bottom: 1rem;
+        grid-column: span 4 !important;
+        margin-bottom: 0.5rem !important;
     }
 
-    /* Flatten dashboard-layout so its children participate in the .dashboard flex */
+    /* Flatten dashboard-layout hierarchy so its children participate in CSS Grid */
     html[data-admin-theme="slotra-reloaded"] .dashboard-layout {
         display: contents !important;
     }
 
-    /* Widget panels: horizontal tile row */
+    /* Left and Right panels span 2 columns each, sitting side by side */
     html[data-admin-theme="slotra-reloaded"] .dashboard-left-panel {
-        order: 2;
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        gap: 1rem !important;
-        margin-bottom: 0.5rem;
+        grid-column: span 2 !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1.25rem !important;
+        margin-bottom: 0 !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel {
-        order: 3;
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        gap: 1rem !important;
-        margin-bottom: 0.75rem;
+        grid-column: span 2 !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1.25rem !important;
+        margin-bottom: 0 !important;
     }
 
-    /* Fixed-size widget tiles, all same width, side by side */
+    /* Reset default widths and margins for panels' children */
     html[data-admin-theme="slotra-reloaded"] .dashboard-left-panel > *,
     html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel > * {
         margin: 0 !important;
-        flex: 1 1 260px !important;
-        max-width: 320px !important;
-        min-width: 240px !important;
-    }
-
-    /* Date banner and controls appear between widgets and week plan */
-    html[data-admin-theme="slotra-reloaded"] .selected-date-info {
-        order: 4;
-        margin-bottom: 0.5rem;
-    }
-
-    html[data-admin-theme="slotra-reloaded"] .dashboard-control-bar {
-        order: 5;
-        margin-bottom: 1rem;
-    }
-
-    /* Week overview: full width, prominent, after controls */
-    html[data-admin-theme="slotra-reloaded"] .week-overview {
-        order: 6;
         width: 100% !important;
         max-width: 100% !important;
-        margin-top: 0 !important;
-        padding: 1.25rem !important;
+        min-width: 0 !important;
     }
 
-    /* Contact info footer: always last inside .dashboard */
-    html[data-admin-theme="slotra-reloaded"] .contact-info-box {
-        order: 7;
-        margin-top: 1.5rem;
-    }
-
-    /* Small/compact tiles styling overrides */
+    /* Uniform Height Constraints & Compact Styles for Widgets */
     html[data-admin-theme="slotra-reloaded"] .dashboard-widget {
-        padding: 0.85rem !important;
-        border-radius: 14px !important;
+        height: 330px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        box-sizing: border-box !important;
+        padding: 1rem !important;
+        border-radius: 16px !important;
         font-size: 0.82rem !important;
+        background: #ffffff !important;
+        border: 1px solid rgba(111, 76, 219, 0.1) !important;
     }
 
-    html[data-admin-theme="slotra-reloaded"] .widget-header {
+    html[data-admin-theme="slotra-reloaded"] .widget-header,
+    html[data-admin-theme="slotra-reloaded"] .ticker-header {
         margin-bottom: 0.6rem !important;
         padding-bottom: 0.4rem !important;
+        border-bottom: 1px solid rgba(111, 76, 219, 0.08) !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
     }
 
-    html[data-admin-theme="slotra-reloaded"] .widget-header h4 {
+    html[data-admin-theme="slotra-reloaded"] .widget-header h4,
+    html[data-admin-theme="slotra-reloaded"] .ticker-header h4 {
         font-size: 0.85rem !important;
+        margin: 0 !important;
+        font-weight: 700 !important;
+        color: #1a1a2e !important;
     }
 
-    html[data-admin-theme="slotra-reloaded"] .widget-item {
-        padding: 0.5rem 0.6rem !important;
-        border-radius: 8px !important;
-        margin-bottom: 0.35rem !important;
+    /* Widget bodies and tickers: scroll vertically, hide horizontal scroll */
+    html[data-admin-theme="slotra-reloaded"] .widget-body,
+    html[data-admin-theme="slotra-reloaded"] .ticker-body {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        padding-right: 0.25rem !important;
+        margin-top: 0.25rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Lists inside widget bodies */
+    html[data-admin-theme="slotra-reloaded"] .widget-list,
+    html[data-admin-theme="slotra-reloaded"] .ticker-list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        width: 100% !important;
+    }
+
+    /* Widget items style overrides */
+    html[data-admin-theme="slotra-reloaded"] .widget-item,
+    html[data-admin-theme="slotra-reloaded"] .ticker-item {
+        padding: 0.55rem 0.65rem !important;
+        border-radius: 10px !important;
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+        border: 1px solid rgba(111, 76, 219, 0.05) !important;
+        background: rgba(111, 76, 219, 0.02) !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .widget-details div {
@@ -1785,7 +1801,91 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         position: static !important;
         top: auto !important;
         width: 100% !important;
-        padding: 0.85rem !important;
+        padding: 0 !important;
+        height: auto !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Thin Custom Scrollbars for Widgets */
+    html[data-admin-theme="slotra-reloaded"] .widget-body::-webkit-scrollbar,
+    html[data-admin-theme="slotra-reloaded"] .ticker-body::-webkit-scrollbar {
+        width: 5px;
+    }
+    html[data-admin-theme="slotra-reloaded"] .widget-body::-webkit-scrollbar-track,
+    html[data-admin-theme="slotra-reloaded"] .ticker-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    html[data-admin-theme="slotra-reloaded"] .widget-body::-webkit-scrollbar-thumb,
+    html[data-admin-theme="slotra-reloaded"] .ticker-body::-webkit-scrollbar-thumb {
+        background: rgba(111, 76, 219, 0.15);
+        border-radius: 10px;
+    }
+    html[data-admin-theme="slotra-reloaded"] .widget-body::-webkit-scrollbar-thumb:hover,
+    html[data-admin-theme="slotra-reloaded"] .ticker-body::-webkit-scrollbar-thumb:hover {
+        background: rgba(111, 76, 219, 0.35);
+    }
+
+    /* Occupancy Widget details layout adjustments */
+    html[data-admin-theme="slotra-reloaded"] .occupancy-ring-container {
+        width: 85px !important;
+        height: 85px !important;
+        margin: 0.15rem auto !important;
+    }
+    html[data-admin-theme="slotra-reloaded"] .occupancy-ring {
+        width: 85px !important;
+        height: 85px !important;
+    }
+    html[data-admin-theme="slotra-reloaded"] .occupancy-ring-pct {
+        font-size: 1.25rem !important;
+    }
+    html[data-admin-theme="slotra-reloaded"] .occupancy-stats-grid {
+        margin-top: 0.35rem !important;
+        gap: 0.35rem !important;
+    }
+    html[data-admin-theme="slotra-reloaded"] .occupancy-stat-item {
+        padding: 0.35rem !important;
+    }
+    html[data-admin-theme="slotra-reloaded"] .occupancy-stat-value {
+        font-size: 0.95rem !important;
+    }
+    html[data-admin-theme="slotra-reloaded"] .occupancy-peak {
+        margin-top: 0.35rem !important;
+        padding: 0.35rem 0.5rem !important;
+        font-size: 0.72rem !important;
+    }
+    html[data-admin-theme="slotra-reloaded"] .occupancy-action-btn {
+        margin-top: auto !important;
+        text-align: center !important;
+        padding-top: 0.4rem !important;
+        width: 100% !important;
+    }
+
+    /* Date banner and controls appear between widgets and week plan */
+    html[data-admin-theme="slotra-reloaded"] .selected-date-info {
+        grid-column: span 4 !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .dashboard-control-bar {
+        grid-column: span 4 !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Week overview: full width, prominent, after controls */
+    html[data-admin-theme="slotra-reloaded"] .week-overview {
+        grid-column: span 4 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 0 !important;
+        padding: 1.25rem !important;
+    }
+
+    /* Contact info footer: always last inside .dashboard */
+    html[data-admin-theme="slotra-reloaded"] .contact-info-box {
+        grid-column: span 4 !important;
+        margin-top: 1rem !important;
     }
 
     /* Dynamic Sidebar Navigation Menu with Bell & Plus dropdown styling */
@@ -1818,13 +1918,30 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         border-color: rgba(111, 76, 219, 0.3);
     }
 
+    /* Floating notification dropdown relative to screen to escape sidebar scroll clip */
     html[data-admin-theme="slotra-reloaded"] .notification-dropdown {
-        top: 40px !important;
-        left: 0px !important;
+        position: fixed !important;
+        top: 20px !important;
+        left: 270px !important;
         right: auto !important;
-        position: absolute !important;
-        width: 250px !important;
-        z-index: 1100 !important;
+        width: 360px !important;
+        max-height: 80vh !important;
+        z-index: 1200 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+        border: 1px solid rgba(111, 76, 219, 0.12) !important;
+        animation: slideInFromLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    @keyframes slideInFromLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
     /* Admin Dropdown Split Quick Link Menu */
