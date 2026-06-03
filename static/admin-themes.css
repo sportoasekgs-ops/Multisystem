@@ -1679,6 +1679,47 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         box-sizing: border-box;
         overflow-y: auto;
     }
+
+    /* Top Row Layout for widgets, Calendar full-width below */
+    html[data-admin-theme="slotra-reloaded"] .dashboard-layout {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1.5rem !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .dashboard-left-panel,
+    html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 1.5rem !important;
+        grid-column: span 1 !important;
+        align-items: start !important;
+        min-height: auto !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .dashboard-left-panel > *,
+    html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel > * {
+        flex: 1 1 280px !important;
+        margin: 0 !important;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .week-overview {
+        grid-column: span 2 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 1rem !important;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .dashboard-ticker {
+        position: static !important;
+        top: auto !important;
+        width: 100% !important;
+    }
 }
 
 /* ── Windows 11 Modern Cards & Widgets ── */
