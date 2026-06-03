@@ -2956,7 +2956,7 @@ def admin():
                 "date": booking_dict["date"],
                 "weekday": booking_dict["weekday"],
                 "period": booking_dict["period"],
-                "teacher_email": booking_dict["teacher_email"],
+                "teacher_email": booking_dict.get("teacher_email", ""),
                 "teacher_name": booking_dict.get("teacher_name", "N/A"),
                 "teacher_class": booking_dict.get("teacher_class", "N/A"),
                 "offer_label": booking_dict["offer_label"],
@@ -4130,6 +4130,8 @@ def api_save_admin_theme():
 @admin_required
 def admin_cms():
     """CMS-Seite für Admin: Login-Texte, Datenschutz, Impressum, Hinweistexte, Demo-Modus"""
+    from system_config import get_config
+
     cms = {
         "login_title": get_config("login_title", ""),
         "login_subtitle": get_config("login_subtitle", ""),

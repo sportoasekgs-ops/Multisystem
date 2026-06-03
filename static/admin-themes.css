@@ -1633,6 +1633,55 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         color: var(--brand-primary);
     }
 
+    /* Admin Menu Integration into Sidebar */
+    html[data-admin-theme="slotra-reloaded"] .admin-menu-dropdown-wrapper {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 0.25rem;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .admin-menu-split-link {
+        display: flex;
+        width: 100%;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .admin-menu-split-link .nav-link-admin {
+        border-radius: 10px !important;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .admin-plus-btn {
+        display: none !important;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .admin-quick-menu {
+        display: flex !important;
+        position: static !important;
+        flex-direction: column;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        min-width: 0 !important;
+        padding-left: 1rem !important;
+        margin-top: 0 !important;
+        gap: 0.25rem;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .admin-quick-menu a {
+        padding: 0.45rem 1rem !important;
+        font-size: 0.8rem !important;
+        color: #6e6f8a !important;
+        border-bottom: none !important;
+        border-radius: 8px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .admin-quick-menu a:hover {
+        background: rgba(111, 76, 219, 0.05) !important;
+        color: var(--brand-primary) !important;
+        transform: translateX(4px) !important;
+    }
+
     html[data-admin-theme="slotra-reloaded"] .nav-tools {
         display: flex;
         flex-direction: column;
@@ -1690,11 +1739,13 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-top-section {
         grid-column: span 4 !important;
+        order: 3 !important;
         margin-bottom: 0.25rem !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .help-section {
         grid-column: span 4 !important;
+        order: 4 !important;
         margin-bottom: 0.5rem !important;
     }
 
@@ -1706,17 +1757,19 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     /* Left and Right panels span 2 columns each, sitting side by side */
     html[data-admin-theme="slotra-reloaded"] .dashboard-left-panel {
         grid-column: span 2 !important;
+        order: 1 !important;
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
-        gap: 1.25rem !important;
+        gap: 1rem !important;
         margin-bottom: 0 !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel {
         grid-column: span 2 !important;
+        order: 2 !important;
         display: grid !important;
         grid-template-columns: 1fr 1fr !important;
-        gap: 1.25rem !important;
+        gap: 1rem !important;
         margin-bottom: 0 !important;
     }
 
@@ -1731,13 +1784,13 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     /* Uniform Height Constraints & Compact Styles for Widgets */
     html[data-admin-theme="slotra-reloaded"] .dashboard-widget {
-        height: 330px !important;
+        height: 260px !important;
         display: flex !important;
         flex-direction: column !important;
         box-sizing: border-box !important;
-        padding: 1rem !important;
-        border-radius: 16px !important;
-        font-size: 0.82rem !important;
+        padding: 0.85rem !important;
+        border-radius: 14px !important;
+        font-size: 0.8rem !important;
         background: #ffffff !important;
         border: 1px solid rgba(111, 76, 219, 0.1) !important;
     }
@@ -1865,17 +1918,20 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     /* Date banner and controls appear between widgets and week plan */
     html[data-admin-theme="slotra-reloaded"] .selected-date-info {
         grid-column: span 4 !important;
+        order: 5 !important;
         margin-bottom: 0.25rem !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-control-bar {
         grid-column: span 4 !important;
+        order: 6 !important;
         margin-bottom: 0.5rem !important;
     }
 
-    /* Week overview: full width, prominent, after controls */
+    /* Week overview: full width, prominent, after widgets */
     html[data-admin-theme="slotra-reloaded"] .week-overview {
         grid-column: span 4 !important;
+        order: 7 !important;
         width: 100% !important;
         max-width: 100% !important;
         margin-top: 0 !important;
@@ -1885,6 +1941,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     /* Contact info footer: always last inside .dashboard */
     html[data-admin-theme="slotra-reloaded"] .contact-info-box {
         grid-column: span 4 !important;
+        order: 10 !important;
         margin-top: 1rem !important;
     }
 
