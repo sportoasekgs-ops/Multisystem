@@ -1680,6 +1680,41 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         overflow-y: auto;
     }
 
+    /* Rearrange main dashboard flow using CSS Flex/Grid properties for clean placement */
+    html[data-admin-theme="slotra-reloaded"] .dashboard {
+        display: flex;
+        flex-direction: column;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .help-section {
+        order: 1;
+        margin-bottom: 1.5rem;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .dashboard-layout {
+        order: 2;
+        margin-bottom: 2rem;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .selected-date-info {
+        order: 3;
+        margin-bottom: 1rem;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .dashboard-control-bar {
+        order: 4;
+        margin-bottom: 1.5rem;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .week-overview {
+        order: 5;
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-top: 0 !important;
+        padding: 1.25rem !important;
+    }
+
     /* Top horizontal row of mini tiles for all widgets */
     html[data-admin-theme="slotra-reloaded"] .dashboard-layout {
         display: grid !important;
@@ -1726,15 +1761,6 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         margin-bottom: 0.15rem !important;
     }
 
-    /* Keep the week plan calendar grid spanning full width below */
-    html[data-admin-theme="slotra-reloaded"] .week-overview {
-        grid-column: 1 / -1 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        margin-top: 1rem !important;
-        padding: 1.25rem !important;
-    }
-
     html[data-admin-theme="slotra-reloaded"] .dashboard-ticker {
         position: static !important;
         top: auto !important;
@@ -1774,10 +1800,10 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     html[data-admin-theme="slotra-reloaded"] .notification-dropdown {
         top: 40px !important;
-        right: 0px !important;
-        left: auto !important;
+        left: 0px !important;
+        right: auto !important;
         position: absolute !important;
-        width: 280px !important;
+        width: 250px !important;
         z-index: 1100 !important;
     }
 
@@ -1798,8 +1824,8 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     html[data-admin-theme="slotra-reloaded"] .admin-menu-split-link a.nav-link-admin {
         flex-grow: 1;
-        border-radius: 10px 0 0 10px !important;
-        padding-right: 0.5rem !important;
+        border-radius: 0 10px 10px 0 !important;
+        padding-left: 0.5rem !important;
         width: auto !important;
     }
 
@@ -1815,9 +1841,11 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        border-left: 1px solid rgba(111, 76, 219, 0.12);
-        border-radius: 0 10px 10px 0;
+        border-right: 1px solid rgba(111, 76, 219, 0.12);
+        border-radius: 10px 0 0 10px;
         transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
         flex-shrink: 0;
     }
 

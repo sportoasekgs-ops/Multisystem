@@ -253,8 +253,8 @@
                         {% if session.user_role == 'admin' %}
                         <div class="admin-menu-dropdown-wrapper">
                             <div class="admin-menu-split-link">
-                                <a href="{{ url_for('admin') }}" class="nav-link-admin">Admin</a>
                                 <button type="button" class="admin-plus-btn" onclick="toggleAdminQuickMenu(event)" title="Admin Schnellzugriff">＋</button>
+                                <a href="{{ url_for('admin') }}" class="nav-link-admin">Admin</a>
                             </div>
                             <div class="admin-quick-menu" id="adminQuickMenu">
                                 <a href="{{ url_for('admin_create_booking') }}">➕ Neue Buchung</a>
