@@ -251,7 +251,22 @@
                         <a href="{{ url_for('meine_buchungen') }}" class="nav-link-my-bookings">Meine Buchungen</a>
 
                         {% if session.user_role == 'admin' %}
-                        <a href="{{ url_for('admin') }}" class="nav-link-admin">Admin</a>
+                        <div class="admin-menu-dropdown-wrapper">
+                            <div class="admin-menu-split-link">
+                                <a href="{{ url_for('admin') }}" class="nav-link-admin">Admin</a>
+                                <button type="button" class="admin-plus-btn" onclick="toggleAdminQuickMenu(event)" title="Admin Schnellzugriff">＋</button>
+                            </div>
+                            <div class="admin-quick-menu" id="adminQuickMenu">
+                                <a href="{{ url_for('admin_create_booking') }}">➕ Neue Buchung</a>
+                                <a href="{{ url_for('manage_slots') }}">📝 Slot-Namen</a>
+                                <a href="{{ url_for('admin_bulk_block') }}">🔒 Ferien-Sperrung</a>
+                                <a href="{{ url_for('admin_dyn.periods') }}">⏱️ Stunden</a>
+                                <a href="{{ url_for('admin_dyn.courses') }}">📚 Kurse & Angebote</a>
+                                <a href="{{ url_for('admin_dyn.classes') }}">🏫 Schulklassen</a>
+                                <a href="{{ url_for('admin_dyn.booking_settings') }}">🎛️ Buchungs-Regeln</a>
+                                <a href="{{ url_for('admin_cms') }}">✏️ Texte & Layout</a>
+                            </div>
+                        </div>
                         {% endif %}
 
                         <div class="nav-tools">
@@ -689,6 +704,19 @@
             {% endif %}
         });
 
+        function toggleAdminQuickMenu(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('adminQuickMenu');
+            if (dropdown) {
+                const isVisible = dropdown.classList.contains('show');
+                // Close other dropdowns
+                document.querySelectorAll('.admin-quick-menu').forEach(d => d.classList.remove('show'));
+                if (!isVisible) {
+                    dropdown.classList.add('show');
+                }
+            }
+        }
+
         // Click outside closes modals, menus, and dropdowns
         document.addEventListener("click", function (e) {
             const credits = document.getElementById("creditsModal");
@@ -696,10 +724,16 @@
             const notifications = document.getElementById("notificationDropdown");
             const navLinksWrapper = document.getElementById("navLinksWrapper");
             const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+            const adminMenu = document.getElementById("adminQuickMenu");
 
             if (e.target === credits) credits.style.display = "none";
             if (e.target === privacy) privacy.style.display = "none";
             
+            // Close admin quick menu
+            if (adminMenu && !adminMenu.contains(e.target) && !e.target.classList.contains('admin-plus-btn')) {
+                adminMenu.classList.remove('show');
+            }
+
             // Close notifications dropdown if clicked outside bell and dropdown
             if (notifications && notifications.style.display === "block") {
                 const bell = document.querySelector(".notification-bell");
