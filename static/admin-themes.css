@@ -1737,6 +1737,11 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         align-items: start !important;
     }
 
+    /* Force all direct children (like inline notice boxes) to span full width by default */
+    html[data-admin-theme="slotra-reloaded"] .dashboard > div {
+        grid-column: span 4 !important;
+    }
+
     html[data-admin-theme="slotra-reloaded"] .dashboard-top-section {
         grid-column: span 4 !important;
         order: 3 !important;
@@ -1784,13 +1789,13 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     /* Uniform Height Constraints & Compact Styles for Widgets */
     html[data-admin-theme="slotra-reloaded"] .dashboard-widget {
-        height: 260px !important;
+        height: 200px !important;
         display: flex !important;
         flex-direction: column !important;
         box-sizing: border-box !important;
         padding: 0.85rem !important;
-        border-radius: 14px !important;
-        font-size: 0.8rem !important;
+        border-radius: 12px !important;
+        font-size: 0.78rem !important;
         background: #ffffff !important;
         border: 1px solid rgba(111, 76, 219, 0.1) !important;
     }
@@ -1808,7 +1813,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     html[data-admin-theme="slotra-reloaded"] .widget-header h4,
     html[data-admin-theme="slotra-reloaded"] .ticker-header h4 {
-        font-size: 0.85rem !important;
+        font-size: 0.8rem !important;
         margin: 0 !important;
         font-weight: 700 !important;
         color: #1a1a2e !important;
