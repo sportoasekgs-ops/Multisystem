@@ -5942,6 +5942,7 @@ footer {
 .week-table .period-row-label-pause {
     background: color-mix(in srgb, #dcc08a 38%, var(--bg-secondary));
     border-right: 3px solid color-mix(in srgb, #c9954a 55%, transparent);
+    text-align: center;
 }
 
 .week-table .period-row-label-pause .period-row-label-title {
