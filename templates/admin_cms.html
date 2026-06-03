@@ -72,6 +72,7 @@ input:checked + .slider:before { transform: translateX(24px); }
         <a href="#" class="cms-tab active" onclick="showTab('login'); return false;">🔑 Login</a>
         <a href="#" class="cms-tab" onclick="showTab('dashboard'); return false;">📅 Dashboard</a>
         <a href="#" class="cms-tab" onclick="showTab('branding'); return false;">🎨 Branding</a>
+        <a href="#" class="cms-tab" onclick="showTab('typography'); return false;">🔤 Typografie</a>
         <a href="#" class="cms-tab" onclick="showTab('smtp'); return false;">📧 SMTP</a>
         <a href="#" class="cms-tab" onclick="showTab('privacy'); return false;">🔐 Datenschutz</a>
         <a href="#" class="cms-tab" onclick="showTab('imprint'); return false;">📄 Impressum</a>
@@ -241,6 +242,109 @@ input:checked + .slider:before { transform: translateX(24px); }
 
             <div class="btn-row">
                 <button type="submit" class="btn-primary">💾 Branding speichern</button>
+                <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ── TYPOGRAFIE ──────────────────────────────────────────── -->
+    <div id="tab-typography" class="cms-section">
+        <form method="post" action="{{ url_for('admin_cms_save') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="section" value="typography">
+
+            <div class="cms-card">
+                <h3>🔤 Schriftgrößen anpassen</h3>
+                <p style="color:var(--text-secondary);font-size:.88rem;margin-bottom:1.4rem;">
+                    Passe die Textgrößen für verschiedene Bereiche an. Standardwert ist 100%.
+                    Die Vorschau aktualisiert sich sofort beim Bewegen der Regler.
+                </p>
+
+                <div class="form-group">
+                    <label class="form-label">Basis-Textgröße (Fließtext, Menü, Buttons)</label>
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <input type="range" name="font_size_base" id="fs-base"
+                               min="50" max="200" step="5"
+                               value="{{ cms.font_size_base or '100' }}"
+                               oninput="updateTypoPreview()"
+                               style="flex:1;">
+                        <span id="fs-base-val" style="min-width:50px;text-align:right;font-weight:600;font-size:.9rem;">{{ cms.font_size_base or '100' }}%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Überschriften</label>
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <input type="range" name="font_size_headings" id="fs-headings"
+                               min="50" max="200" step="5"
+                               value="{{ cms.font_size_headings or '100' }}"
+                               oninput="updateTypoPreview()"
+                               style="flex:1;">
+                        <span id="fs-headings-val" style="min-width:50px;text-align:right;font-weight:600;font-size:.9rem;">{{ cms.font_size_headings or '100' }}%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Wochenplan / Tabellen</label>
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <input type="range" name="font_size_table" id="fs-table"
+                               min="50" max="200" step="5"
+                               value="{{ cms.font_size_table or '100' }}"
+                               oninput="updateTypoPreview()"
+                               style="flex:1;">
+                        <span id="fs-table-val" style="min-width:50px;text-align:right;font-weight:600;font-size:.9rem;">{{ cms.font_size_table or '100' }}%</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Widgets (Buchungen, Ticker, etc.)</label>
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <input type="range" name="font_size_widgets" id="fs-widgets"
+                               min="50" max="200" step="5"
+                               value="{{ cms.font_size_widgets or '100' }}"
+                               oninput="updateTypoPreview()"
+                               style="flex:1;">
+                        <span id="fs-widgets-val" style="min-width:50px;text-align:right;font-weight:600;font-size:.9rem;">{{ cms.font_size_widgets or '100' }}%</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:.5rem;">
+                    <button type="button" class="btn-ghost" onclick="resetTypoSliders()" style="font-size:.82rem;">↩️ Alle auf 100% zurücksetzen</button>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div class="cms-card" style="border-left:4px solid #6366f1;">
+                <h3>👁️ Live-Vorschau</h3>
+                <div id="typo-preview" style="background:var(--bg-secondary);border-radius:10px;padding:1.5rem;">
+                    <h2 id="tp-heading" style="margin:0 0 .5rem 0;font-weight:700;">Überschrift Beispiel</h2>
+                    <p id="tp-body" style="margin:0 0 1rem 0;color:var(--text-secondary);line-height:1.6;">
+                        Dies ist ein Beispiel-Fließtext, wie er auf der Seite erscheint.
+                        So kannst du die Lesbarkeit direkt einschätzen.
+                    </p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div id="tp-widget" style="background:var(--bg-card);border:1px solid var(--border-light,#e2e8f0);border-radius:10px;padding:1rem;">
+                            <h4 style="margin:0 0 .4rem 0;font-weight:600;">📋 Widget-Titel</h4>
+                            <p style="margin:0;font-size:inherit;color:var(--text-secondary);">Keine anstehenden Buchungen.</p>
+                        </div>
+                        <div id="tp-table" style="background:var(--bg-card);border:1px solid var(--border-light,#e2e8f0);border-radius:10px;padding:1rem;">
+                            <table style="width:100%;border-collapse:collapse;font-size:inherit;">
+                                <thead><tr>
+                                    <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--border-light,#e2e8f0);font-weight:600;">Tag</th>
+                                    <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--border-light,#e2e8f0);font-weight:600;">Kurs</th>
+                                </tr></thead>
+                                <tbody>
+                                    <tr><td style="padding:4px 8px;">Mo</td><td style="padding:4px 8px;">Freie Wahl</td></tr>
+                                    <tr><td style="padding:4px 8px;">Di</td><td style="padding:4px 8px;">Entspannung</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">💾 Typografie speichern</button>
                 <a href="{{ url_for('admin') }}" class="btn-ghost">← Zurück zum Admin</a>
             </div>
         </form>
@@ -1000,7 +1104,7 @@ function syncColor(hexInput, pickerId) {
 // Hash-basiertes Tab-Routing beim Laden
 (function() {
     const hash = window.location.hash.replace('#tab-', '');
-    const valid = ['login','dashboard','branding','smtp','privacy','imprint','hints','demo','database'];
+    const valid = ['login','dashboard','branding','typography','smtp','privacy','imprint','hints','demo','database'];
     if (valid.includes(hash)) {
         document.querySelectorAll('.cms-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.cms-tab').forEach(t => t.classList.remove('active'));
@@ -1010,5 +1114,30 @@ function syncColor(hexInput, pickerId) {
         tabs.forEach(t => { if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + hash + "'")) t.classList.add('active'); });
     }
 })();
+
+function updateTypoPreview() {
+    var base = document.getElementById('fs-base').value;
+    var headings = document.getElementById('fs-headings').value;
+    var table = document.getElementById('fs-table').value;
+    var widgets = document.getElementById('fs-widgets').value;
+    document.getElementById('fs-base-val').textContent = base + '%';
+    document.getElementById('fs-headings-val').textContent = headings + '%';
+    document.getElementById('fs-table-val').textContent = table + '%';
+    document.getElementById('fs-widgets-val').textContent = widgets + '%';
+    var bodySize = (16 * base / 100);
+    var headingSize = (1.6 * 16 * headings / 100);
+    var tableSize = (16 * table / 100);
+    var widgetSize = (16 * widgets / 100);
+    document.getElementById('tp-body').style.fontSize = bodySize + 'px';
+    document.getElementById('tp-heading').style.fontSize = headingSize + 'px';
+    document.getElementById('tp-table').style.fontSize = tableSize + 'px';
+    document.getElementById('tp-widget').style.fontSize = widgetSize + 'px';
+}
+function resetTypoSliders() {
+    ['fs-base','fs-headings','fs-table','fs-widgets'].forEach(function(id) {
+        document.getElementById(id).value = 100;
+    });
+    updateTypoPreview();
+}
 </script>
 {% endblock %}

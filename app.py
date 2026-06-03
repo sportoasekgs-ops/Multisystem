@@ -557,6 +557,10 @@ def inject_branding():
         "contact_email": _cfg("contact_email"),
         "contact_phone": _cfg("contact_phone"),
         "contact_text": _cfg("contact_text"),
+        "font_size_base": _cfg("font_size_base", "100"),
+        "font_size_headings": _cfg("font_size_headings", "100"),
+        "font_size_table": _cfg("font_size_table", "100"),
+        "font_size_widgets": _cfg("font_size_widgets", "100"),
     }
     return dict(branding=branding, **branding, **extra)
 
@@ -4163,7 +4167,15 @@ def admin_cms():
         "brevo_from_name": get_config("brevo_from_name", "SportOase"),
         "iserv_admin_email": get_config("iserv_admin_email", ""),
         "iserv_domain": get_config("iserv_domain", ""),
+        "font_size_base": get_config("font_size_base", "100"),
+        "font_size_headings": get_config("font_size_headings", "100"),
+        "font_size_table": get_config("font_size_table", "100"),
+        "font_size_widgets": get_config("font_size_widgets", "100"),
         "iserv_client_id": get_config("iserv_client_id", ""),
+        "font_size_base": get_config("font_size_base", "100"),
+        "font_size_headings": get_config("font_size_headings", "100"),
+        "font_size_table": get_config("font_size_table", "100"),
+        "font_size_widgets": get_config("font_size_widgets", "100"),
     }
     # DB-URL für Anzeige (maskiert)
     from local_config import get_database_url as _get_db_url
@@ -4376,6 +4388,32 @@ def admin_cms_save():
             os.environ["ISERV_CLIENT_ID"] = new_client_id
         invalidate_iserv_domain_cache()
         flash("IServ-Konfiguration gespeichert. ✅", "success")
+
+    elif section == "typography":
+        from system_config import set_configs
+
+        font_size_base = request.form.get("font_size_base", "100").strip()
+        font_size_headings = request.form.get("font_size_headings", "100").strip()
+        font_size_table = request.form.get("font_size_table", "100").strip()
+        font_size_widgets = request.form.get("font_size_widgets", "100").strip()
+        # Clamp values between 50 and 200
+        try:
+            font_size_base = str(max(50, min(200, int(font_size_base))))
+            font_size_headings = str(max(50, min(200, int(font_size_headings))))
+            font_size_table = str(max(50, min(200, int(font_size_table))))
+            font_size_widgets = str(max(50, min(200, int(font_size_widgets))))
+        except ValueError:
+            font_size_base = font_size_headings = font_size_table = font_size_widgets = "100"
+        set_configs(
+            {
+                "font_size_base": font_size_base,
+                "font_size_headings": font_size_headings,
+                "font_size_table": font_size_table,
+                "font_size_widgets": font_size_widgets,
+            },
+            category="typography",
+        )
+        flash("Typografie-Einstellungen gespeichert. ✅", "success")
 
     elif section == "demo":
         from system_config import set_config as _sc

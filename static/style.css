@@ -7064,3 +7064,23 @@ footer {
     color: var(--primary) !important;
     transform: none !important;
 }
+
+/* ── Typography Scale (configurable via Admin CMS) ── */
+body {
+    font-size: calc(1rem * var(--font-scale-base, 100) / 100);
+}
+
+h1, h2, h3 {
+    font-size: calc(1em * var(--font-scale-headings, 100) / 100);
+}
+
+.week-table,
+.week-table th,
+.week-table td {
+    font-size: calc(1em * var(--font-scale-table, 100) / 100);
+}
+
+.dashboard-widget,
+.dashboard-ticker {
+    font-size: calc(1em * var(--font-scale-widgets, 100) / 100);
+}

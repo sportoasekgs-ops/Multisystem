@@ -25,8 +25,8 @@
     {% else %}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     {% endif %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260603k">
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260603k">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20260603L">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin-themes.css') }}?v=20260603L">
     <meta http-equiv="refresh" content="600">
 
     <!-- ── Dynamisches Branding aus der Datenbank (für alle Themes) ── -->
@@ -43,6 +43,11 @@
             --primary-overlay: rgba({{ primary_rgb or '233, 30, 99' }}, 0.12);
             --brand-tint-8: color-mix(in srgb, var(--brand-primary) 8%, white);
             --brand-tint-15: color-mix(in srgb, var(--brand-primary) 15%, white);
+
+            --font-scale-base: {{ font_size_base | default('100') }};
+            --font-scale-headings: {{ font_size_headings | default('100') }};
+            --font-scale-table: {{ font_size_table | default('100') }};
+            --font-scale-widgets: {{ font_size_widgets | default('100') }};
             --brand-tint-25: color-mix(in srgb, var(--brand-primary) 25%, white);
             --brand-shade-20: color-mix(in srgb, var(--brand-primary) 80%, black);
         }
