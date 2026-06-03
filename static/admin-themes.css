@@ -1496,6 +1496,778 @@ html[data-admin-theme="slotra2"] main.container {
     z-index: 1;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. SLOTRA RELOADED – Dark Premium Dashboard (dunkel, glassmorphism, modern)
+   ═══════════════════════════════════════════════════════════════════════════ */
+html[data-admin-theme="slotra-reloaded"] {
+    --font-heading: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-body: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --text-primary: #1a1a2e;
+    --text-secondary: #6e6f8a;
+    --text-tertiary: #a0a2c0;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f3f0f7;
+    --bg-tertiary: #eae7f2;
+    --bg-card: #ffffff;
+    --border: rgba(147, 51, 234, 0.09);
+    --border-light: rgba(147, 51, 234, 0.05);
+    --login-gradient: linear-gradient(135deg, #eae7f2 0%, #f3f0f7 100%);
+    --shadow-sm: 0 4px 12px rgba(111, 76, 219, 0.05);
+    --shadow: 0 10px 30px rgba(111, 76, 219, 0.08);
+    --shadow-md: 0 16px 40px rgba(111, 76, 219, 0.12);
+    --shadow-lg: 0 24px 50px rgba(111, 76, 219, 0.15);
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --info-bg: rgba(var(--primary-rgb), 0.05);
+    --info-border: rgba(var(--primary-rgb), 0.12);
+    --info-text: var(--brand-primary);
+    --highlight-bg: rgba(var(--primary-rgb), 0.05);
+    --highlight-border: rgba(var(--primary-rgb), 0.15);
+    --highlight-text: var(--brand-primary);
+    --slot-course-warm: #ff6b6b;
+    --slot-course-warm-text: #fff;
+    --slot-course-cool: #54a0ff;
+    --slot-course-cool-text: #fff;
+    --slot-course-green: #1dd1a1;
+    --slot-course-green-text: #fff;
+    --slot-course-pink: #f368e0;
+    --slot-course-pink-text: #fff;
+    --slot-course-neutral: #a0a2c0;
+    --slot-course-neutral-text: #fff;
+}
+
+html[data-admin-theme="slotra-reloaded"] body {
+    background: #f3f0f7;
+    background-image: none;
+    color: #1a1a2e;
+    letter-spacing: -0.01em;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0;
+}
+
+html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
+    display: none;
+}
+
+/* ── Dynamic Sidebar App Layout ── */
+@media (min-width: 1024px) {
+    html[data-admin-theme="slotra-reloaded"] .app-layout-wrapper {
+        display: flex;
+        min-height: 100vh;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .top-nav {
+        width: 260px;
+        min-width: 260px;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        background: #eae7f2;
+        border-right: 1px solid rgba(111, 76, 219, 0.1);
+        border-bottom: none;
+        box-shadow: 4px 0 20px rgba(111, 76, 219, 0.05);
+        padding: 2rem 1rem;
+        z-index: 1000;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .top-nav .container {
+        padding: 0;
+        max-width: 100%;
+        height: 100%;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .top-nav nav {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 2rem;
+        height: 100%;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .nav-logo-link {
+        margin-bottom: 1.5rem;
+        padding-left: 0.5rem;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .nav-links-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        flex-grow: 1;
+        margin-left: 0;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .top-nav nav a {
+        display: flex;
+        align-items: center;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        padding: 0.75rem 1rem;
+        color: #6e6f8a;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        width: 100%;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .top-nav nav a:hover {
+        background: rgba(111, 76, 219, 0.08);
+        color: var(--brand-primary);
+        transform: translateX(4px);
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .top-nav nav a.nav-link-dashboard {
+        background: rgba(111, 76, 219, 0.12);
+        color: var(--brand-primary);
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .nav-tools {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: auto;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(111, 76, 219, 0.1);
+        border-left: none;
+        margin-left: 0;
+        padding-left: 0;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .user-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+        padding: 0.75rem;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(111, 76, 219, 0.08);
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .top-nav nav a.logout-link {
+        margin-top: 0.5rem;
+        border: 1px solid rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+        justify-content: center;
+        font-weight: 700;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] .top-nav nav a.logout-link:hover {
+        background: #ef4444;
+        color: #fff;
+        transform: none;
+    }
+
+    html[data-admin-theme="slotra-reloaded"] main.container {
+        flex-grow: 1;
+        margin-left: 260px; /* Sidebar width offset */
+        max-width: calc(100% - 260px);
+        padding: 2.5rem 3rem;
+        min-height: 100vh;
+        box-sizing: border-box;
+        overflow-y: auto;
+    }
+}
+
+/* ── Windows 11 Modern Cards & Widgets ── */
+html[data-admin-theme="slotra-reloaded"] .dashboard-card,
+html[data-admin-theme="slotra-reloaded"] .login-box,
+html[data-admin-theme="slotra-reloaded"] .admin-card,
+html[data-admin-theme="slotra-reloaded"] .admin-section-modern,
+html[data-admin-theme="slotra-reloaded"] .date-selector,
+html[data-admin-theme="slotra-reloaded"] .modal-content,
+html[data-admin-theme="slotra-reloaded"] .dashboard-widget {
+    background: #ffffff;
+    border: 1px solid rgba(111, 76, 219, 0.09);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-overview {
+    background: #ffffff;
+    border: 1px solid rgba(111, 76, 219, 0.09);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow);
+    padding: 1.75rem;
+    max-width: 100% !important;
+    width: 100%;
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .dashboard-card:hover,
+html[data-admin-theme="slotra-reloaded"] .admin-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: rgba(111, 76, 219, 0.2);
+}
+
+html[data-admin-theme="slotra-reloaded"] .dashboard-card .card-icon {
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.35);
+}
+
+html[data-admin-theme="slotra-reloaded"] .dashboard-card-title .card-text {
+    color: var(--brand-primary);
+    font-weight: 600;
+}
+
+html[data-admin-theme="slotra-reloaded"] .dashboard-card .card-text {
+    color: #e2e8f0;
+}
+
+/* ── Week overview header ── */
+html[data-admin-theme="slotra-reloaded"] .week-header-with-nav {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.25rem;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-title {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #f1f5f9;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-dates {
+    background: rgba(var(--primary-rgb), 0.12);
+    color: var(--brand-primary);
+    border: 1px solid rgba(var(--primary-rgb), 0.2);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-nav-arrow {
+    border-radius: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    color: #94a3b8;
+    box-shadow: var(--shadow-sm);
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-nav-arrow:hover {
+    background: rgba(var(--primary-rgb), 0.15);
+    border-color: rgba(var(--primary-rgb), 0.3);
+    color: var(--brand-primary);
+    transform: none;
+}
+
+/* ── Week Table (clean dark grid) ── */
+html[data-admin-theme="slotra-reloaded"] .week-table {
+    border-collapse: separate;
+    border-spacing: 0 0.3rem;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table th {
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: none;
+    padding-bottom: 0.5rem;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table th:first-child {
+    color: #475569;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-day-header {
+    align-items: center;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-day-header .day-name {
+    display: inline-block;
+    padding: 0.35rem 0.85rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-day-header.today-header .day-name {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(var(--primary-rgb), 0.4);
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-day-header .day-date {
+    font-size: 0.68rem;
+    margin-top: 0.25rem;
+    opacity: 0.7;
+    color: #64748b;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table th.today-column {
+    background: transparent;
+    border: none;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table td {
+    border: none;
+    background: transparent;
+    padding: 0.2rem;
+    vertical-align: top;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table td:first-child {
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.8rem;
+    vertical-align: middle;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table td.today-column {
+    background: rgba(var(--primary-rgb), 0.04);
+    border-radius: 12px;
+}
+
+/* ── Selected date banner ── */
+html[data-admin-theme="slotra-reloaded"] .selected-date-info h3 {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    color: #fff;
+    border-radius: var(--radius-xl);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    box-shadow: 0 10px 35px rgba(var(--primary-rgb), 0.35);
+    padding: 1rem 1.5rem;
+}
+
+/* ── Slot Cards (dark glass) ── */
+html[data-admin-theme="slotra-reloaded"] .slot-card {
+    border-radius: var(--radius);
+    border: 1px solid rgba(111, 76, 219, 0.1);
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(111, 76, 219, 0.04);
+    padding: 0.55rem 0.6rem;
+    min-height: 62px;
+    transition: all 0.2s ease;
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(111, 76, 219, 0.3);
+    box-shadow: 0 4px 15px rgba(111, 76, 219, 0.1);
+    background: #ffffff;
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-card.slot-has-bookings {
+    background: #faf8ff;
+    border-color: rgba(111, 76, 219, 0.2);
+    box-shadow: 0 4px 12px rgba(111, 76, 219, 0.05);
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-card.slot-full {
+    opacity: 0.65;
+    background: #fbfbfe;
+    border-color: rgba(111, 76, 219, 0.08);
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-card.slot-full .slot-course-name,
+html[data-admin-theme="slotra-reloaded"] .slot-card.slot-full .slot-availability,
+html[data-admin-theme="slotra-reloaded"] .slot-card.slot-full .course-tag {
+    color: #a0a2c0;
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-card.slot-full .course-tag {
+    background: #eae7f2;
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-course-name {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: #1a1a2e;
+    text-transform: none;
+    letter-spacing: -0.01em;
+    font-style: normal;
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-card[class*="course-"] {
+    border-color: rgba(111, 76, 219, 0.15);
+}
+
+html[data-admin-theme="slotra-reloaded"] .course-tag {
+    border-radius: 8px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: var(--brand-primary);
+    color: #fff;
+    border: none;
+}
+
+/* ── Book button ── */
+html[data-admin-theme="slotra-reloaded"] .book-btn {
+    border-radius: 10px;
+    background: var(--brand-primary);
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 0.5rem 0.65rem;
+    margin-top: 0.45rem;
+    box-shadow: 0 4px 12px rgba(111, 76, 219, 0.15);
+    color: #ffffff;
+}
+
+html[data-admin-theme="slotra-reloaded"] .book-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(111, 76, 219, 0.25);
+    background: var(--brand-secondary);
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-availability .book-link,
+html[data-admin-theme="slotra-reloaded"] .slot-availability .booked-indicator {
+    color: var(--brand-primary);
+    font-weight: 700;
+}
+
+/* ── Slot booking bar ── */
+html[data-admin-theme="slotra-reloaded"] .slot-booking-bar {
+    background: rgba(var(--primary-rgb), 0.1);
+    border-radius: 999px;
+    height: 5px;
+}
+
+html[data-admin-theme="slotra-reloaded"] .slot-booking-bar-fill.bar-low,
+html[data-admin-theme="slotra-reloaded"] .slot-booking-bar-fill.bar-high {
+    background: var(--brand-primary);
+}
+
+/* ── Exclusive & Pending ── */
+html[data-admin-theme="slotra-reloaded"] .pending-exclusive-hint {
+    background: rgba(var(--primary-rgb), 0.08);
+    border: 1px solid rgba(var(--primary-rgb), 0.2);
+    border-radius: var(--radius);
+    color: color-mix(in srgb, var(--brand-primary) 70%, #f1f5f9);
+}
+
+html[data-admin-theme="slotra-reloaded"] .exclusive-header {
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    border-radius: var(--radius);
+}
+
+html[data-admin-theme="slotra-reloaded"] .period-exclusive {
+    background: rgba(var(--primary-rgb), 0.08) !important;
+    border: 1px solid rgba(var(--primary-rgb), 0.2) !important;
+    border-radius: var(--radius);
+}
+
+/* ── Widgets ── */
+html[data-admin-theme="slotra-reloaded"] .widget-item {
+    border-radius: var(--radius);
+    border: 1px solid rgba(111, 76, 219, 0.08);
+    background: #faf8ff;
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .widget-item:hover {
+    border-color: rgba(111, 76, 219, 0.2);
+    background: #f4efff;
+}
+
+html[data-admin-theme="slotra-reloaded"] .widget-badge.badge-primary {
+    background: rgba(111, 76, 219, 0.12);
+    color: var(--brand-primary);
+    border-radius: 8px;
+}
+
+html[data-admin-theme="slotra-reloaded"] .widget-badge.badge-warning {
+    border-radius: 8px;
+    background: #ffeaa7;
+    color: #d25100;
+}
+
+/* ── Forms ── */
+html[data-admin-theme="slotra-reloaded"] .form-group input,
+html[data-admin-theme="slotra-reloaded"] .form-group select,
+html[data-admin-theme="slotra-reloaded"] .form-group textarea {
+    border-radius: var(--radius);
+    border: 1px solid rgba(111, 76, 219, 0.15);
+    background: #ffffff;
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .form-group input:focus,
+html[data-admin-theme="slotra-reloaded"] .form-group select:focus,
+html[data-admin-theme="slotra-reloaded"] .form-group textarea:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(111, 76, 219, 0.15);
+    outline: none;
+}
+
+html[data-admin-theme="slotra-reloaded"] .form-group label {
+    color: #6e6f8a;
+}
+
+/* ── Login ── */
+html[data-admin-theme="slotra-reloaded"] .login-box {
+    border-radius: var(--radius-2xl);
+    padding: 2.5rem;
+    background: #ffffff;
+    box-shadow: var(--shadow-lg);
+}
+
+html[data-admin-theme="slotra-reloaded"] .login-box h2 {
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .login-logo img {
+    border-radius: 50%;
+    box-shadow: 0 8px 24px rgba(111, 76, 219, 0.12), 0 0 0 2px rgba(111, 76, 219, 0.1);
+}
+
+/* ── Typography ── */
+html[data-admin-theme="slotra-reloaded"] h1,
+html[data-admin-theme="slotra-reloaded"] h2,
+html[data-admin-theme="slotra-reloaded"] h3,
+html[data-admin-theme="slotra-reloaded"] .dashboard-title {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #1a1a2e;
+}
+
+/* ── Stat cards ── */
+html[data-admin-theme="slotra-reloaded"] .stat-card {
+    background: var(--brand-primary);
+    border-radius: var(--radius-xl);
+    box-shadow: 0 8px 24px rgba(111, 76, 219, 0.2);
+}
+
+/* ── Help cards ── */
+html[data-admin-theme="slotra-reloaded"] .help-card,
+html[data-admin-theme="slotra-reloaded"] .help-card-exclusive {
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(111, 76, 219, 0.08);
+    box-shadow: var(--shadow-sm);
+    background: #ffffff;
+    color: #6e6f8a;
+}
+
+html[data-admin-theme="slotra-reloaded"] .help-card-exclusive {
+    background: rgba(111, 76, 219, 0.05);
+    border-color: rgba(111, 76, 219, 0.2);
+}
+
+/* ── Notifications ── */
+html[data-admin-theme="slotra-reloaded"] .notification-dropdown {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(111, 76, 219, 0.1);
+    background: #ffffff;
+}
+
+html[data-admin-theme="slotra-reloaded"] .notification-header {
+    border-bottom-color: rgba(111, 76, 219, 0.08);
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .notification-header h4 {
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .notification-item {
+    border-bottom-color: rgba(111, 76, 219, 0.05);
+}
+
+html[data-admin-theme="slotra-reloaded"] .notification-message {
+    color: #6e6f8a;
+}
+
+html[data-admin-theme="slotra-reloaded"] .notification-time {
+    color: #a0a2c0;
+}
+
+/* ── Toast overrides ── */
+html[data-admin-theme="slotra-reloaded"] .toast.info {
+    border-left-color: var(--brand-primary);
+}
+
+html[data-admin-theme="slotra-reloaded"] .toast.success {
+    border-left-color: var(--brand-primary);
+}
+
+/* ── Contact & other boxes ── */
+html[data-admin-theme="slotra-reloaded"] .contact-info-box {
+    background: var(--brand-primary);
+}
+
+/* ── Clickable slot hover ── */
+html[data-admin-theme="slotra-reloaded"] .clickable-slot:hover .slot-card {
+    border-color: rgba(111, 76, 219, 0.4);
+    box-shadow: 0 6px 18px rgba(111, 76, 219, 0.1);
+}
+
+/* ── Date input in light theme ── */
+html[data-admin-theme="slotra-reloaded"] .date-input-inline {
+    background: #ffffff !important;
+    color: #1a1a2e !important;
+    border-color: rgba(111, 76, 219, 0.15) !important;
+}
+
+html[data-admin-theme="slotra-reloaded"] .date-input-inline::-webkit-calendar-picker-indicator {
+    filter: none;
+}
+
+/* ── Admin theme select ── */
+html[data-admin-theme="slotra-reloaded"] .admin-theme-select {
+    background-color: #ffffff;
+    color: #1a1a2e;
+    border-color: rgba(111, 76, 219, 0.15);
+}
+
+/* ── Occupancy widget ── */
+html[data-admin-theme="slotra-reloaded"] .occupancy-widget {
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .occupancy-ring-text {
+    fill: #1a1a2e;
+}
+
+/* ── Messages / Alerts ── */
+html[data-admin-theme="slotra-reloaded"] .message {
+    background: #ffffff;
+    border-color: rgba(111, 76, 219, 0.15);
+    color: #1a1a2e;
+}
+
+/* ── Footer links ── */
+html[data-admin-theme="slotra-reloaded"] .footer-legal a {
+    color: #a0a2c0;
+}
+
+html[data-admin-theme="slotra-reloaded"] .footer-legal a:hover {
+    color: var(--brand-primary);
+}
+
+/* ── Credits button ── */
+html[data-admin-theme="slotra-reloaded"] .credits-button {
+    background: #ffffff;
+    border: 1px solid rgba(111, 76, 219, 0.15);
+    color: #6e6f8a;
+}
+
+/* ── Credits modal ── */
+html[data-admin-theme="slotra-reloaded"] .credits-content {
+    background: #ffffff;
+    color: #1a1a2e;
+    border: 1px solid rgba(111, 76, 219, 0.15);
+}
+
+/* ── Modal overlays ── */
+html[data-admin-theme="slotra-reloaded"] .modal-overlay {
+    background: rgba(26, 28, 40, 0.35);
+}
+
+html[data-admin-theme="slotra-reloaded"] .modal-content {
+    background: #ffffff !important;
+    backdrop-filter: blur(20px) !important;
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .modal-header {
+    border-bottom-color: rgba(111, 76, 219, 0.08);
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .modal-header h3 {
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .modal-body {
+    color: #6e6f8a;
+}
+
+html[data-admin-theme="slotra-reloaded"] .modal-body h4 {
+    color: #1a1a2e;
+}
+
+/* ── Help section ── */
+html[data-admin-theme="slotra-reloaded"] .help-toggle {
+    color: #1a1a2e;
+    background: #ffffff;
+    border-color: rgba(111, 76, 219, 0.12);
+}
+
+html[data-admin-theme="slotra-reloaded"] .help-content {
+    background: #ffffff;
+    color: #6e6f8a;
+    border-color: rgba(111, 76, 219, 0.12);
+}
+
+/* ── Ticker / Live feed widgets ── */
+html[data-admin-theme="slotra-reloaded"] .ticker-header {
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] .ticker-item {
+    border-bottom-color: rgba(111, 76, 219, 0.08);
+    color: #6e6f8a;
+}
+
+/* ── Calendar view ── */
+html[data-admin-theme="slotra-reloaded"] .calendar-btn {
+    background: #ffffff;
+    border-color: rgba(111, 76, 219, 0.15);
+}
+
+/* ── Admin tables ── */
+html[data-admin-theme="slotra-reloaded"] table {
+    color: #1a1a2e;
+}
+
+html[data-admin-theme="slotra-reloaded"] table th {
+    color: #6e6f8a;
+    border-bottom-color: rgba(111, 76, 219, 0.15);
+}
+
+html[data-admin-theme="slotra-reloaded"] table td {
+    border-bottom-color: rgba(111, 76, 219, 0.08);
+}
+
+/* ── Logout link ── */
+html[data-admin-theme="slotra-reloaded"] .logout-link {
+    color: #6e6f8a;
+}
+
+html[data-admin-theme="slotra-reloaded"] .logout-link:hover {
+    color: #f87171;
+}
+
+/* ── Dashboard layout spacing ── */
+html[data-admin-theme="slotra-reloaded"] .dashboard {
+    color: #1a1a2e;
+}
+
+/* ── Z-index for main content ── */
+html[data-admin-theme="slotra-reloaded"] main.container {
+    position: relative;
+    z-index: 1;
+}
+
 /* Toast: immer lesbar (unabhängig vom Theme-Text) */
 .toast-message {
     color: #f8fafc !important;
