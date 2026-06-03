@@ -450,18 +450,33 @@
             </div>
         </div>
         <div class="calendar-width-control" id="calendarWidthControl">
-            <label for="calendarWidthRange">Kalenderbreite</label>
+            <label for="calendarWidthRange">Seitenleisten</label>
             <input
                 type="range"
                 id="calendarWidthRange"
                 min="240"
-                max="360"
+                max="480"
                 step="10"
                 value="290"
                 oninput="setCalendarWidth(this.value, true)"
                 onchange="setCalendarWidth(this.value, true)"
             />
             <span class="calendar-width-value" id="calendarWidthValue">Standard</span>
+        </div>
+        <div class="week-plan-width-control" id="weekPlanWidthControl">
+            <label for="weekPlanWidthRange" title="900–2050 px; ganz rechts (2100+) = volle Breite">Wochenplan</label>
+            <input
+                type="range"
+                id="weekPlanWidthRange"
+                min="900"
+                max="2200"
+                step="50"
+                value="900"
+                title="Regler ganz nach rechts = volle Bildschirmbreite"
+                oninput="setWeekPlanWidth(this.value, true)"
+                onchange="setWeekPlanWidth(this.value, true)"
+            />
+            <span class="week-plan-width-value" id="weekPlanWidthValue">900px</span>
         </div>
         <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()" title="Widget-Layout anpassen">
             <span class="btn-icon">⚙️</span>
@@ -1479,11 +1494,11 @@ function setCalendarWidth(rawValue, persist = false) {
     const layout = document.getElementById('dashboardLayout');
     const valueLabel = document.getElementById('calendarWidthValue');
     const range = document.getElementById('calendarWidthRange');
-    const width = Math.max(240, Math.min(360, parseInt(rawValue, 10) || 290));
+    const width = Math.max(240, Math.min(480, parseInt(rawValue, 10) || 290));
 
     if (!layout) return;
     layout.style.setProperty('--dashboard-side-width', `${width}px`);
-    layout.style.setProperty('--dashboard-side-width-tablet', `${Math.max(width - 10, 240)}px`);
+    layout.style.setProperty('--dashboard-side-width-tablet', `${Math.max(width - 20, 240)}px`);
 
     if (valueLabel) {
         valueLabel.textContent = width === 290 ? 'Standard' : `${width}px`;
@@ -1494,11 +1509,60 @@ function setCalendarWidth(rawValue, persist = false) {
     if (persist) {
         localStorage.setItem('dashboard_calendar_side_width', String(width));
     }
+    syncDashboardLayoutMaxWidth(null, width);
+}
+
+function setWeekPlanWidth(rawValue, persist = false) {
+    const layout = document.getElementById('dashboardLayout');
+    const valueLabel = document.getElementById('weekPlanWidthValue');
+    const range = document.getElementById('weekPlanWidthRange');
+    let width = parseInt(rawValue, 10) || 900;
+    width = Math.max(900, Math.min(2200, width));
+
+    const useFull = width >= 2100;
+    const weekCss = useFull ? '100%' : `${width}px`;
+    if (layout) {
+        layout.style.setProperty('--week-plan-max-width', weekCss);
+    }
+    document.documentElement.style.setProperty('--week-plan-max-width', weekCss);
+
+    if (valueLabel) {
+        valueLabel.textContent = useFull ? 'Volle Breite' : `${width}px`;
+    }
+    if (range && parseInt(range.value, 10) !== width) {
+        range.value = String(width);
+    }
+    if (persist) {
+        localStorage.setItem('dashboard_week_plan_max_width', String(width));
+    }
+    syncDashboardLayoutMaxWidth(width, null);
+}
+
+function syncDashboardLayoutMaxWidth(weekOverride, sideOverride) {
+    const layout = document.getElementById('dashboardLayout');
+    if (!layout) return;
+    const weekRaw =
+        weekOverride ??
+        parseInt(localStorage.getItem('dashboard_week_plan_max_width') || '900', 10);
+    const sideRaw =
+        sideOverride ??
+        parseInt(localStorage.getItem('dashboard_calendar_side_width') || '290', 10);
+    if (weekRaw >= 2100) {
+        layout.style.setProperty('--dashboard-layout-max-width', '100%');
+        return;
+    }
+    const total = Math.max(1550, weekRaw + sideRaw * 2 + 120);
+    layout.style.setProperty('--dashboard-layout-max-width', `${total}px`);
 }
 
 function restoreCalendarWidth() {
     const saved = localStorage.getItem('dashboard_calendar_side_width');
     setCalendarWidth(saved || 290, false);
+}
+
+function restoreWeekPlanWidth() {
+    const saved = localStorage.getItem('dashboard_week_plan_max_width');
+    setWeekPlanWidth(saved || 900, false);
 }
 
 // Layout Saving & Restoring
@@ -1699,6 +1763,7 @@ function downloadCSV(dateStr) {
 // Restore layout on load
 document.addEventListener('DOMContentLoaded', () => {
     restoreWidgetLayout();
+    restoreWeekPlanWidth();
     restoreCalendarWidth();
 });
 

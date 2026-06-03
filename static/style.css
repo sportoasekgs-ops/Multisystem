@@ -1413,17 +1413,19 @@ details.help-section[open] .toggle-arrow {
     box-shadow: var(--shadow-md);
 }
 
-/* Week Overview - Modern Card */
+/* Week Overview - Modern Card (--week-plan-max-width per Layout anpassen) */
 .week-overview {
     background: var(--bg-primary);
     padding: 1.25rem;
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md);
     margin-bottom: 1.5rem;
-    max-width: 900px;
+    width: 100%;
+    max-width: min(var(--week-plan-max-width, 900px), 100%);
     margin-left: auto;
     margin-right: auto;
     border: 2px solid var(--border);
+    box-sizing: border-box;
 }
 
 .week-header-with-nav {
@@ -2542,26 +2544,113 @@ details.help-section[open] .toggle-arrow {
         width: 100%;
     }
     
+    /* Dashboard – kein horizontaler Seiten-Scroll */
+    .dashboard {
+        max-width: 100%;
+        overflow-x: clip;
+    }
+
+    .dashboard-layout > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .dashboard-left-panel,
+    .dashboard-ticker,
+    .draggable-widget,
+    .dashboard-widget {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .dashboard-card-date {
+        width: 100%;
+    }
+
+    .date-form-inline {
+        flex: 1;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    .date-input-inline {
+        max-width: 100%;
+    }
+
+    .edit-mode-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Dashboard Layout – Mobil */
+    .dashboard-control-bar {
+        flex-wrap: wrap;
+        justify-content: stretch;
+        gap: 0.5rem;
+        padding: 0 0.5rem;
+        max-width: 100%;
+    }
+
+    .dashboard-control-bar.edit-mode-active {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dashboard-control-bar.edit-mode-active .calendar-width-control,
+    .dashboard-control-bar.edit-mode-active .week-plan-width-control {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .dashboard-layout {
+        padding: 0 0.35rem;
+        gap: 1rem;
+        max-width: 100% !important;
+    }
+
+    .dashboard-ticker {
+        position: static;
+        top: auto;
+    }
+
     /* Week Overview */
     .week-overview {
-        padding: 0.75rem;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        max-width: 100%;
+        padding: 0.65rem;
+        overflow: visible;
+        max-width: 100% !important;
+        width: 100%;
         margin: 0;
     }
     
     .week-header-with-nav {
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 0.5rem;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.65rem;
+    }
+
+    .week-title-area {
+        width: 100%;
+        min-width: 0;
+        flex: 1 1 100%;
+        order: 0;
     }
     
-    .week-header-with-nav h3 {
-        font-size: 0.75rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .week-header-with-nav h3,
+    .week-title-area .week-title {
+        font-size: 0.82rem;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: unset;
+        line-height: 1.35;
+        text-align: center;
+    }
+
+    .week-title {
+        flex-direction: column;
+        gap: 0.35rem;
     }
     
     .week-nav-arrow {
@@ -2570,20 +2659,51 @@ details.help-section[open] .toggle-arrow {
         min-width: 32px;
     }
     
-    /* Week Table Wrapper - Horizontal Scroll mit 2 Tagen sichtbar */
+    /* Week Table Wrapper – horizontal wischen */
     .week-table-wrapper {
         position: relative;
         overflow-x: auto;
+        overflow-y: visible;
         -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
+        scroll-snap-type: x proximity;
         scrollbar-width: thin;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+    }
+
+    .scroll-hint {
+        display: flex;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 12;
+        pointer-events: none;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        font-size: 0.85rem;
+        color: white;
+        background: var(--primary);
+        border-radius: 50%;
+        box-shadow: var(--shadow-sm);
+        opacity: 0.85;
+    }
+
+    .scroll-hint-left {
+        left: 58px;
+    }
+
+    .scroll-hint-right {
+        right: 0.15rem;
     }
     
     .week-table {
         table-layout: fixed;
-        font-size: 0.75rem;
-        min-width: auto;
-        width: auto;
+        font-size: 0.8rem;
+        min-width: max-content;
+        width: max-content;
     }
     
     .week-table th,
@@ -2597,21 +2717,43 @@ details.help-section[open] .toggle-arrow {
     /* Erste Spalte (Stunde) - fixiert */
     .week-table th:first-child,
     .week-table td:first-child {
-        width: 62px;
-        min-width: 62px;
+        width: 72px;
+        min-width: 72px;
+        max-width: 72px;
         position: sticky;
         left: 0;
         background: var(--bg-primary);
         z-index: 10;
         border-right: 2px solid var(--border);
+        box-shadow: 4px 0 10px -6px rgba(0, 0, 0, 0.12);
+    }
+
+    .week-table tr.week-row-pause td:first-child {
+        background: color-mix(in srgb, #dcc08a 42%, var(--bg-secondary));
     }
     
-    /* Jede Tag-Spalte = 2 Tage sichtbar auf Tablets */
     .week-table th:not(:first-child),
     .week-table td:not(:first-child) {
-        min-width: 160px;
-        width: 160px;
-        padding: 0.35rem;
+        min-width: 148px;
+        width: 148px;
+        max-width: 148px;
+        padding: 0.4rem 0.35rem;
+    }
+
+    .slot-card {
+        min-height: 58px;
+    }
+
+    .slot-card .slot-course-name {
+        font-size: 0.78rem;
+        line-height: 1.25;
+        word-break: break-word;
+    }
+
+    .book-btn {
+        min-height: 36px;
+        padding: 0.4rem 0.5rem;
+        font-size: 0.78rem;
     }
     
     .day-name {
@@ -2717,39 +2859,6 @@ details.help-section[open] .toggle-arrow {
     .slot-block-mini {
         font-size: 0.6rem;
         padding: 0.2rem;
-    }
-    
-    /* Scroll-Hinweise */
-    .scroll-hint {
-        display: flex;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: var(--primary);
-        color: white;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        z-index: 20;
-        opacity: 0.8;
-        pointer-events: none;
-        animation: pulse 2s infinite;
-    }
-    
-    .scroll-hint-left {
-        left: 50px;
-    }
-    
-    .scroll-hint-right {
-        right: 5px;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 0.6; transform: translateY(-50%) scale(1); }
-        50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
     }
     
     /* Day Schedule */
@@ -5275,11 +5384,14 @@ footer {
     grid-template-columns: 1fr;
     --dashboard-side-width: 290px;
     --dashboard-side-width-tablet: 280px;
+    --week-plan-max-width: 900px;
+    --dashboard-layout-max-width: 1550px;
     gap: 1.5rem;
-    max-width: 1550px;
+    max-width: min(var(--dashboard-layout-max-width, 1550px), 100%);
     margin: 0 auto;
     align-items: start;
     padding: 0 1rem;
+    box-sizing: border-box;
 }
 
 @media (max-width: 1023px) {
@@ -6212,9 +6324,10 @@ footer {
     justify-content: flex-end;
     align-items: center;
     gap: 1rem;
-    max-width: 1550px;
+    max-width: min(var(--dashboard-layout-max-width, 1550px), 100%);
     margin: 0 auto 0.75rem;
     padding: 0 1rem;
+    box-sizing: border-box;
 }
 
 .calendar-width-control {
@@ -6229,652 +6342,25 @@ footer {
     -webkit-backdrop-filter: var(--glass-blur);
 }
 
-.dashboard-control-bar.edit-mode-active .calendar-width-control {
+.dashboard-control-bar.edit-mode-active .calendar-width-control,
+.dashboard-control-bar.edit-mode-active .week-plan-width-control {
     display: inline-flex;
 }
 
-.calendar-width-control label {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    white-space: nowrap;
-}
-
-.calendar-width-control input[type="range"] {
-    width: 110px;
-}
-
-.calendar-width-control .calendar-width-value {
-    font-size: 0.74rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    min-width: 58px;
-    text-align: right;
-}
-
-.edit-mode-btn {
-    display: inline-flex;
+.week-plan-width-control {
+    display: none;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.45rem 1rem;
+    padding: 0.45rem 0.75rem;
     border-radius: var(--radius-lg);
-    border: 1.5px solid var(--border);
+    border: 1px solid var(--border);
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    color: var(--text-secondary);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition);
-}
-
-.edit-mode-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-    box-shadow: var(--shadow-glow);
-}
-
-.edit-mode-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-    box-shadow: var(--shadow-glow);
-}
-
-.edit-mode-btn .btn-icon {
-    font-size: 1rem;
-}
-
-/* Widget Drag Handles */
-.widget-drag-handle {
-    display: none;
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    cursor: grab;
-    color: var(--text-tertiary);
-    font-size: 1.1rem;
-    padding: 0.2rem;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    z-index: 5;
-}
-
-.widget-drag-handle:hover {
-    color: var(--primary);
-    background: rgba(var(--primary-rgb), 0.1);
-}
-
-.widget-drag-handle:active {
-    cursor: grabbing;
-}
-
-.edit-mode-active .widget-drag-handle {
-    display: block;
-}
-
-/* Draggable Widget Wrapper */
-.draggable-widget {
-    position: relative;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.draggable-widget.dragging {
-    opacity: 0.4;
-    transform: scale(0.95);
-}
-
-/* Drop Zone Highlighting */
-.dashboard-left-panel,
-.dashboard-right-panel {
-    position: relative;
-    min-height: 50px;
-    transition: all var(--transition);
-}
-
-.edit-mode-active .dashboard-left-panel,
-.edit-mode-active .dashboard-right-panel {
-    border: 2px dashed transparent;
-    border-radius: var(--radius-lg);
-    padding: 0.5rem;
-}
-
-.dashboard-left-panel.dragover,
-.dashboard-right-panel.dragover {
-    border-color: var(--primary) !important;
-    background: rgba(var(--primary-rgb), 0.04);
-}
-
-/* Drop Placeholder */
-.drop-placeholder {
-    height: 4px;
-    background: var(--primary);
-    border-radius: 2px;
-    margin: 0.35rem 0;
-    transition: height 0.15s ease;
-    box-shadow: 0 0 8px rgba(var(--primary-rgb), 0.3);
-}
-
-/* Widget Visibility Toggle */
-.widget-visibility-panel {
-    display: none;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.75rem;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-lg);
-}
-
-.edit-mode-active .widget-visibility-panel {
-    display: block;
-}
-
-.widget-visibility-panel h5 {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
-}
-
-.visibility-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.35rem 0;
-}
-
-.visibility-toggle label {
-    font-size: 0.8rem;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-weight: 500;
-}
-
-/* Mini Toggle Switch */
-.toggle-switch {
-    position: relative;
-    width: 36px;
-    height: 20px;
-    flex-shrink: 0;
-}
-
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    position: absolute;
-    inset: 0;
-    background: var(--border);
-    border-radius: 20px;
-    cursor: pointer;
-    transition: background var(--transition-fast);
-}
-
-.toggle-slider::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border-radius: 50%;
-    transition: transform var(--transition-fast);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-}
-
-.toggle-switch input:checked + .toggle-slider {
-    background: var(--primary);
-}
-
-.toggle-switch input:checked + .toggle-slider::before {
-    transform: translateX(16px);
-}
-
-/* ==========================================
-   Occupancy Widget
-   ========================================== */
-.occupancy-widget {
-    text-align: center;
-}
-
-.occupancy-ring-container {
-    position: relative;
-    width: 110px;
-    height: 110px;
-    margin: 0.75rem auto;
-}
-
-.occupancy-ring {
-    transform: rotate(-90deg);
-    width: 110px;
-    height: 110px;
-}
-
-.occupancy-ring-bg {
-    fill: none;
-    stroke: var(--border);
-    stroke-width: 8;
-}
-
-.occupancy-ring-fill {
-    fill: none;
-    stroke: var(--primary);
-    stroke-width: 8;
-    stroke-linecap: round;
-    transition: stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.occupancy-ring-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-}
-
-.occupancy-ring-pct {
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    line-height: 1;
-}
-
-.occupancy-ring-label {
-    font-size: 0.6rem;
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-}
-
-.occupancy-stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    text-align: left;
-}
-
-.occupancy-stat-item {
-    padding: 0.5rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius);
-    border: 1px solid var(--border-light);
-}
-
-.occupancy-stat-value {
-    font-family: var(--font-heading);
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1.2;
-}
-
-.occupancy-stat-label {
-    font-size: 0.65rem;
-    color: var(--text-tertiary);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-}
-
-.occupancy-peak {
-    margin-top: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    background: rgba(var(--primary-rgb), 0.06);
-    border: 1px solid rgba(var(--primary-rgb), 0.15);
-    border-radius: var(--radius);
-    font-size: 0.75rem;
-    color: var(--text-primary);
-}
-
-.occupancy-peak strong {
-    color: var(--primary);
-}
-
-.occupancy-actions {
-    margin-top: 0.75rem;
-    display: flex;
-    gap: 0.5rem;
-}
-
-.occupancy-actions .btn-report {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius);
-    border: 1.5px solid var(--primary);
-    background: transparent;
-    color: var(--primary);
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.occupancy-actions .btn-report:hover {
-    background: var(--primary);
-    color: white;
-    box-shadow: var(--shadow-glow);
-}
-
-/* ==========================================
-   Occupancy Analysis Modal
-   ========================================== */
-.analysis-modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 10000;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    justify-content: center;
-    align-items: center;
-    padding: 2rem;
-    animation: modalFadeIn 0.3s ease;
-}
-
-.analysis-modal-overlay.show {
-    display: flex;
-}
-
-@keyframes modalFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.analysis-modal {
-    background: var(--bg-primary);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
-    max-width: 800px;
-    width: 100%;
-    max-height: 85vh;
-    overflow-y: auto;
-    animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes modalSlideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.analysis-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--border-light);
-}
-
-.analysis-modal-header h3 {
-    font-family: var(--font-heading);
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.analysis-modal-close {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: none;
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
-}
-
-.analysis-modal-close:hover {
-    background: var(--error-bg);
-    color: var(--error-text);
-}
-
-.analysis-modal-body {
-    padding: 1.5rem;
-}
-
-/* Summary Stats Cards */
-.analysis-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-}
-
-.analysis-stat-card {
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-light);
-    text-align: center;
-}
-
-.analysis-stat-card .stat-value {
-    font-family: var(--font-heading);
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--primary);
-    line-height: 1.2;
-}
-
-.analysis-stat-card .stat-label {
-    font-size: 0.7rem;
-    color: var(--text-tertiary);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-top: 0.25rem;
-}
-
-/* Day Breakdown Table */
-.analysis-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin-bottom: 1.5rem;
-    font-size: 0.82rem;
-}
-
-.analysis-table thead {
-    background: var(--bg-secondary);
-}
-
-.analysis-table th {
-    padding: 0.65rem 0.75rem;
-    text-align: left;
-    font-weight: 700;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-secondary);
-    border-bottom: 2px solid var(--border);
-}
-
-.analysis-table th:first-child {
-    border-radius: var(--radius) 0 0 0;
-}
-
-.analysis-table th:last-child {
-    border-radius: 0 var(--radius) 0 0;
-}
-
-.analysis-table td {
-    padding: 0.55rem 0.75rem;
-    border-bottom: 1px solid var(--border-light);
-    color: var(--text-primary);
-}
-
-.analysis-table tbody tr:hover {
-    background: var(--bg-secondary);
-}
-
-.analysis-table .pct-bar {
-    display: inline-block;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--primary);
-    min-width: 4px;
-    vertical-align: middle;
-    margin-right: 0.4rem;
-}
-
-/* Modal Action Bar */
-.analysis-modal-actions {
-    display: flex;
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-light);
-    justify-content: flex-end;
     flex-wrap: wrap;
 }
 
-.analysis-modal-actions button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.55rem 1.1rem;
-    border-radius: var(--radius);
-    border: 1.5px solid var(--border);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-}
-
-.analysis-modal-actions button:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.analysis-modal-actions .btn-csv {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.analysis-modal-actions .btn-csv:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
-    color: white;
-}
-
-/* Dark Mode for new elements */
-[data-theme="dark"] .edit-mode-btn {
-    background: rgba(30, 30, 48, 0.6);
-    border-color: var(--border);
-}
-
-[data-theme="dark"] .occupancy-stat-item {
-    background: var(--bg-tertiary);
-    border-color: var(--border);
-}
-
-[data-theme="dark"] .analysis-modal {
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
-}
-
-[data-theme="dark"] .analysis-stat-card {
-    background: var(--bg-tertiary);
-    border-color: var(--border);
-}
-
-[data-theme="dark"] .analysis-table thead {
-    background: var(--bg-tertiary);
-}
-
-[data-theme="dark"] .analysis-modal-actions button {
-    background: var(--bg-tertiary);
-    border-color: var(--border);
-}
-
-[data-theme="dark"] .widget-visibility-panel {
-    background: rgba(30, 30, 48, 0.6);
-}
-
-/* Print Styles for Reports */
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    .analysis-modal,
-    .analysis-modal * {
-        visibility: visible;
-    }
-    .analysis-modal {
-        position: fixed;
-        inset: 0;
-        max-height: none;
-        overflow: visible;
-        box-shadow: none;
-        border-radius: 0;
-    }
-    .analysis-modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: white;
-        display: flex !important;
-    }
-    .analysis-modal-actions,
-    .analysis-modal-close {
-        display: none !important;
-    }
-}
-/* ==========================================
-   Dashboard Edit Mode & Widget Controls
-   ========================================== */
-
-/* Control Bar */
-.dashboard-control-bar {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 1rem;
-    max-width: 1550px;
-    margin: 0 auto 0.75rem;
-    padding: 0 1rem;
-}
-
-.calendar-width-control {
-    display: none;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.45rem 0.75rem;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-}
-
-.dashboard-control-bar.edit-mode-active .calendar-width-control {
-    display: inline-flex;
-}
-
+.week-plan-width-control label,
 .calendar-width-control label {
     font-size: 0.78rem;
     font-weight: 600;
@@ -6882,15 +6368,18 @@ footer {
     white-space: nowrap;
 }
 
+.week-plan-width-control input[type="range"],
 .calendar-width-control input[type="range"] {
-    width: 110px;
+    width: min(140px, 42vw);
+    min-width: 80px;
 }
 
+.week-plan-width-control .week-plan-width-value,
 .calendar-width-control .calendar-width-value {
     font-size: 0.74rem;
     font-weight: 700;
     color: var(--text-primary);
-    min-width: 58px;
+    min-width: 72px;
     text-align: right;
 }
 
