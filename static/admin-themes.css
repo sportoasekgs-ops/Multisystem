@@ -2412,14 +2412,30 @@ html[data-admin-theme="slotra-reloaded"] .pending-exclusive-hint {
 }
 
 html[data-admin-theme="slotra-reloaded"] .exclusive-header {
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
-    border-radius: var(--radius);
+    background: var(--brand-primary) !important;
+    color: #ffffff !important;
+    border-radius: var(--radius) var(--radius) 0 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0.6rem !important;
 }
 
 html[data-admin-theme="slotra-reloaded"] .period-exclusive {
-    background: rgba(var(--primary-rgb), 0.08) !important;
-    border: 1px solid rgba(var(--primary-rgb), 0.2) !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(111, 76, 219, 0.4) !important;
     border-radius: var(--radius);
+    padding: 0 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+html[data-admin-theme="slotra-reloaded"] .exclusive-student {
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+    padding-top: 0.5rem !important;
+}
+
+html[data-admin-theme="slotra-reloaded"] .exclusive-teacher {
+    color: #475569 !important;
+    padding-bottom: 0.5rem !important;
 }
 
 /* ── Widgets ── */
