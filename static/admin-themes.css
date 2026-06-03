@@ -2757,3 +2757,21 @@ html[data-admin-theme="slotra-reloaded"] main.container {
 .toast.success {
     border-left-color: var(--brand-primary, var(--primary));
 }
+/* ── Pause Row Overrides ── */
+html[data-admin-theme="slotra-reloaded"] .week-table tr.week-row-pause td {
+    border-radius: var(--radius);
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table .period-row-label-pause {
+    border-radius: var(--radius);
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table .period-row-label-pause .period-row-label-title {
+    margin-bottom: 0 !important;
+    line-height: 1.2 !important;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-table .period-row-label-pause .period-row-time {
+    margin-top: 0.1rem !important;
+    line-height: 1.2 !important;
+}
