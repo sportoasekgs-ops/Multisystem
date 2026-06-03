@@ -1766,7 +1766,9 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: 1rem !important;
+        margin-top: 0 !important;
         margin-bottom: 0 !important;
+        align-items: start !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel {
@@ -1775,7 +1777,9 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: 1rem !important;
+        margin-top: 0 !important;
         margin-bottom: 0 !important;
+        align-items: start !important;
     }
 
     /* Reset default widths and margins for panels' children */
@@ -2138,7 +2142,7 @@ html[data-admin-theme="slotra-reloaded"] .dashboard-card-title .card-text {
 }
 
 html[data-admin-theme="slotra-reloaded"] .dashboard-card .card-text {
-    color: #e2e8f0;
+    color: #1a1a2e !important;
 }
 
 /* ── Week overview header ── */
@@ -2151,7 +2155,7 @@ html[data-admin-theme="slotra-reloaded"] .week-header-with-nav {
 html[data-admin-theme="slotra-reloaded"] .week-title {
     font-weight: 600;
     letter-spacing: -0.02em;
-    color: #f1f5f9;
+    color: #1a1a2e !important;
 }
 
 html[data-admin-theme="slotra-reloaded"] .week-dates {
@@ -2182,6 +2186,28 @@ html[data-admin-theme="slotra-reloaded"] .week-nav-arrow:hover {
     border-color: rgba(var(--primary-rgb), 0.3);
     color: var(--brand-primary);
     transform: none;
+}
+
+/* ── Week Selector Dropdown for Light Theme ── */
+html[data-admin-theme="slotra-reloaded"] .week-selector-dropdown {
+    background: #ffffff !important;
+    border: 1px solid rgba(111, 76, 219, 0.15) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-option {
+    color: #475569 !important;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-option:hover {
+    background: rgba(111, 76, 219, 0.05) !important;
+    color: #1a1a2e !important;
+}
+
+html[data-admin-theme="slotra-reloaded"] .week-option.selected {
+    background: rgba(111, 76, 219, 0.1) !important;
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
 }
 
 /* ── Week Table (clean dark grid) ── */
