@@ -1750,7 +1750,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     html[data-admin-theme="slotra-reloaded"] .help-section {
         grid-column: 1 / -1 !important;
-        order: 10 !important;
+        order: 2 !important;
         margin-bottom: 0.5rem !important;
     }
 
@@ -1762,7 +1762,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     /* Left and Right panels span 2 columns each, sitting side by side */
     html[data-admin-theme="slotra-reloaded"] .dashboard-left-panel {
         grid-column: 1 / 3 !important;
-        order: 5 !important;
+        order: 6 !important;
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: 1rem !important;
@@ -1771,7 +1771,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel {
         grid-column: 3 / 5 !important;
-        order: 5 !important;
+        order: 6 !important;
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
         gap: 1rem !important;
@@ -1924,20 +1924,20 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     /* Date banner and controls appear between widgets and week plan */
     html[data-admin-theme="slotra-reloaded"] .selected-date-info {
         grid-column: 1 / -1 !important;
-        order: 4 !important;
+        order: 3 !important;
         margin-bottom: 0.25rem !important;
     }
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-control-bar {
         grid-column: 1 / -1 !important;
-        order: 3 !important;
+        order: 5 !important;
         margin-bottom: 0.5rem !important;
     }
 
     /* Week overview: full width, prominent, after widgets */
     html[data-admin-theme="slotra-reloaded"] .week-overview {
         grid-column: 1 / -1 !important;
-        order: 2 !important;
+        order: 4 !important;
         width: 100% !important;
         max-width: 100% !important;
         margin-top: 0 !important;
