@@ -874,7 +874,7 @@ h4 {
 .dashboard-top-section {
     display: flex;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.4rem;
     flex-wrap: wrap;
 }
 
@@ -980,7 +980,7 @@ h4 {
 .help-section {
     background: var(--bg-primary);
     border-radius: var(--radius-lg);
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.4rem;
     box-shadow: var(--shadow);
     border: 2px solid var(--border);
     overflow: hidden;
@@ -1398,7 +1398,7 @@ details.help-section[open] .toggle-arrow {
 
 /* Selected Date Info */
 .selected-date-info {
-    margin-bottom: 2rem;
+    margin-bottom: 0.4rem;
 }
 
 .selected-date-info h3 {

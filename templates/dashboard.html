@@ -3,7 +3,7 @@
 <div class="dashboard">
 
     {% if demo_mode %}
-    <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:.9rem 1.2rem;margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;font-size:.88rem;">
+    <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:.9rem 1.2rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.8rem;font-size:.88rem;">
         <span style="font-size:1.2rem;">🧪</span>
         <span><strong>Demo-Modus aktiv:</strong> Es werden Beispiel-Buchungen angezeigt. E-Mails werden nicht versendet. Neue Buchungen sind deaktiviert.
         {% if session.user_role == 'admin' %}<a href="{{ url_for('admin_cms') }}" style="margin-left:.5rem;color:#92400e;font-weight:600;">Demo-Modus deaktivieren →</a>{% endif %}</span>
@@ -11,7 +11,7 @@
     {% endif %}
 
     {% if dashboard_notice %}
-    <div style="background:#fef9c3;border:1px solid #eab308;border-radius:10px;padding:.9rem 1.2rem;margin-bottom:1rem;font-size:.88rem;">
+    <div style="background:#fef9c3;border:1px solid #eab308;border-radius:10px;padding:.9rem 1.2rem;margin-bottom:.4rem;font-size:.88rem;">
         ℹ️ {{ dashboard_notice }}
     </div>
     {% endif %}
