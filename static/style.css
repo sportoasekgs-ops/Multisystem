@@ -3184,26 +3184,9 @@ footer {
 
 /* Notification System Styles */
 .notification-container {
-    position: fixed;
-    top: 18px;
-    right: 18px;
-    z-index: 9999;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    padding: 6px;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
-}
-
-.notification-container:hover {
-    box-shadow: var(--shadow-glow);
-    border-color: var(--primary);
+    position: relative;
+    display: inline-block;
+    margin: 0 10px;
 }
 
 .notification-bell {

@@ -283,6 +283,21 @@
                         <div class="nav-tools">
                         {% if session.user_role == 'admin' %}
                         {% include 'partials/admin_theme_picker.html' %}
+                        <div class="notification-container" style="position: relative; display: inline-flex; align-items: center; justify-content: center; z-index: 1000; margin: 0 10px;">
+                            <button class="notification-bell" onclick="toggleNotifications()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; position: relative; padding: 4px; display: flex; align-items: center; justify-content: center; line-height: 1;">🔔
+                                <span id="notificationBadge" class="notification-badge" style="display:none; position: absolute; top: -4px; right: -4px; background: #EF4444; color: white; border-radius: 12px; padding: 1px 5px; font-size: 0.7rem; font-weight: bold; min-width: 16px; text-align: center; box-shadow: 0 1.5px 3px rgba(239, 68, 68, 0.4);">0</span>
+                            </button>
+
+                            <div id="notificationDropdown" class="notification-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); min-width: 350px; max-width: 400px; max-height: 500px; overflow: hidden; z-index: 1000; margin-top: 10px;">
+                                <div class="notification-header" style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                                    <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">Benachrichtigungen</h4>
+                                    <button class="mark-all-read" onclick="markAllAsRead()">Alle gelesen</button>
+                                </div>
+                                <div id="notificationList" class="notification-list">
+                                    <p>Keine neuen Benachrichtigungen</p>
+                                </div>
+                            </div>
+                        </div>
                         {% endif %}
 
                         <div class="user-info">
@@ -299,23 +314,7 @@
                         </div>
                     </div>
 
-                    {% if session.user_role == 'admin' %}
-                    <div class="notification-container">
-                        <button class="notification-bell" onclick="toggleNotifications()">🔔
-                            <span id="notificationBadge" class="notification-badge" style="display:none;">0</span>
-                        </button>
 
-                        <div id="notificationDropdown" class="notification-dropdown">
-                            <div class="notification-header">
-                                <h4>Benachrichtigungen</h4>
-                                <button class="mark-all-read" onclick="markAllAsRead()">Alle gelesen</button>
-                            </div>
-                            <div id="notificationList" class="notification-list">
-                                <p>Keine neuen Benachrichtigungen</p>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
 
                     <!-- Mobile Hamburger Button -->
                     <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menü öffnen" id="mobileMenuBtn">
