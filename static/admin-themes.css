@@ -2632,16 +2632,16 @@ html[data-admin-theme="iserv"] .week-table .period-row-label-pause .period-row-t
 /* Slotra Reloaded Sidebar Quick Menu Group Headers */
 html[data-admin-theme="slotra-reloaded"] .quick-menu-group-title {
     display: block !important;
-    padding: 0.65rem 0.5rem 0.25rem 1rem !important;
+    padding: 0.65rem 0.5rem 0.35rem 1rem !important;
     font-size: 0.72rem !important;
     font-weight: 700 !important;
-    color: #9ea0b8 !important;
+    color: #ffffff !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
     border-top: none !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.25) !important;
     margin-top: 0.8rem !important;
-    margin-bottom: 0.35rem !important;
+    margin-bottom: 0.45rem !important;
 }
 html[data-admin-theme="slotra-reloaded"] .quick-menu-group-title:first-of-type {
     margin-top: 0.2rem !important;
