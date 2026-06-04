@@ -433,8 +433,27 @@
     </details>
     {% endif %}
 
-    <div class="selected-date-info">
-        <h3>{{ weekday }}, {{ selected_date.strftime('%d.%m.%Y') }}</h3>
+    <div class="selected-date-info" style="display: flex; flex-direction: column; background: var(--primary); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 1.5rem;">
+        <!-- Browser-style Room Tabs Area -->
+        {% if all_rooms and all_rooms|length > 1 %}
+        <div class="room-browser-tabs" style="display: flex; background: rgba(0,0,0,0.12); padding: 8px 12px 0; gap: 4px;">
+            {% for room in all_rooms %}
+            <a href="{{ url_for('dashboard', date=selected_date.strftime('%Y-%m-%d'), room=room.id) }}" 
+               class="room-browser-tab {% if current_room and room.id == current_room.id %}active{% endif %}"
+               style="text-decoration: none; padding: 8px 18px; border-radius: 8px 8px 0 0; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast); 
+                      background: {% if current_room and room.id == current_room.id %}var(--bg-primary, #fff){% else %}transparent{% endif %}; 
+                      color: {% if current_room and room.id == current_room.id %}var(--text-primary, #1e1b4b){% else %}rgba(255,255,255,0.78){% endif %};">
+                <span>{{ room.icon }}</span>
+                <span>{{ room.name }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Selected Date Header Area -->
+        <h3 style="background: transparent; color: white; padding: 1.25rem 1.5rem; margin: 0; text-align: center; font-size: 1.125rem; font-weight: 600; box-shadow: none; width: 100%; box-sizing: border-box;">
+            {{ weekday }}, {{ selected_date.strftime('%d.%m.%Y') }}
+        </h3>
     </div>
 
 
@@ -585,19 +604,6 @@
                     </div>
                 </div>
 
-                <!-- Raum-Auswahl als Tabs -->
-                {% if all_rooms and all_rooms|length > 1 %}
-                <div class="room-tabs-container" style="display: flex; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap;">
-                    {% for room in all_rooms %}
-                    <a href="{{ url_for('dashboard', date=selected_date.strftime('%Y-%m-%d'), room=room.id) }}" 
-                       class="room-tab-item {% if current_room and room.id == current_room.id %}active{% endif %}"
-                       style="text-decoration: none; padding: 0.4rem 1rem; border-radius: var(--radius-lg); border: 1.5px solid {% if current_room and room.id == current_room.id %}var(--primary){% else %}var(--border){% endif %}; background: {% if current_room and room.id == current_room.id %}var(--primary){% else %}var(--bg-card){% endif %}; color: {% if current_room and room.id == current_room.id %}#fff{% else %}var(--text-primary){% endif %}; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); display: inline-flex; align-items: center; gap: 0.4rem;">
-                        <span>{{ room.icon }}</span>
-                        <span>{{ room.name }}</span>
-                    </a>
-                    {% endfor %}
-                </div>
-                {% endif %}
             </div>
             <a
                 href="{{ url_for('dashboard', date=next_week_date, room=current_room.id if current_room else None) }}"
