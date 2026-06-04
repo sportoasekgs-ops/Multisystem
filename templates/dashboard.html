@@ -585,16 +585,17 @@
                     </div>
                 </div>
 
-                <!-- Raum-Auswahl Dropdown -->
-                {% if all_rooms %}
-                <div class="room-selector-container" style="display: flex; align-items: center; gap: 0.5rem; margin-left: 0.5rem;">
-                    <select id="roomSelect" onchange="switchRoom(this.value)" style="padding: 0.45rem 1rem; border-radius: var(--radius-lg); border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); min-width: 140px;">
-                        {% for room in all_rooms %}
-                        <option value="{{ room.id }}" {% if current_room and room.id == current_room.id %}selected{% endif %}>
-                            {{ room.icon }} {{ room.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                <!-- Raum-Auswahl als Tabs -->
+                {% if all_rooms and all_rooms|length > 1 %}
+                <div class="room-tabs-container" style="display: flex; gap: 0.5rem; margin-top: 0.6rem; flex-wrap: wrap;">
+                    {% for room in all_rooms %}
+                    <a href="{{ url_for('dashboard', date=selected_date.strftime('%Y-%m-%d'), room=room.id) }}" 
+                       class="room-tab-item {% if current_room and room.id == current_room.id %}active{% endif %}"
+                       style="text-decoration: none; padding: 0.4rem 1rem; border-radius: var(--radius-lg); border: 1.5px solid {% if current_room and room.id == current_room.id %}var(--primary){% else %}var(--border){% endif %}; background: {% if current_room and room.id == current_room.id %}var(--primary){% else %}var(--bg-card){% endif %}; color: {% if current_room and room.id == current_room.id %}#fff{% else %}var(--text-primary){% endif %}; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <span>{{ room.icon }}</span>
+                        <span>{{ room.name }}</span>
+                    </a>
+                    {% endfor %}
                 </div>
                 {% endif %}
             </div>
