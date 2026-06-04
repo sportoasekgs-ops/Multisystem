@@ -764,16 +764,13 @@ def check_booking_time(booking_date, period):
     return True, None
 
 
-# Route: Startseite (leitet direkt zu IServ weiter)
+# Route: Startseite
 @app.route("/")
 def index():
-    """Startseite - leitet zum Dashboard oder IServ-Login weiter"""
+    """Startseite - leitet zum Dashboard oder der Login-Seite weiter"""
     if "user_id" in session:
         return redirect(url_for("dashboard"))
-    # Wenn IServ nicht konfiguriert, zeige Login-Seite
-    if not get_iserv_client():
-        return redirect(url_for("login"))
-    return redirect(url_for("login_iserv"))
+    return redirect(url_for("login"))
 
 
 # Route: Direkter IServ-Embed Login (für iFrame-Integration)
