@@ -7106,3 +7106,28 @@ h1, h2, h3 {
 .quick-menu-group-title:first-of-type {
     margin-top: 0.15rem;
 }
+
+/* Slotra Reloaded Layout Compact overrides */
+.dashboard > div[style*="background"],
+.dashboard > .dashboard-top-section,
+.dashboard > .help-section,
+.dashboard > .selected-date-info {
+    margin-top: 0.35rem !important;
+    margin-bottom: 0.35rem !important;
+}
+.dashboard > .dashboard-top-section {
+    gap: 0.4rem !important;
+}
+.dashboard-layout {
+    gap: 0.75rem !important;
+}
+.dashboard-card {
+    padding: 0.45rem 0.85rem !important;
+}
+.help-toggle {
+    padding: 0.45rem 0.85rem !important;
+}
+.selected-date-info h3 {
+    padding: 0.6rem 1rem !important;
+}
+
