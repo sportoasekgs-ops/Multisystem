@@ -1535,7 +1535,7 @@ def dashboard():
     period_times = get_period_times()
     period_keys = get_ordered_period_numbers()
     fixed_offers = get_fixed_offers()
-    max_students = get_max_students()
+    max_students = current_room.max_students if (current_room and current_room.max_students) else get_max_students()
 
     student_counts_today = {}
     for booking in Booking.query.filter_by(date=selected_date_str, room_id=room_id).all():
@@ -2058,7 +2058,7 @@ def dashboard():
         next_week_date=next_week_monday.strftime("%Y-%m-%d"),
         monday_date=monday.strftime("%d.%m.%Y"),
         friday_date=friday.strftime("%d.%m.%Y"),
-        max_students=get_max_students(),
+        max_students=max_students,
         dashboard_title=_dashboard_title,
         help_content=_help_content,
         contact_name=_contact_name,
