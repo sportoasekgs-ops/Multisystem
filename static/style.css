@@ -3184,23 +3184,44 @@ footer {
 
 /* Notification System Styles */
 .notification-container {
-    position: relative;
-    display: inline-block;
-    margin: 0 10px;
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 9999;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    padding: 6px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.notification-container:hover {
+    box-shadow: var(--shadow-glow);
+    border-color: var(--primary);
 }
 
 .notification-bell {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     cursor: pointer;
     position: relative;
-    padding: 5px;
-    transition: transform 0.2s ease;
+    padding: 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform var(--transition-fast);
 }
 
 .notification-bell:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
 }
 
 .notification-badge {
