@@ -764,6 +764,18 @@ def check_booking_time(booking_date, period):
     return True, None
 
 
+# Route: Homepage (Marketing-Website)
+@app.route("/homepage")
+def redirect_homepage():
+    return redirect(url_for("serve_homepage"))
+
+@app.route("/homepage/")
+@app.route("/homepage/<path:filename>")
+def serve_homepage(filename="index.html"):
+    from flask import send_from_directory
+    return send_from_directory("homepage", filename)
+
+
 # Route: Startseite
 @app.route("/")
 def index():
