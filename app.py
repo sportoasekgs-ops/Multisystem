@@ -4387,6 +4387,9 @@ def admin_cms_save():
         if new_client_id:
             os.environ["ISERV_CLIENT_ID"] = new_client_id
         invalidate_iserv_domain_cache()
+        from oauth_config import reinit_oauth
+        global iserv_client
+        iserv_client = reinit_oauth(app, oauth_instance)
         flash("IServ-Konfiguration gespeichert. ✅", "success")
 
     elif section == "typography":

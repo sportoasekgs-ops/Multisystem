@@ -1514,7 +1514,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
 
     html[data-admin-theme="slotra-reloaded"] .dashboard-control-bar {
         grid-column: 1 / -1 !important;
-        order: 5 !important;
+        order: 7 !important;
         margin-bottom: 0.5rem !important;
     }
 

@@ -1584,6 +1584,7 @@ function restoreWeekPlanWidth() {
 function setWidgetHeight(val, persist) {
     val = parseInt(val);
     document.querySelectorAll('.dashboard-widget').forEach(function(w) {
+        w.style.height = val + 'px';
         w.style.maxHeight = val + 'px';
         w.style.overflow = 'auto';
     });
