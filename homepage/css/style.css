@@ -31,6 +31,7 @@ body {
     background: var(--bg);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
 }
 
 img {
@@ -531,17 +532,20 @@ section {
     border-bottom: 3px solid #000;
 }
 
-.theme-preview.elegant {
-    background: linear-gradient(165deg, var(--brand-light), #ede9fe);
-    color: var(--brand-dark);
+.theme-preview.slotra2 {
+    background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+    color: #fff;
 }
 
-.theme-preview.slotra2 {
-    background: #fff;
-    color: var(--brand-dark);
-    box-shadow: 0 12px 32px rgba(26, 26, 46, 0.1);
-    border: 1px solid #efedf2;
-    border-radius: 20px 20px 0 0;
+.theme-preview.slotra-reloaded {
+    background: linear-gradient(135deg, #111019 0%, #1a1926 100%);
+    color: #a78bfa;
+    border-bottom: 2px solid #a78bfa;
+}
+
+.theme-preview.iserv {
+    background: linear-gradient(135deg, #005691 0%, #007bc4 100%);
+    color: #fff;
 }
 
 .theme-card h4 {
