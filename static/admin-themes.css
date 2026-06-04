@@ -177,205 +177,6 @@ html[data-admin-theme="classic"] h3 {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   2. PROFESSIONELL – Corporate Grid (Inter, Raster, sachlich, blau)
-   ═══════════════════════════════════════════════════════════════════════════ */
-html[data-admin-theme="professional"] {
-    --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono: 'Inter', monospace;
-    --accent: #047857;
-    --accent-warn: #b45309;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-tertiary: #94a3b8;
-    --bg-primary: #ffffff;
-    --bg-secondary: #f1f5f9;
-    --bg-tertiary: #e2e8f0;
-    --bg-card: #ffffff;
-    --border: #94a3b8;
-    --border-light: #cbd5e1;
-    --login-gradient: #f1f5f9;
-    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-    --shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
-    --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.1);
-    --radius-sm: 4px;
-    --radius: 6px;
-    --radius-lg: 8px;
-    --radius-xl: 10px;
-    --radius-2xl: 12px;
-}
-
-html[data-admin-theme="professional"] body {
-    background-color: #f1f5f9;
-    background-image: linear-gradient(#e2e8f0 1px, transparent 1px),
-        linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
-    background-size: 20px 20px;
-    letter-spacing: 0;
-    line-height: 1.5;
-}
-
-html[data-admin-theme="professional"] .bg-glow-orb {
-    display: none;
-}
-
-html[data-admin-theme="professional"] .top-nav {
-    background: #fff;
-    border-bottom: none;
-    box-shadow: 0 1px 0 #cbd5e1, 0 4px 12px rgba(15, 23, 42, 0.06);
-    padding: 0.75rem 0;
-}
-
-html[data-admin-theme="professional"] .top-nav {
-    position: sticky;
-    overflow: visible;
-}
-
-html[data-admin-theme="professional"] .top-nav::after {
-    content: '';
-    display: block;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--brand-tint-25));
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-}
-
-html[data-admin-theme="professional"] .top-nav nav a {
-    border-radius: 4px;
-    font-weight: 500;
-    font-size: 0.8125rem;
-    text-transform: none;
-}
-
-html[data-admin-theme="professional"] .top-nav nav a:hover {
-    transform: none;
-    background: var(--primary-light);
-    color: var(--primary);
-}
-
-html[data-admin-theme="professional"] .user-info {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-}
-
-html[data-admin-theme="professional"] .btn {
-    border-radius: 4px;
-    border-width: 1px;
-    border-color: #cbd5e1;
-    box-shadow: none;
-    font-weight: 600;
-    text-transform: none;
-    letter-spacing: 0;
-}
-
-html[data-admin-theme="professional"] .btn-primary {
-    background: var(--primary);
-    border-color: var(--primary-dark);
-}
-
-html[data-admin-theme="professional"] .btn-primary:hover,
-html[data-admin-theme="professional"] .btn-secondary:hover {
-    transform: none;
-    box-shadow: 0 2px 8px rgb(var(--primary-rgb) / 0.3);
-}
-
-html[data-admin-theme="professional"] .dashboard-card,
-html[data-admin-theme="professional"] .week-overview,
-html[data-admin-theme="professional"] .login-box,
-html[data-admin-theme="professional"] .admin-card,
-html[data-admin-theme="professional"] .admin-section-modern,
-html[data-admin-theme="professional"] .date-selector {
-    border-radius: 6px;
-    border: 1px solid #cbd5e1;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-    transform: none;
-}
-
-html[data-admin-theme="professional"] .dashboard-card:hover,
-html[data-admin-theme="professional"] .admin-card:hover {
-    transform: none;
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px rgb(var(--primary-rgb) / 0.15);
-}
-
-html[data-admin-theme="professional"] .dashboard-card .card-icon {
-    border-radius: 4px;
-    background: var(--primary);
-}
-
-html[data-admin-theme="professional"] .week-table {
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-html[data-admin-theme="professional"] .week-table th {
-    background: #f8fafc;
-    color: #0f172a;
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 2px solid var(--primary);
-}
-
-html[data-admin-theme="professional"] .week-table td {
-    background: #fff;
-    border-color: #e2e8f0;
-}
-
-html[data-admin-theme="professional"] .week-table tbody tr:nth-child(even) td {
-    background: #f8fafc;
-}
-
-html[data-admin-theme="professional"] .slot-card {
-    border-radius: 4px;
-    border: 1px solid #cbd5e1;
-    box-shadow: none;
-    background: #fff;
-}
-
-html[data-admin-theme="professional"] .slot-card:hover {
-    transform: none;
-    border-color: var(--primary);
-    box-shadow: inset 0 0 0 1px var(--primary);
-}
-
-html[data-admin-theme="professional"] .slot-course-name {
-    font-style: normal;
-    font-weight: 600;
-    text-transform: none;
-    color: #0f172a;
-    font-size: 0.75rem;
-}
-
-html[data-admin-theme="professional"] .selected-date-info h3 {
-    background: var(--primary);
-    border-radius: 6px;
-    box-shadow: none;
-}
-
-html[data-admin-theme="professional"] .login-box {
-    border-radius: 8px;
-}
-
-html[data-admin-theme="professional"] .dashboard-title,
-html[data-admin-theme="professional"] h2 {
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: #0f172a;
-}
-
-html[data-admin-theme="professional"] .week-dates {
-    background: var(--primary-light);
-    color: var(--primary);
-    border-radius: 4px;
-    border: 1px solid var(--brand-tint-25);
-}
 
 html[data-admin-theme="professional"] .form-group input,
 html[data-admin-theme="professional"] .form-group select {
@@ -781,236 +582,6 @@ html[data-admin-theme="minimal"] .week-overview .book-btn {
     background-image: none;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   4. ELEGANT – Editorial Luxury (Serif, Glass, weiche Verläufe)
-   ═══════════════════════════════════════════════════════════════════════════ */
-html[data-admin-theme="elegant"] {
-    --font-heading: 'Playfair Display', Georgia, serif;
-    --font-body: 'Source Sans 3', -apple-system, sans-serif;
-    --font-mono: 'Source Sans 3', sans-serif;
-    --accent: #7c3aed;
-    --accent-warn: #ca8a04;
-    --text-primary: color-mix(in srgb, var(--brand-primary) 55%, #0f172a);
-    --text-secondary: #64748b;
-    --text-tertiary: #94a3b8;
-    --bg-primary: rgba(255, 255, 255, 0.72);
-    --bg-secondary: transparent;
-    --bg-tertiary: rgba(255, 255, 255, 0.5);
-    --bg-card: rgba(255, 255, 255, 0.65);
-    --border: rgb(var(--primary-rgb) / 0.25);
-    --border-light: rgb(var(--primary-rgb) / 0.12);
-    --login-gradient: linear-gradient(160deg, var(--brand-light) 0%, #f8fafc 50%, var(--brand-tint-8) 100%);
-    --shadow-sm: 0 4px 24px rgb(var(--primary-rgb) / 0.08);
-    --shadow: 0 8px 32px rgb(var(--primary-rgb) / 0.1);
-    --shadow-md: 0 12px 40px rgb(var(--primary-rgb) / 0.12);
-    --shadow-lg: 0 20px 60px rgb(var(--primary-rgb) / 0.15);
-    --radius-sm: 12px;
-    --radius: 16px;
-    --radius-lg: 22px;
-    --radius-xl: 28px;
-    --radius-2xl: 36px;
-}
-
-html[data-admin-theme="elegant"] body {
-    background: linear-gradient(165deg, var(--brand-light) 0%, #ffffff 35%, var(--brand-tint-8) 70%, var(--brand-tint-15) 100%);
-    background-attachment: fixed;
-    min-height: 100vh;
-    letter-spacing: 0.01em;
-}
-
-html[data-admin-theme="elegant"] .bg-glow-orb.orb-1 {
-    background: radial-gradient(circle, rgb(var(--primary-rgb) / 0.35) 0%, transparent 65%);
-    width: 480px;
-    height: 480px;
-}
-
-html[data-admin-theme="elegant"] .bg-glow-orb.orb-2 {
-    background: radial-gradient(circle, rgb(var(--primary-rgb) / 0.18) 0%, transparent 65%);
-}
-
-html[data-admin-theme="elegant"] .top-nav {
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(16px) saturate(1.4);
-    -webkit-backdrop-filter: blur(16px) saturate(1.4);
-    border-bottom: 1px solid rgb(var(--primary-rgb) / 0.15);
-    box-shadow: 0 4px 30px rgb(var(--primary-rgb) / 0.06);
-}
-
-html[data-admin-theme="elegant"] .top-nav nav a {
-    border-radius: 999px;
-    font-weight: 500;
-}
-
-html[data-admin-theme="elegant"] .top-nav nav a:hover {
-    transform: none;
-    background: var(--primary-light);
-    color: var(--primary-dark);
-}
-
-html[data-admin-theme="elegant"] .user-info {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgb(var(--primary-rgb) / 0.15);
-    border-radius: 999px;
-}
-
-html[data-admin-theme="elegant"] .btn {
-    border-radius: 999px;
-    border: 1px solid transparent;
-    box-shadow: 0 4px 14px rgb(var(--primary-rgb) / 0.2);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-}
-
-html[data-admin-theme="elegant"] .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--brand-tint-25));
-    border: none;
-}
-
-html[data-admin-theme="elegant"] .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgb(var(--primary-rgb) / 0.35);
-}
-
-html[data-admin-theme="elegant"] .btn-secondary {
-    background: rgba(255, 255, 255, 0.8);
-    border-color: rgb(var(--primary-rgb) / 0.2);
-}
-
-html[data-admin-theme="elegant"] .btn-secondary:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
-}
-
-html[data-admin-theme="elegant"] .dashboard-card,
-html[data-admin-theme="elegant"] .week-overview,
-html[data-admin-theme="elegant"] .login-box,
-html[data-admin-theme="elegant"] .admin-card,
-html[data-admin-theme="elegant"] .admin-section-modern,
-html[data-admin-theme="elegant"] .date-selector,
-html[data-admin-theme="elegant"] .modal-content {
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(12px) saturate(1.3);
-    -webkit-backdrop-filter: blur(12px) saturate(1.3);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-    border-radius: var(--radius-lg);
-}
-
-html[data-admin-theme="elegant"] .dashboard-card:hover,
-html[data-admin-theme="elegant"] .admin-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-    border-color: rgb(var(--primary-rgb) / 0.3);
-}
-
-html[data-admin-theme="elegant"] .dashboard-card .card-icon {
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), var(--brand-tint-25));
-}
-
-html[data-admin-theme="elegant"] .week-table th {
-    background: rgb(var(--primary-rgb) / 0.12);
-    color: var(--primary-dark);
-    font-family: var(--font-heading);
-    font-weight: 600;
-    font-size: 0.85rem;
-    border: none;
-}
-
-html[data-admin-theme="elegant"] .week-table td {
-    border-color: rgb(var(--primary-rgb) / 0.1);
-    background: rgba(255, 255, 255, 0.4);
-}
-
-html[data-admin-theme="elegant"] .slot-card {
-    border-radius: var(--radius);
-    border: 1px solid rgb(var(--primary-rgb) / 0.2);
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 4px 16px rgb(var(--primary-rgb) / 0.08);
-}
-
-html[data-admin-theme="elegant"] .slot-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 28px rgb(var(--primary-rgb) / 0.15);
-    border-color: rgb(var(--primary-rgb) / 0.4);
-}
-
-html[data-admin-theme="elegant"] .slot-course-name {
-    font-family: var(--font-heading);
-    font-style: italic;
-    font-weight: 600;
-    text-transform: none;
-    color: var(--primary-dark);
-    font-size: 0.85rem;
-}
-
-html[data-admin-theme="elegant"] .selected-date-info h3 {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--brand-shade-20) 100%);
-    border-radius: var(--radius-xl);
-    font-family: var(--font-heading);
-    font-weight: 600;
-    box-shadow: var(--shadow-md);
-}
-
-html[data-admin-theme="elegant"] .login-box {
-    padding: 3.5rem;
-    border-radius: var(--radius-2xl);
-}
-
-html[data-admin-theme="elegant"] .login-box h2 {
-    font-family: var(--font-heading);
-    font-weight: 600;
-    font-size: 2rem;
-}
-
-html[data-admin-theme="elegant"] .login-logo img {
-    border-radius: 50%;
-    box-shadow: 0 12px 40px rgb(var(--primary-rgb) / 0.2);
-    border: 3px solid rgba(255, 255, 255, 0.9);
-}
-
-html[data-admin-theme="elegant"] h1,
-html[data-admin-theme="elegant"] h2,
-html[data-admin-theme="elegant"] h3,
-html[data-admin-theme="elegant"] .dashboard-title,
-html[data-admin-theme="elegant"] .admin-header h2 {
-    font-family: var(--font-heading);
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--primary-dark);
-}
-
-html[data-admin-theme="elegant"] .week-dates {
-    background: var(--primary-light);
-    color: var(--primary-dark);
-    border-radius: 999px;
-    border: 1px solid rgb(var(--primary-rgb) / 0.2);
-}
-
-html[data-admin-theme="elegant"] .week-nav-arrow {
-    border-radius: 50%;
-    border: 1px solid rgb(var(--primary-rgb) / 0.2);
-    background: rgba(255, 255, 255, 0.6);
-}
-
-html[data-admin-theme="elegant"] .form-group input,
-html[data-admin-theme="elegant"] .form-group select {
-    border-radius: var(--radius);
-    background: rgba(255, 255, 255, 0.7);
-    border-color: rgb(var(--primary-rgb) / 0.2);
-}
-
-html[data-admin-theme="elegant"] .stat-card {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--brand-shade-20) 100%);
-    border-radius: var(--radius-xl);
-}
-
-html[data-admin-theme="elegant"] main.container {
-    position: relative;
-    z-index: 1;
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    5. SLOTRA 2.0 – Soft UI (rund, luftig, Branding-Akzente)
@@ -2775,3 +2346,285 @@ html[data-admin-theme="slotra-reloaded"] .week-table .period-row-label-pause .pe
     margin-top: 0.1rem !important;
     line-height: 1.2 !important;
 }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ISERV – Schulportal-Look (vertraut, funktional, IServ-typisch)
+   ═══════════════════════════════════════════════════════════════════════════ */
+html[data-admin-theme="iserv"] {
+    --font-heading: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+    --accent: #28a745;
+    --accent-warn: #ffc107;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --text-tertiary: #6c757d;
+    --bg-primary: #f5f6fa;
+    --bg-secondary: #ebedf3;
+    --bg-tertiary: #dee2e6;
+    --bg-card: #ffffff;
+    --border: #ced4da;
+    --border-light: #dee2e6;
+    --login-gradient: #f5f6fa;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 3px 8px rgba(0,0,0,0.1);
+    --shadow-lg: 0 6px 16px rgba(0,0,0,0.12);
+    --radius-sm: 3px;
+    --radius: 4px;
+    --radius-lg: 6px;
+    --radius-xl: 8px;
+    --radius-2xl: 10px;
+}
+
+html[data-admin-theme="iserv"] body {
+    background-color: #f5f6fa;
+    background-image: none;
+    letter-spacing: 0;
+    line-height: 1.5;
+}
+
+html[data-admin-theme="iserv"] .bg-glow-orb {
+    display: none;
+}
+
+html[data-admin-theme="iserv"] .top-nav {
+    background: #074B83;
+    border-bottom: 3px solid #053a66;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    padding: 0;
+}
+
+html[data-admin-theme="iserv"] .top-nav nav a {
+    color: rgba(255,255,255,0.85);
+    border-radius: 0;
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+    text-transform: none;
+    letter-spacing: 0;
+    transition: background 0.15s ease;
+}
+
+html[data-admin-theme="iserv"] .top-nav nav a:hover {
+    background: rgba(255,255,255,0.15);
+    color: #ffffff;
+    transform: none;
+}
+
+html[data-admin-theme="iserv"] .top-nav nav a.active {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border-bottom: 2px solid #fff;
+}
+
+html[data-admin-theme="iserv"] .top-nav .nav-brand {
+    color: #fff;
+    font-weight: 700;
+}
+
+html[data-admin-theme="iserv"] .user-info {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    color: rgba(255,255,255,0.9);
+}
+
+html[data-admin-theme="iserv"] .btn {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    box-shadow: none;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+html[data-admin-theme="iserv"] .btn-primary {
+    background: #074B83;
+    border-color: #053a66;
+    color: #fff;
+}
+
+html[data-admin-theme="iserv"] .btn-primary:hover {
+    background: #053a66;
+    transform: none;
+    box-shadow: 0 2px 6px rgba(7,75,131,0.3);
+}
+
+html[data-admin-theme="iserv"] .btn-secondary {
+    background: #ffffff;
+    border-color: #ced4da;
+    color: #212529;
+}
+
+html[data-admin-theme="iserv"] .btn-secondary:hover {
+    background: #f5f6fa;
+    border-color: #074B83;
+    color: #074B83;
+    transform: none;
+}
+
+html[data-admin-theme="iserv"] .dashboard-card,
+html[data-admin-theme="iserv"] .week-overview,
+html[data-admin-theme="iserv"] .login-box,
+html[data-admin-theme="iserv"] .admin-card,
+html[data-admin-theme="iserv"] .admin-section-modern,
+html[data-admin-theme="iserv"] .date-selector {
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    background: #fff;
+    transform: none;
+}
+
+html[data-admin-theme="iserv"] .dashboard-card:hover,
+html[data-admin-theme="iserv"] .admin-card:hover {
+    transform: none;
+    border-color: #074B83;
+    box-shadow: 0 2px 8px rgba(7,75,131,0.15);
+}
+
+html[data-admin-theme="iserv"] .dashboard-card .card-icon {
+    border-radius: 4px;
+    background: #074B83;
+}
+
+html[data-admin-theme="iserv"] .week-table {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+html[data-admin-theme="iserv"] .week-table th {
+    background: #074B83;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: none;
+    letter-spacing: 0;
+    border-bottom: none;
+    padding: 0.65rem 0.75rem;
+}
+
+html[data-admin-theme="iserv"] .week-table td {
+    background: #fff;
+    border-color: #dee2e6;
+}
+
+html[data-admin-theme="iserv"] .week-table tbody tr:nth-child(even) td {
+    background: #f8f9fc;
+}
+
+html[data-admin-theme="iserv"] .slot-card {
+    border-radius: 3px;
+    border: 1px solid #dee2e6;
+    box-shadow: none;
+    background: #fff;
+}
+
+html[data-admin-theme="iserv"] .slot-card:hover {
+    transform: none;
+    border-color: #074B83;
+    box-shadow: inset 0 0 0 1px #074B83;
+}
+
+html[data-admin-theme="iserv"] .slot-course-name {
+    font-style: normal;
+    font-weight: 600;
+    text-transform: none;
+    color: #212529;
+    font-size: 0.8rem;
+}
+
+html[data-admin-theme="iserv"] .selected-date-info h3 {
+    background: #074B83;
+    border-radius: 4px;
+    box-shadow: none;
+}
+
+html[data-admin-theme="iserv"] .login-box {
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+html[data-admin-theme="iserv"] .dashboard-title,
+html[data-admin-theme="iserv"] h2 {
+    font-weight: 700;
+    letter-spacing: 0;
+    color: #212529;
+}
+
+html[data-admin-theme="iserv"] .week-dates {
+    background: #e8f0f8;
+    color: #074B83;
+    border-radius: 4px;
+    border: 1px solid #b8d4ed;
+}
+
+html[data-admin-theme="iserv"] .week-nav-arrow {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    background: #fff;
+}
+
+html[data-admin-theme="iserv"] .form-group input,
+html[data-admin-theme="iserv"] .form-group select {
+    border-radius: 4px;
+    border-color: #ced4da;
+}
+
+html[data-admin-theme="iserv"] .message {
+    border-radius: 4px;
+    border-left-width: 4px;
+}
+
+html[data-admin-theme="iserv"] .stat-card {
+    background: #074B83;
+    border-radius: 6px;
+}
+
+html[data-admin-theme="iserv"] main.container {
+    position: relative;
+    z-index: 1;
+}
+
+/* IServ Dark Mode */
+[data-theme="dark"] html[data-admin-theme="iserv"],
+html[data-admin-theme="iserv"][data-theme="dark"] {
+    --bg-primary: #1a1f2e;
+    --bg-secondary: #242938;
+    --bg-tertiary: #2e3446;
+    --bg-card: #242938;
+    --text-primary: #e4e7eb;
+    --text-secondary: #9ca3af;
+    --text-tertiary: #6b7280;
+    --border: #374151;
+    --border-light: #2e3446;
+}
+
+[data-theme="dark"] html[data-admin-theme="iserv"] .top-nav,
+html[data-admin-theme="iserv"][data-theme="dark"] .top-nav {
+    background: #052d50;
+    border-bottom-color: #074B83;
+}
+
+/* IServ Pause Row Overrides */
+html[data-admin-theme="iserv"] .week-table tr.week-row-pause td {
+    border-radius: var(--radius);
+}
+
+html[data-admin-theme="iserv"] .week-table .period-row-label-pause {
+    border-radius: var(--radius);
+}
+
+html[data-admin-theme="iserv"] .week-table .period-row-label-pause .period-row-label-title {
+    margin-bottom: 0 !important;
+    line-height: 1.2 !important;
+}
+
+html[data-admin-theme="iserv"] .week-table .period-row-label-pause .period-row-time {
+    margin-top: 0.1rem !important;
+    line-height: 1.2 !important;
+}
+

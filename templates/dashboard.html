@@ -437,52 +437,7 @@
         <h3>{{ weekday }}, {{ selected_date.strftime('%d.%m.%Y') }}</h3>
     </div>
 
-    <!-- Dashboard Control Bar -->
-    <div class="dashboard-control-bar">
-        <div class="widget-visibility-panel" id="widgetVisibilityPanel">
-            <h5>Widgets ein-/ausblenden</h5>
-            <div class="visibility-toggle">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="toggle-occupancy" checked onchange="toggleWidgetVisibility('occupancy', this.checked)">
-                    <span class="toggle-slider"></span>
-                </label>
-                <label for="toggle-occupancy">Auslastungs-Widget</label>
-            </div>
-        </div>
-        <div class="calendar-width-control" id="calendarWidthControl">
-            <label for="calendarWidthRange">Seitenleisten</label>
-            <input
-                type="range"
-                id="calendarWidthRange"
-                min="240"
-                max="480"
-                step="10"
-                value="290"
-                oninput="setCalendarWidth(this.value, true)"
-                onchange="setCalendarWidth(this.value, true)"
-            />
-            <span class="calendar-width-value" id="calendarWidthValue">Standard</span>
-        </div>
-        <div class="week-plan-width-control" id="weekPlanWidthControl">
-            <label for="weekPlanWidthRange" title="900–2050 px; ganz rechts (2100+) = volle Breite">Wochenplan</label>
-            <input
-                type="range"
-                id="weekPlanWidthRange"
-                min="900"
-                max="2200"
-                step="50"
-                value="900"
-                title="Regler ganz nach rechts = volle Bildschirmbreite"
-                oninput="setWeekPlanWidth(this.value, true)"
-                onchange="setWeekPlanWidth(this.value, true)"
-            />
-            <span class="week-plan-width-value" id="weekPlanWidthValue">900px</span>
-        </div>
-        <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()" title="Widget-Layout anpassen">
-            <span class="btn-icon">⚙️</span>
-            <span class="btn-text">Layout anpassen</span>
-        </button>
-    </div>
+
 
     <!-- Dashboard Layout mit Wochenplan und Ticker -->
     <div class="dashboard-layout" id="dashboardLayout">
@@ -987,6 +942,67 @@
 
     </div> <!-- End dashboard-right-panel -->
 </div> <!-- End dashboard-layout -->
+
+    <!-- Dashboard Control Bar -->
+    <div class="dashboard-control-bar">
+        <div class="widget-visibility-panel" id="widgetVisibilityPanel">
+            <h5>Widgets ein-/ausblenden</h5>
+            <div class="visibility-toggle">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-occupancy" checked onchange="toggleWidgetVisibility('occupancy', this.checked)">
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="toggle-occupancy">Auslastungs-Widget</label>
+            </div>
+        </div>
+        <div class="calendar-width-control" id="calendarWidthControl">
+            <label for="calendarWidthRange">Seitenleisten</label>
+            <input
+                type="range"
+                id="calendarWidthRange"
+                min="240"
+                max="480"
+                step="10"
+                value="290"
+                oninput="setCalendarWidth(this.value, true)"
+                onchange="setCalendarWidth(this.value, true)"
+            />
+            <span class="calendar-width-value" id="calendarWidthValue">Standard</span>
+        </div>
+        <div class="week-plan-width-control" id="weekPlanWidthControl">
+            <label for="weekPlanWidthRange" title="900–2050 px; ganz rechts (2100+) = volle Breite">Wochenplan</label>
+            <input
+                type="range"
+                id="weekPlanWidthRange"
+                min="900"
+                max="2200"
+                step="50"
+                value="900"
+                title="Regler ganz nach rechts = volle Bildschirmbreite"
+                oninput="setWeekPlanWidth(this.value, true)"
+                onchange="setWeekPlanWidth(this.value, true)"
+            />
+            <span class="week-plan-width-value" id="weekPlanWidthValue">900px</span>
+        </div>
+        <div class="widget-height-control" id="widgetHeightControl">
+            <label for="widgetHeightRange">Widget-Höhe</label>
+            <input
+                type="range"
+                id="widgetHeightRange"
+                min="150"
+                max="600"
+                step="10"
+                value="300"
+                oninput="setWidgetHeight(this.value, true)"
+                onchange="setWidgetHeight(this.value, true)"
+            />
+            <span class="widget-height-value" id="widgetHeightValue">300px</span>
+        </div>
+        <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()" title="Widget-Layout anpassen">
+            <span class="btn-icon">⚙️</span>
+            <span class="btn-text">Layout anpassen</span>
+        </button>
+    </div>
 
     <!-- Kontakt-Information -->
     <div class="contact-info-box">
@@ -1565,6 +1581,28 @@ function restoreWeekPlanWidth() {
     setWeekPlanWidth(saved || 900, false);
 }
 
+function setWidgetHeight(val, persist) {
+    val = parseInt(val);
+    document.querySelectorAll('.dashboard-widget').forEach(function(w) {
+        w.style.maxHeight = val + 'px';
+        w.style.overflow = 'auto';
+    });
+    var label = document.getElementById('widgetHeightValue');
+    if (label) label.textContent = val + 'px';
+    if (persist) {
+        localStorage.setItem('slotra_widget_height', val);
+    }
+}
+
+function restoreWidgetHeight() {
+    var savedWidgetHeight = localStorage.getItem('slotra_widget_height');
+    if (savedWidgetHeight) {
+        var whSlider = document.getElementById('widgetHeightRange');
+        if (whSlider) whSlider.value = savedWidgetHeight;
+        setWidgetHeight(savedWidgetHeight, false);
+    }
+}
+
 // Layout Saving & Restoring
 function saveWidgetLayout() {
     const panels = ['dashboard-left-panel', 'panel-right'];
@@ -1765,6 +1803,7 @@ document.addEventListener('DOMContentLoaded', () => {
     restoreWidgetLayout();
     restoreWeekPlanWidth();
     restoreCalendarWidth();
+    restoreWidgetHeight();
 });
 
 </script>
