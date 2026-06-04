@@ -26,7 +26,7 @@
                         border-radius: 4px;
                         font-family: monospace;
                     "
-                    >{{ request.host_url }}oauth/callback</code
+                    >{{ 'https' if 'localhost' not in request.host and '127.0.0.1' not in request.host else request.scheme }}://{{ request.host }}/oauth/callback</code
                 ><br />
                 • Aktivierten Scopes:
                 <code
@@ -187,7 +187,7 @@
                             font-family: monospace;
                             font-size: 0.82rem;
                         "
-                        >{{ request.host_url }}oauth/callback</code
+                        >{{ 'https' if 'localhost' not in request.host and '127.0.0.1' not in request.host else request.scheme }}://{{ request.host }}/oauth/callback</code
                     >
                 </li>
                 <li>

@@ -729,7 +729,7 @@ input:checked + .slider:before { transform: translateX(24px); }
                 <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 18px;font-size:.84rem;color:#166534;">
                     <strong>📋 Redirect-URI für IServ</strong><br>
                     In IServ Admin → Single-Sign-On → App bearbeiten diese URL eintragen:<br>
-                    <code style="background:#dcfce7;padding:2px 7px;border-radius:4px;font-family:monospace;">{{ request.host_url }}oauth/callback</code>
+                    <code style="background:#dcfce7;padding:2px 7px;border-radius:4px;font-family:monospace;">{{ 'https' if 'localhost' not in request.host and '127.0.0.1' not in request.host else request.scheme }}://{{ request.host }}/oauth/callback</code>
                 </div>
             </div>
             <div class="btn-row">

@@ -1086,7 +1086,10 @@ def login_iserv():
         return redirect(url_for("login"))
 
     try:
-        redirect_uri = url_for("oauth_callback", _external=True)
+        scheme = "https"
+        if "localhost" in request.host or "127.0.0.1" in request.host:
+            scheme = "http"
+        redirect_uri = url_for("oauth_callback", _external=True, _scheme=scheme)
         print(f"🔐 IServ OAuth: Starte Login, Redirect URI: {redirect_uri}")
         return client.authorize_redirect(redirect_uri)
     except Exception as e:
@@ -1105,7 +1108,11 @@ def oauth_callback():
         return redirect(url_for("login"))
 
     try:
-        token = client.authorize_access_token()
+        scheme = "https"
+        if "localhost" in request.host or "127.0.0.1" in request.host:
+            scheme = "http"
+        redirect_uri = url_for("oauth_callback", _external=True, _scheme=scheme)
+        token = client.authorize_access_token(redirect_uri=redirect_uri)
 
         # === AUSFÜHRLICHES DEBUG-LOGGING ===
         print("=" * 80)
