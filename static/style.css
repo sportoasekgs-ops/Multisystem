@@ -7085,3 +7085,20 @@ h1, h2, h3 {
 .dashboard-ticker {
     font-size: calc(1em * var(--font-scale-widgets, 100) / 100);
 }
+
+/* Base style for Quick Menu Section headers in dropdown */
+.quick-menu-group-title {
+    display: block;
+    padding: 0.45rem 0.75rem 0.2rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border-light);
+    margin-top: 0.35rem;
+}
+.quick-menu-group-title:first-of-type {
+    border-top: none;
+    margin-top: 0;
+}
