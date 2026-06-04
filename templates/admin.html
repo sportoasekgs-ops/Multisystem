@@ -10,12 +10,14 @@
     </div>
     
     <!-- KATEGORIE 1: Buchungs- & Stunden-Verwaltung -->
-    <section class="admin-section-modern" style="margin-bottom: 1.5rem;">
-        <div class="section-header" style="margin-bottom: 1rem;">
-            <h3><span class="section-icon">📅</span> Buchungen & Belegungsplan</h3>
-            <span class="info-hint">Tägliche Verwaltung von Reservierungen, manuellen Buchungen und Ferien-Sperren</span>
+    <div class="admin-category-group" style="margin-bottom: 2.5rem;">
+        <div class="category-header" style="margin-bottom: 1.25rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.6rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.25rem 0;">
+                <span>📅</span> Buchungen & Belegungsplan
+            </h3>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">Tägliche Verwaltung von Reservierungen, manuellen Buchungen und Ferien-Sperren</span>
         </div>
-        <div class="admin-cards" style="margin-bottom: 0;">
+        <div class="admin-cards">
             <a href="{{ url_for('meine_buchungen') }}" class="admin-card">
                 <span class="card-icon">📋</span>
                 <span class="card-title">Alle Buchungen</span>
@@ -32,15 +34,17 @@
                 <span class="card-desc">Stundenplan wochenweise sperren</span>
             </a>
         </div>
-    </section>
+    </div>
 
     <!-- KATEGORIE 2: Stammdaten & Regeln -->
-    <section class="admin-section-modern" style="margin-bottom: 1.5rem;">
-        <div class="section-header" style="margin-bottom: 1rem;">
-            <h3><span class="section-icon">📚</span> Stammdaten & Buchungsregeln</h3>
-            <span class="info-hint">Unterrichtsstunden, Kurse, Klassen und Kapazitätsgrenzen festlegen</span>
+    <div class="admin-category-group" style="margin-bottom: 2.5rem;">
+        <div class="category-header" style="margin-bottom: 1.25rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.6rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.25rem 0;">
+                <span>📚</span> Stammdaten & Buchungsregeln
+            </h3>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">Unterrichtsstunden, Kurse, Klassen und Kapazitätsgrenzen festlegen</span>
         </div>
-        <div class="admin-cards" style="margin-bottom: 0;">
+        <div class="admin-cards">
             <a href="{{ url_for('admin_dyn.periods') }}" class="admin-card">
                 <span class="card-icon">⏱️</span>
                 <span class="card-title">Stunden</span>
@@ -67,15 +71,17 @@
                 <span class="card-desc">Maximale Kapazität & Storno-Vorlaufzeiten</span>
             </a>
         </div>
-    </section>
+    </div>
 
     <!-- KATEGORIE 3: System- & Schnittstellen-Konfiguration -->
-    <section class="admin-section-modern" style="margin-bottom: 1.5rem;">
-        <div class="section-header" style="margin-bottom: 1rem;">
-            <h3><span class="section-icon">⚙️</span> System- & Schnittstellen-Konfiguration</h3>
-            <span class="info-hint">Texte, Design, SMTP/E-Mail-Dienst und IServ OAuth Schnittstelle</span>
+    <div class="admin-category-group" style="margin-bottom: 2.5rem;">
+        <div class="category-header" style="margin-bottom: 1.25rem; border-bottom: 2px solid var(--border-light); padding-bottom: 0.6rem;">
+            <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.25rem 0;">
+                <span>⚙️</span> System- & Schnittstellen-Konfiguration
+            </h3>
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">Texte, Design, SMTP/E-Mail-Dienst und IServ OAuth Schnittstelle</span>
         </div>
-        <div class="admin-cards" style="margin-bottom: 0;">
+        <div class="admin-cards">
             <a href="{{ url_for('admin_cms') }}" class="admin-card">
                 <span class="card-icon">✏️</span>
                 <span class="card-title">Texte & Layout (CMS)</span>
@@ -102,7 +108,7 @@
                 <span class="card-desc">Gesamte Datenbank zurücksetzen</span>
             </a>
         </div>
-    </section>
+    </div>
     
     <div class="admin-stats">
         <div class="stat-card">
