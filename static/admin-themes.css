@@ -2635,11 +2635,11 @@ html[data-admin-theme="slotra-reloaded"] .quick-menu-group-title {
     padding: 0.65rem 0.5rem 0.35rem 1rem !important;
     font-size: 0.72rem !important;
     font-weight: 700 !important;
-    color: #ffffff !important;
+    color: #474866 !important;
     text-transform: uppercase !important;
     letter-spacing: 0.05em !important;
     border-top: none !important;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.25) !important;
+    border-bottom: 2px solid rgba(111, 76, 219, 0.5) !important;
     margin-top: 0.8rem !important;
     margin-bottom: 0.45rem !important;
 }
