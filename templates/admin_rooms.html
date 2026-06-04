@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Räume verwalten – Admin{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+        <div>
+            <a href="{{ url_for('admin') }}" style="text-decoration:none;color:#888;font-size:.9rem;">← Admin</a>
+            <h2 style="margin:.25rem 0 0;">🚪 Räume verwalten</h2>
+            <p style="color:#666;margin:.25rem 0 0;">Räume und Ressourcen des Buchungssystems konfigurieren</p>
+        </div>
+        <div style="display:flex;gap:.75rem;">
+            <a href="{{ url_for('admin_dyn.classes') }}" class="btn btn-secondary">🏫 Klassen</a>
+            <a href="{{ url_for('admin_dyn.courses') }}" class="btn btn-secondary">📚 Kurse</a>
+            <a href="{{ url_for('admin_dyn.periods') }}" class="btn btn-secondary">⏱️ Stunden</a>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat,msg in messages %}
+    <div class="flash-message flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <!-- Räume-Liste -->
+        <div style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+            <h3 style="margin:0 0 1rem;">Aktuelle Räume ({{ rooms | length }})</h3>
+            {% if rooms %}
+            <div style="max-height:600px;overflow-y:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:.9rem;">
+                <thead style="position:sticky;top:0;background:#fff;">
+                    <tr style="background:#fce4ec;color:#c2185b;">
+                        <th style="padding:.6rem .8rem;text-align:left;">Raum</th>
+                        <th style="padding:.6rem .8rem;text-align:left;">Farbe</th>
+                        <th style="padding:.6rem .8rem;text-align:center;">Max. Schüler</th>
+                        <th style="padding:.6rem .8rem;text-align:center;">Aktiv</th>
+                        <th style="padding:.6rem .8rem;text-align:right;">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for room in rooms %}
+                <tr style="border-bottom:1px solid #f5f5f5;" id="row-room-{{ room.id }}">
+                    <td style="padding:.6rem .8rem;font-weight:600;">
+                        <span style="font-size:1.15rem;margin-right:0.25rem;">{{ room.icon }}</span> {{ room.name }}
+                        {% if room.description %}
+                        <div style="font-size:0.75rem;color:#888;font-weight:normal;">{{ room.description }}</div>
+                        {% endif %}
+                    </td>
+                    <td style="padding:.6rem .8rem;">
+                        <div style="display:flex;align-items:center;gap:0.4rem;">
+                            <span style="display:inline-block;width:16px;height:16px;border-radius:50%;background-color:{{ room.color or '#6366f1' }};border:1px solid #ddd;"></span>
+                            <code>{{ room.color }}</code>
+                        </div>
+                    </td>
+                    <td style="padding:.6rem .8rem;text-align:center;">
+                        {% if room.max_students %}{{ room.max_students }}{% else %}<span style="color:#aaa;">(global)</span>{% endif %}
+                    </td>
+                    <td style="padding:.6rem .8rem;text-align:center;">
+                        {% if room.is_active %}<span style="color:#4caf50;">✔</span>{% else %}<span style="color:#ccc;">✖</span>{% endif %}
+                    </td>
+                    <td style="padding:.6rem .8rem;text-align:right;white-space:nowrap;">
+                        <button onclick="toggleEditRoom({{ room.id }})" class="btn btn-secondary" style="padding:.28rem .6rem;font-size:.8rem;">Edit</button>
+                        <form method="POST" action="{{ url_for('admin_dyn.rooms_delete', room_id=room.id) }}" style="display:inline;" onsubmit="return confirm('Raum {{ room.name }} löschen? (Nur möglich, wenn keine Buchungen darauf liegen)');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn" style="background:#f44336;color:#fff;padding:.28rem .6rem;font-size:.8rem;">✕</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr id="edit-room-{{ room.id }}" style="display:none;background:#fff8f9;">
+                    <td colspan="5" style="padding:.75rem .8rem;">
+                        <form method="POST" action="{{ url_for('admin_dyn.rooms_edit', room_id=room.id) }}" style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Raumname</label>
+                                <input type="text" name="name" value="{{ room.name }}" required style="width:100%;padding:.4rem;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Beschreibung</label>
+                                <input type="text" name="description" value="{{ room.description or '' }}" style="width:100%;padding:.4rem;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Farbe</label>
+                                <div style="display:flex;gap:0.25rem;">
+                                    <input type="color" name="color" value="{{ room.color or '#6366f1' }}" style="height:32px;width:40px;padding:0;border:1px solid #ddd;border-radius:6px;">
+                                    <input type="text" name="color_text" id="color-text-{{ room.id }}" value="{{ room.color or '#6366f1' }}" oninput="document.getElementsByName('color')[0].value=this.value" style="flex:1;padding:.4rem;border:1px solid #ddd;border-radius:6px;">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Icon / Emoji</label>
+                                <input type="text" name="icon" value="{{ room.icon or '🏫' }}" style="width:100%;padding:.4rem;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Max. Schüler (optional)</label>
+                                <input type="number" name="max_students" value="{{ room.max_students or '' }}" placeholder="Leer = globaler Standard" style="width:100%;padding:.4rem;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Sortier-Index</label>
+                                <input type="number" name="sort_order" value="{{ room.sort_order }}" style="width:100%;padding:.4rem;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Status</label>
+                                <select name="is_active" style="width:100%;padding:.4rem;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+                                    <option value="1" {% if room.is_active %}selected{% endif %}>Aktiv</option>
+                                    <option value="0" {% if not room.is_active %}selected{% endif %}>Inaktiv</option>
+                                </select>
+                            </div>
+                            <div style="display:flex;align-items:flex-end;justify-content:flex-end;gap:0.5rem;grid-column: span 2;">
+                                <button type="button" onclick="toggleEditRoom({{ room.id }})" class="btn btn-secondary">Abbrechen</button>
+                                <button type="submit" class="btn btn-primary">Speichern</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% else %}
+            <p style="color:#888;text-align:center;padding:2rem;">Noch keine Räume vorhanden.</p>
+            {% endif %}
+        </div>
+
+        <!-- Neuen Raum hinzufügen -->
+        <div>
+            <div style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:1.5rem;">
+                <h3 style="margin:0 0 1rem;">➕ Neuen Raum anlegen</h3>
+                <form method="POST" action="{{ url_for('admin_dyn.rooms_add') }}" style="display:flex;flex-direction:column;gap:0.75rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <div>
+                        <label style="font-size:.85rem;color:#666;font-weight:600;">Raumname</label>
+                        <input type="text" name="name" required placeholder="z.B. Computerraum, Aula" style="width:100%;padding:.6rem;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:.85rem;color:#666;font-weight:600;">Beschreibung</label>
+                        <input type="text" name="description" placeholder="z.B. Raum 204, 15 PCs" style="width:100%;padding:.6rem;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div>
+                            <label style="font-size:.85rem;color:#666;font-weight:600;">Farbe</label>
+                            <input type="color" name="color" value="#6366f1" style="width:100%;height:38px;padding:0;border:1px solid #ddd;border-radius:8px;cursor:pointer;">
+                        </div>
+                        <div>
+                            <label style="font-size:.85rem;color:#666;font-weight:600;">Icon / Emoji</label>
+                            <input type="text" name="icon" value="🏫" placeholder="z.B. 🏫, 💻, 🏀" style="width:100%;padding:.6rem;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                        <div>
+                            <label style="font-size:.85rem;color:#666;font-weight:600;">Max. Schüler (optional)</label>
+                            <input type="number" name="max_students" placeholder="Leer = globaler Wert" style="width:100%;padding:.6rem;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+                        </div>
+                        <div>
+                            <label style="font-size:.85rem;color:#666;font-weight:600;">Sortierung</label>
+                            <input type="number" name="sort_order" value="0" style="width:100%;padding:.6rem;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top:0.5rem;padding:.7rem;">Raum hinzufügen</button>
+                </form>
+            </div>
+
+            <div style="background:#fff8e1;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+                <h3 style="margin:0 0 .5rem;">💡 Info zu Räumen</h3>
+                <p style="color:#666;font-size:.9rem;margin:0;line-height:1.4;">
+                    Räume ermöglichen separate Buchungskalender. Inaktive Räume werden Lehrkräften im Dashboard-Dropdown nicht zur Buchung angeboten.<br><br>
+                    <strong>Globaler Standard:</strong> Falls ein Raum kein eigenes Schüler-Maximum hat, gilt der globale Standardwert aus den Buchungseinstellungen.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleEditRoom(id) {
+    const row = document.getElementById('edit-room' + '-' + id);
+    if (row) {
+        row.style.display = row.style.display === 'none' ? '' : 'none';
+    }
+}
+</script>
+{% endblock %}

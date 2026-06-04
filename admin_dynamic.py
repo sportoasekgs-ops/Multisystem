@@ -880,3 +880,106 @@ def booking_settings():
     return render_template('admin_booking_settings.html',
                            max_students=int(max_students),
                            advance_minutes=int(advance_minutes))
+
+
+# ─── Räume (Rooms) ───────────────────────────────────────────────────────────
+
+@admin_dyn_bp.route('/rooms')
+def rooms():
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    from models import Room
+    all_rooms = Room.query.order_by(Room.sort_order, Room.name).all()
+    return render_template('admin_rooms.html', rooms=all_rooms)
+
+
+@admin_dyn_bp.route('/rooms/add', methods=['POST'])
+def rooms_add():
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.rooms'))
+
+    try:
+        name = request.form.get('name', '').strip()
+        description = request.form.get('description', '').strip() or None
+        color = request.form.get('color', '#6366f1').strip()
+        icon = request.form.get('icon', '🏫').strip()
+        max_students_raw = request.form.get('max_students', '').strip()
+        max_students = int(max_students_raw) if max_students_raw else None
+        sort_order = int(request.form.get('sort_order', 0) or 0)
+
+        if not name:
+            flash('Bitte einen Raumnamen eingeben.', 'error')
+            return redirect(url_for('admin_dyn.rooms'))
+
+        from models import Room
+        if Room.query.filter_by(name=name).first():
+            flash(f'Raum „{name}" existiert bereits.', 'error')
+            return redirect(url_for('admin_dyn.rooms'))
+
+        from models import create_room
+        create_room(name, description, color, icon, max_students, sort_order)
+        flash(f'Raum „{name}" hinzugefügt.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler: {e}', 'error')
+    return redirect(url_for('admin_dyn.rooms'))
+
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/edit', methods=['POST'])
+def rooms_edit(room_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.rooms'))
+
+    try:
+        name = request.form.get('name', '').strip()
+        description = request.form.get('description', '').strip() or None
+        color = request.form.get('color', '#6366f1').strip()
+        icon = request.form.get('icon', '🏫').strip()
+        max_students_raw = request.form.get('max_students', '').strip()
+        max_students = int(max_students_raw) if max_students_raw else None
+        sort_order = int(request.form.get('sort_order', 0) or 0)
+        is_active = request.form.get('is_active') == '1'
+
+        if not name:
+            flash('Bitte einen Raumnamen eingeben.', 'error')
+            return redirect(url_for('admin_dyn.rooms'))
+
+        from models import update_room
+        update_room(room_id, name=name, description=description, color=color, icon=icon, max_students=max_students, sort_order=sort_order, is_active=is_active)
+        flash(f'Raum „{name}" aktualisiert.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler: {e}', 'error')
+    return redirect(url_for('admin_dyn.rooms'))
+
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/delete', methods=['POST'])
+def rooms_delete(room_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.rooms'))
+
+    from models import delete_room, get_room_by_id
+    room = get_room_by_id(room_id)
+    if not room:
+        flash('Raum nicht gefunden.', 'error')
+        return redirect(url_for('admin_dyn.rooms'))
+
+    name = room.name
+    if delete_room(room_id):
+        flash(f'Raum „{name}" gelöscht.', 'success')
+    else:
+        flash(f'Raum „{name}" konnte nicht gelöscht werden. (Prüfen Sie, ob noch Buchungen darauf laufen).', 'error')
+    return redirect(url_for('admin_dyn.rooms'))

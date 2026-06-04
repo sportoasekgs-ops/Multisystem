@@ -27,6 +27,17 @@
             </div>
             
             <div class="form-group">
+                <label for="room_id">Raum:</label>
+                <select id="room_id" name="room_id" required>
+                    {% for room in rooms %}
+                    <option value="{{ room.id }}" {% if booking and booking.room_id == room.id %}selected{% endif %}>
+                        {{ room.icon }} {{ room.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label for="teacher_id">Lehrkraft (Account):</label>
                 <select id="teacher_id" name="teacher_id" required>
                     <option value="">-- Bitte wählen --</option>

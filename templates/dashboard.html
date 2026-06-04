@@ -558,7 +558,7 @@
         <div class="week-overview">
             <div class="week-header-with-nav">
             <a
-                href="{{ url_for('dashboard', date=prev_week_date) }}"
+                href="{{ url_for('dashboard', date=prev_week_date, room=current_room.id if current_room else None) }}"
                 class="week-nav-arrow"
                 title="Vorherige Woche"
             >
@@ -578,15 +578,28 @@
                     <button class="week-selector-btn" type="button">Woche wählen</button>
                     <div class="week-selector-dropdown">
                         {% for option in week_selector %}
-                            <a href="{{ url_for('dashboard', date=option.date) }}" class="week-option {% if option.is_selected %}selected{% endif %}">
+                            <a href="{{ url_for('dashboard', date=option.date, room=current_room.id if current_room else None) }}" class="week-option {% if option.is_selected %}selected{% endif %}">
                                 {{ option.label }}
                             </a>
                         {% endfor %}
                     </div>
                 </div>
+
+                <!-- Raum-Auswahl Dropdown -->
+                {% if all_rooms %}
+                <div class="room-selector-container" style="display: flex; align-items: center; gap: 0.5rem; margin-left: 0.5rem;">
+                    <select id="roomSelect" onchange="switchRoom(this.value)" style="padding: 0.45rem 1rem; border-radius: var(--radius-lg); border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); min-width: 140px;">
+                        {% for room in all_rooms %}
+                        <option value="{{ room.id }}" {% if current_room and room.id == current_room.id %}selected{% endif %}>
+                            {{ room.icon }} {{ room.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
             </div>
             <a
-                href="{{ url_for('dashboard', date=next_week_date) }}"
+                href="{{ url_for('dashboard', date=next_week_date, room=current_room.id if current_room else None) }}"
                 class="week-nav-arrow"
                 title="Nächste Woche"
             >
@@ -810,9 +823,9 @@
                                 </div>
 
                                 {% if slot.can_book %}
-                                <a href="{{ url_for('book', date_str=day.date, period=p_num) }}"
+                                <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None) }}"
                                    class="book-btn"
-                                   data-book-url="{{ url_for('book', date_str=day.date, period=p_num) }}">
+                                   data-book-url="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None) }}">
                                     📝 Buchen
                                 </a>
                                 {% endif %}
@@ -1057,6 +1070,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
             <input type="hidden" name="date" id="blockDate" />
             <input type="hidden" name="period" id="blockPeriod" />
+            <input type="hidden" name="room_id" id="blockRoomId" value="" />
 
             <div class="modal-body">
                 <p class="modal-slot-info" id="blockSlotInfo"></p>
@@ -1254,6 +1268,7 @@ Tagesübersicht:
     function openBlockModal(date, period, slotInfo) {
         document.getElementById("blockDate").value = date;
         document.getElementById("blockPeriod").value = period;
+        document.getElementById("blockRoomId").value = "{{ current_room.id if current_room else '' }}";
         document.getElementById("blockSlotInfo").textContent =
             slotInfo + ", " + period + ". Stunde";
         document.getElementById("blockReason").value = "";
@@ -1798,8 +1813,25 @@ function copyAnalysisText() {
 }
 
 function downloadCSV(dateStr) {
-    const dateQuery = dateStr ? `?date=${dateStr}` : '';
-    window.location.href = "{{ url_for('export_occupancy_report') }}" + dateQuery;
+    let url = "{{ url_for('export_occupancy_report') }}";
+    const params = [];
+    if (dateStr) {
+        params.push(`date=${dateStr}`);
+    }
+    const currentRoomId = "{{ current_room.id if current_room else '' }}";
+    if (currentRoomId) {
+        params.push(`room=${currentRoomId}`);
+    }
+    if (params.length > 0) {
+        url += "?" + params.join("&");
+    }
+    window.location.href = url;
+}
+
+function switchRoom(roomId) {
+    const url = new URL(window.location);
+    url.searchParams.set('room', roomId);
+    window.location.href = url.toString();
 }
 
 // Restore layout on load

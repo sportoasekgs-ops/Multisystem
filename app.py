@@ -300,6 +300,7 @@ if not _BOOTSTRAP_MODE:
     from models import (
         Booking,
         User,
+        Room,
         change_user_password,
         check_student_double_booking,
         count_students_for_period,
@@ -324,6 +325,12 @@ if not _BOOTSTRAP_MODE:
         mark_notification_as_read,
         update_booking,
         verify_password,
+        get_all_rooms,
+        get_room_by_id,
+        get_default_room,
+        create_room,
+        update_room,
+        delete_room,
     )
 
     # IServ OAuth-Integration initialisieren
@@ -389,10 +396,69 @@ if not _BOOTSTRAP_MODE:
             SlotName,
             SystemConfig,
             User,
+            Room,
         )
 
         db.create_all()
-        
+
+        # --- Multi-Room Migration ---
+        try:
+            from models import Room, Booking, BlockedSlot
+            inspector = db.inspect(db.engine)
+            
+            # 1. Standardraum "Kleine Insel" erzeugen, falls kein Raum existiert
+            if db.engine.dialect.has_table(db.engine.connect(), 'rooms'):
+                default_room = Room.query.first()
+                if not default_room:
+                    print("[MIGRATION] Erstelle Standard-Raum 'Kleine Insel'...")
+                    default_room = Room(
+                        name="Kleine Insel",
+                        description="Standardraum",
+                        color="#6366f1",
+                        icon="🏫",
+                        is_active=True,
+                        sort_order=0
+                    )
+                    db.session.add(default_room)
+                    db.session.commit()
+                    print(f"[MIGRATION] Standard-Raum 'Kleine Insel' mit ID {default_room.id} erstellt.")
+            
+            # 2. room_id in bookings
+            if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
+                cols = [c['name'] for c in inspector.get_columns('bookings')]
+                if 'room_id' not in cols:
+                    print("[MIGRATION] Füge Spalte 'room_id' zu 'bookings' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("ALTER TABLE bookings ADD COLUMN room_id INTEGER REFERENCES rooms(id)"))
+                        conn.commit()
+                    
+                    # Belege mit Default-Raum (ID 1)
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("UPDATE bookings SET room_id = 1 WHERE room_id IS NULL"))
+                        conn.commit()
+                    print("[MIGRATION] room_id zu bookings hinzugefügt und auf 1 gesetzt.")
+
+            # 3. room_id in blocked_slots
+            if db.engine.dialect.has_table(db.engine.connect(), 'blocked_slots'):
+                cols = [c['name'] for c in inspector.get_columns('blocked_slots')]
+                if 'room_id' not in cols:
+                    print("[MIGRATION] Füge Spalte 'room_id' zu 'blocked_slots' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("ALTER TABLE blocked_slots ADD COLUMN room_id INTEGER REFERENCES rooms(id)"))
+                        conn.commit()
+                    
+                    # Belege mit Default-Raum (ID 1)
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("UPDATE blocked_slots SET room_id = 1 WHERE room_id IS NULL"))
+                        conn.commit()
+                    print("[MIGRATION] room_id zu blocked_slots hinzugefügt und auf 1 gesetzt.")
+        except Exception as e:
+            print(f"[MIGRATION] Fehler bei der Multi-Room-Migration: {e}")
+
         # --- Auto-Migrator: Fehlende Spalten hinzufügen (z.B. für blocked_slots.icon) ---
         try:
             inspector = db.inspect(db.engine)
@@ -1433,6 +1499,24 @@ def dashboard():
     weekday = selected_date.strftime("%a")
     weekday_name = selected_date.strftime("%A")  # Ausgeschriebener Name
 
+    # Hole gewählten Raum und alle aktiven Räume
+    from models import Booking, get_blocked_slot, is_holiday_blocked_reason, is_slot_blocked, get_all_rooms, get_room_by_id, get_default_room
+
+    room_id = request.args.get("room", type=int)
+    all_rooms = get_all_rooms(active_only=True)
+    
+    # Fallback zum Standard-Raum
+    default_room = get_default_room()
+    current_room = None
+    if room_id:
+        current_room = get_room_by_id(room_id)
+    if not current_room:
+        current_room = default_room
+        if current_room:
+            room_id = current_room.id
+        else:
+            room_id = 1
+
     # Deutsche Wochentagsnamen
     weekday_names_de = {
         "Monday": "Montag",
@@ -1454,7 +1538,7 @@ def dashboard():
     max_students = get_max_students()
 
     student_counts_today = {}
-    for booking in Booking.query.filter_by(date=selected_date_str).all():
+    for booking in Booking.query.filter_by(date=selected_date_str, room_id=room_id).all():
         students = (
             json.loads(booking.students_json) if booking.students_json else []
         )
@@ -1469,7 +1553,7 @@ def dashboard():
         available = max_students - student_count
 
         # Prüfe, ob Slot blockiert ist
-        blocked_slot = get_blocked_slot(selected_date_str, period)
+        blocked_slot = get_blocked_slot(selected_date_str, period, room_id=room_id)
         is_blocked = blocked_slot is not None
 
         # Prüfe, ob Termin in der Vergangenheit liegt
@@ -1541,7 +1625,7 @@ def dashboard():
 
     # Hole alle Buchungen für diese Woche
     week_bookings = get_bookings_for_week(
-        monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d")
+        monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d"), room_id=room_id
     )
 
     # Im Demo-Modus: Fake-Buchungen hinzufügen
@@ -1553,7 +1637,7 @@ def dashboard():
 
     # Hole alle blockierten Slots für diese Woche
     blocked_slots = get_blocked_slots_for_week(
-        monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d")
+        monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d"), room_id=room_id
     )
 
     # Organisiere blockierte Slots nach Datum und Stunde
@@ -1983,6 +2067,8 @@ def dashboard():
         contact_text=_contact_text,
         occupancy_stats=occupancy_stats,
         monday_str=monday.strftime('%Y-%m-%d'),
+        current_room=current_room,
+        all_rooms=all_rooms,
     )
 
 
@@ -2163,6 +2249,16 @@ def book(date_str, period):
         flash("Im Demo-Modus können keine Buchungen erstellt werden.", "error")
         return redirect(url_for("dashboard"))
 
+    # Hole gewählten Raum
+    from models import get_room_by_id, get_default_room
+    room_id = request.args.get("room", type=int) or request.form.get("room", type=int)
+    current_room = None
+    if room_id:
+        current_room = get_room_by_id(room_id)
+    if not current_room:
+        current_room = get_default_room()
+    room_id = current_room.id if current_room else 1
+
     # Hole den Benutzernamen aus der Session für das Formular
     user_display_name = session.get("user_username", "")
     # Falls E-Mail als Username verwendet wird, extrahiere den Namen
@@ -2174,12 +2270,12 @@ def book(date_str, period):
         booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except:
         flash("Ungültiges Datum.", "error")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("dashboard", room=room_id))
 
     period_times = get_period_times()
     if period not in period_times:
         flash("Ungültiges Zeitfenster.", "error")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("dashboard", room=room_id))
 
     # Prüfe, ob Termin in der Vergangenheit liegt
     if is_past_date(booking_date, period):
@@ -2187,55 +2283,55 @@ def book(date_str, period):
             "Dieser Termin liegt in der Vergangenheit und kann nicht gebucht werden.",
             "error",
         )
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("dashboard", room=room_id))
 
     # Prüfe, ob es ein Wochenende ist (Samstag=5, Sonntag=6)
     if booking_date.weekday() in [5, 6]:
         flash("Buchungen sind am Wochenende nicht möglich.", "error")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("dashboard", room=room_id))
 
     # Ermittle Wochentag und Stundeninfo
     weekday = booking_date.strftime("%a")
     period_info = get_period_info(weekday, period)
 
     # Prüfe verfügbare Plätze
-    current_students = count_students_for_period(date_str, period)
+    current_students = count_students_for_period(date_str, period, room_id=room_id)
     available_spots = get_max_students() - current_students
 
     if available_spots <= 0:
         flash("Diese Stunde ist bereits voll belegt.", "error")
-        return redirect(url_for("dashboard", date=date_str))
+        return redirect(url_for("dashboard", date=date_str, room=room_id))
 
     # Prüfe, ob Slot für Beratung blockiert ist (nur Admins können blockierte Slots sehen)
     from models import get_blocked_slot, is_slot_blocked
 
-    if is_slot_blocked(date_str, period):
-        blocked_info = get_blocked_slot(date_str, period)
+    if is_slot_blocked(date_str, period, room_id=room_id):
+        blocked_info = get_blocked_slot(date_str, period, room_id=room_id)
         reason = blocked_info.get("reason", "Beratung") if blocked_info else "Beratung"
         flash(
             f"Dieser Slot ist für {reason} blockiert und kann nicht gebucht werden.",
             "error",
         )
-        return redirect(url_for("dashboard", date=date_str))
+        return redirect(url_for("dashboard", date=date_str, room=room_id))
 
     # Prüfe, ob bereits eine genehmigte exklusive Buchung existiert
     from models import Booking
 
     exclusive_booking = Booking.query.filter_by(
-        date=date_str, period=period, is_exclusive=True, is_approved=True
+        date=date_str, period=period, is_exclusive=True, is_approved=True, room_id=room_id
     ).first()
     if exclusive_booking:
         flash(
             "Dieser Slot ist für ein Einzelangebot reserviert und kann nicht gebucht werden.",
             "error",
         )
-        return redirect(url_for("dashboard", date=date_str))
+        return redirect(url_for("dashboard", date=date_str, room=room_id))
 
     # Prüfe Zeitfenster
     can_book, time_message = check_booking_time(booking_date, period)
     if not can_book:
         flash(time_message or "Buchung nicht möglich.", "error")
-        return redirect(url_for("dashboard", date=date_str))
+        return redirect(url_for("dashboard", date=date_str, room=room_id))
 
     if request.method == "POST":
         # Hole Lehrkraft-Informationen
@@ -2284,7 +2380,7 @@ def book(date_str, period):
                 f"Nicht genug Plätze verfügbar. Nur noch {available_spots} Plätze frei.",
                 "error",
             )
-            return redirect(url_for("dashboard", date=date_str))
+            return redirect(url_for("dashboard", date=date_str, room=room_id))
 
         # Sammle Schülerdaten und prüfe Doppelbuchungen
         whole_class = request.form.get("whole_class") == "1"
@@ -2304,6 +2400,7 @@ def book(date_str, period):
                 user_email=display_user_email if "display_user_email" in dir() else "",
                 school_classes=get_school_classes_list(),
                 max_students=get_max_students(),
+                room=current_room,
                 **extra,
             )
 
@@ -2315,7 +2412,7 @@ def book(date_str, period):
                     f"Klassenbuchung nicht möglich – nur noch {available_spots} Plätze frei. Bitte einzelne Schüler*innen eintragen.",
                     "error",
                 )
-                return redirect(url_for("dashboard", date=date_str))
+                return redirect(url_for("dashboard", date=date_str, room=room_id))
             num_students = _max
             for _ in range(num_students):
                 students.append({"name": "", "klasse": teacher_class})
@@ -2386,6 +2483,7 @@ def book(date_str, period):
             teacher_class=teacher_class,
             notes=notes if notes else None,
             is_exclusive=is_exclusive,
+            room_id=room_id,
         )
 
         if booking_id:
@@ -2498,7 +2596,7 @@ def book(date_str, period):
                     f"Buchung erfolgreich! {len(students)} Schüler für {offer_label} angemeldet.",
                     "success",
                 )
-            return redirect(url_for("dashboard", date=date_str))
+            return redirect(url_for("dashboard", date=date_str, room=room_id))
         else:
             flash("Fehler beim Erstellen der Buchung.", "error")
 
@@ -2522,6 +2620,7 @@ def book(date_str, period):
         user_email=display_user_email,
         school_classes=get_school_classes_list(),
         max_students=get_max_students(),
+        room=current_room,
     )
 
 
@@ -3359,7 +3458,13 @@ def admin_create_booking():
         period_info = get_period_info(weekday, period)
 
         # Prüfe Kapazität vor dem Erstellen der Buchung
-        current_students = count_students_for_period(date_str, period)
+        room_id = request.form.get("room_id", type=int)
+        if not room_id:
+            from models import get_default_room
+            def_room = get_default_room()
+            room_id = def_room.id if def_room else 1
+
+        current_students = count_students_for_period(date_str, period, room_id=room_id)
         available_spots = get_max_students() - current_students
 
         if num_students > available_spots:
@@ -3368,10 +3473,12 @@ def admin_create_booking():
                 "error",
             )
             users = get_all_users()
+            rooms = get_all_rooms(active_only=True)
             return render_template(
                 "admin_edit_booking.html",
                 booking=None,
                 users=users,
+                rooms=rooms,
                 free_modules=get_free_courses(),
                 period_times=get_period_times(),
             )
@@ -3387,10 +3494,12 @@ def admin_create_booking():
                     "Bitte wählen Sie für alle Schüler*innen eine Klasse aus.", "error"
                 )
                 users = get_all_users()
+                rooms = get_all_rooms(active_only=True)
                 return render_template(
                     "admin_edit_booking.html",
                     booking=None,
                     users=users,
+                    rooms=rooms,
                     free_modules=get_free_courses(),
                     period_times=get_period_times(),
                 )
@@ -3400,10 +3509,12 @@ def admin_create_booking():
                     "error",
                 )
                 users = get_all_users()
+                rooms = get_all_rooms(active_only=True)
                 return render_template(
                     "admin_edit_booking.html",
                     booking=None,
                     users=users,
+                    rooms=rooms,
                     free_modules=get_free_courses(),
                     period_times=get_period_times(),
                 )
@@ -3415,10 +3526,12 @@ def admin_create_booking():
             if selected_module not in get_free_courses():
                 flash("Bitte wählen Sie ein Modul.", "error")
                 users = get_all_users()
+                rooms = get_all_rooms(active_only=True)
                 return render_template(
                     "admin_edit_booking.html",
                     booking=None,
                     users=users,
+                    rooms=rooms,
                     free_modules=get_free_courses(),
                     period_times=get_period_times(),
                 )
@@ -3440,6 +3553,7 @@ def admin_create_booking():
             teacher_name=teacher_name,
             teacher_class=teacher_class,
             notes=notes if notes else None,
+            room_id=room_id,
         )
 
         if booking_id:
@@ -3452,10 +3566,12 @@ def admin_create_booking():
             flash("Fehler beim Erstellen der Buchung.", "error")
 
     users = get_all_users()
+    rooms = get_all_rooms(active_only=True)
     return render_template(
         "admin_edit_booking.html",
         booking=None,
         users=users,
+        rooms=rooms,
         free_modules=get_free_courses(),
         period_times=get_period_times(),
     )
@@ -3474,9 +3590,23 @@ def admin_edit_booking(booking_id):
         return redirect(url_for("admin"))
 
     booking = dict(booking_row)
+    users = get_all_users()
+    rooms = get_all_rooms(active_only=True)
+
+    def _render_edit(booking_data, **extra):
+        return render_template(
+            "admin_edit_booking.html",
+            booking=booking_data,
+            users=users,
+            rooms=rooms,
+            free_modules=get_free_courses(),
+            period_times=get_period_times(),
+            **extra,
+        )
 
     if request.method == "POST":
         date_str = request.form.get("date", "").strip()
+        room_id = request.form.get("room_id", type=int) or booking.get("room_id")
 
         try:
             period = int(request.form.get("period", 1))
@@ -3486,7 +3616,6 @@ def admin_edit_booking(booking_id):
             flash(
                 "Ungültige Eingabe für Stunde, Lehrkraft oder Schüleranzahl.", "error"
             )
-            users = get_all_users()
             students = (
                 json.loads(booking["students_json"])
                 if booking.get("students_json")
@@ -3494,13 +3623,7 @@ def admin_edit_booking(booking_id):
             )
             booking_display = dict(booking)
             booking_display["students"] = students
-            return render_template(
-                "admin_edit_booking.html",
-                booking=booking_display,
-                users=users,
-                free_modules=get_free_courses(),
-                period_times=get_period_times(),
-            )
+            return _render_edit(booking_display)
 
         teacher_name = request.form.get("teacher_name", "").strip()
         teacher_class = request.form.get("teacher_class", "").strip()
@@ -3517,7 +3640,6 @@ def admin_edit_booking(booking_id):
                 f"Bitte füllen Sie alle Pflichtfelder aus und wählen Sie 1-{get_max_students()} Schüler.",
                 "error",
             )
-            users = get_all_users()
             students = (
                 json.loads(booking["students_json"])
                 if booking.get("students_json")
@@ -3525,19 +3647,12 @@ def admin_edit_booking(booking_id):
             )
             booking_display = dict(booking)
             booking_display["students"] = students
-            return render_template(
-                "admin_edit_booking.html",
-                booking=booking_display,
-                users=users,
-                free_modules=get_free_courses(),
-                period_times=get_period_times(),
-            )
+            return _render_edit(booking_display)
 
         try:
             booking_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except:
             flash("Ungültiges Datum.", "error")
-            users = get_all_users()
             students = (
                 json.loads(booking["students_json"])
                 if booking.get("students_json")
@@ -3545,19 +3660,13 @@ def admin_edit_booking(booking_id):
             )
             booking_display = dict(booking)
             booking_display["students"] = students
-            return render_template(
-                "admin_edit_booking.html",
-                booking=booking_display,
-                users=users,
-                free_modules=get_free_courses(),
-                period_times=get_period_times(),
-            )
+            return _render_edit(booking_display)
 
         weekday = booking_date.strftime("%a")
         period_info = get_period_info(weekday, period)
 
         # Prüfe Kapazität: Berechne verfügbare Plätze ohne die aktuelle Buchung
-        current_students = count_students_for_period(date_str, period)
+        current_students = count_students_for_period(date_str, period, room_id=room_id)
         old_booking_students = len(
             json.loads(booking["students_json"]) if booking.get("students_json") else []
         )
@@ -3568,7 +3677,6 @@ def admin_edit_booking(booking_id):
                 f"Nicht genug Plätze verfügbar. Nur noch {available_spots} Plätze frei.",
                 "error",
             )
-            users = get_all_users()
             students = (
                 json.loads(booking["students_json"])
                 if booking.get("students_json")
@@ -3576,13 +3684,7 @@ def admin_edit_booking(booking_id):
             )
             booking_display = dict(booking)
             booking_display["students"] = students
-            return render_template(
-                "admin_edit_booking.html",
-                booking=booking_display,
-                users=users,
-                free_modules=get_free_courses(),
-                period_times=get_period_times(),
-            )
+            return _render_edit(booking_display)
 
         students = []
         names_optional_edit = request.form.get("names_optional") == "1"
@@ -3594,7 +3696,6 @@ def admin_edit_booking(booking_id):
                 flash(
                     "Bitte wählen Sie für alle Schüler*innen eine Klasse aus.", "error"
                 )
-                users = get_all_users()
                 _old_students = (
                     json.loads(booking["students_json"])
                     if booking.get("students_json")
@@ -3602,19 +3703,12 @@ def admin_edit_booking(booking_id):
                 )
                 booking_display = dict(booking)
                 booking_display["students"] = _old_students
-                return render_template(
-                    "admin_edit_booking.html",
-                    booking=booking_display,
-                    users=users,
-                    free_modules=get_free_courses(),
-                    period_times=get_period_times(),
-                )
+                return _render_edit(booking_display)
             if not names_optional_edit and not name:
                 flash(
                     'Bitte geben Sie alle Schüler-Namen ein oder aktivieren Sie „Namen optional".',
                     "error",
                 )
-                users = get_all_users()
                 _old_students = (
                     json.loads(booking["students_json"])
                     if booking.get("students_json")
@@ -3622,13 +3716,7 @@ def admin_edit_booking(booking_id):
                 )
                 booking_display = dict(booking)
                 booking_display["students"] = _old_students
-                return render_template(
-                    "admin_edit_booking.html",
-                    booking=booking_display,
-                    users=users,
-                    free_modules=get_free_courses(),
-                    period_times=get_period_times(),
-                )
+                return _render_edit(booking_display)
 
             students.append({"name": name, "klasse": klasse})
 
@@ -3636,7 +3724,6 @@ def admin_edit_booking(booking_id):
             selected_module = request.form.get("module", "")
             if selected_module not in get_free_courses():
                 flash("Bitte wählen Sie ein Modul.", "error")
-                users = get_all_users()
                 students = (
                     json.loads(booking["students_json"])
                     if booking.get("students_json")
@@ -3644,13 +3731,7 @@ def admin_edit_booking(booking_id):
                 )
                 booking_display = dict(booking)
                 booking_display["students"] = students
-                return render_template(
-                    "admin_edit_booking.html",
-                    booking=booking_display,
-                    users=users,
-                    free_modules=get_free_courses(),
-                    period_times=get_period_times(),
-                )
+                return _render_edit(booking_display)
             offer_label = selected_module
         else:
             offer_label = period_info["label"]
@@ -3670,26 +3751,20 @@ def admin_edit_booking(booking_id):
             teacher_name=teacher_name,
             teacher_class=teacher_class,
             notes=notes if notes else None,
+            room_id=room_id,
         ):
             flash(f"Buchung erfolgreich aktualisiert!", "success")
             return redirect(url_for("admin"))
         else:
             flash("Fehler beim Aktualisieren der Buchung.", "error")
 
-    users = get_all_users()
     students = (
         json.loads(booking["students_json"]) if booking.get("students_json") else []
     )
     booking_display = dict(booking)
     booking_display["students"] = students
 
-    return render_template(
-        "admin_edit_booking.html",
-        booking=booking_display,
-        users=users,
-        free_modules=get_free_courses(),
-        period_times=get_period_times(),
-    )
+    return _render_edit(booking_display)
 
 
 # Route: Buchung löschen (nur Admin)
@@ -3776,6 +3851,7 @@ def admin_block_slot():
     period = request.form.get("period", type=int)
     reason = request.form.get("reason", "Beratung").strip()
     icon = request.form.get("icon", "🔧").strip()
+    room_id = request.form.get("room_id", type=int)
 
     # Validiere Grund-Länge
     if reason and len(reason) > 200:
@@ -3810,11 +3886,16 @@ def admin_block_slot():
         flash("Ungültiges Datum.", "error")
         return redirect(request.referrer or url_for("dashboard"))
 
-    if is_slot_blocked(date_str, period):
+    if not room_id:
+        from models import get_default_room
+        def_room = get_default_room()
+        room_id = def_room.id if def_room else 1
+
+    if is_slot_blocked(date_str, period, room_id=room_id):
         flash("Dieser Slot ist bereits blockiert.", "warning")
     else:
         admin_id = session.get("user_id")
-        if block_slot(date_str, weekday, period, admin_id, reason, icon):
+        if block_slot(date_str, weekday, period, admin_id, reason, icon, room_id=room_id):
             flash(f"Slot erfolgreich für {reason} blockiert.", "success")
         else:
             flash("Fehler beim Blockieren des Slots.", "error")
@@ -3845,6 +3926,7 @@ def admin_unblock_slot():
 
     date_str = request.form.get("date", "").strip()
     period = request.form.get("period", type=int)
+    room_id = request.form.get("room_id", type=int)
 
     if not date_str or not period:
         if is_ajax:
@@ -3852,7 +3934,12 @@ def admin_unblock_slot():
         flash("Ungültige Slot-Daten.", "error")
         return redirect(request.referrer or url_for("dashboard"))
 
-    if unblock_slot(date_str, period):
+    if not room_id:
+        from models import get_default_room
+        def_room = get_default_room()
+        room_id = def_room.id if def_room else 1
+
+    if unblock_slot(date_str, period, room_id=room_id):
         if is_ajax:
             return jsonify(
                 {"success": True, "message": "Slot erfolgreich freigegeben."}
@@ -3882,6 +3969,16 @@ def export_occupancy_report():
         return redirect(url_for("dashboard"))
 
     date_param = request.args.get("date", "")
+    room_id = request.args.get("room", type=int)
+    
+    # Resolve room if room_id is set
+    room_name = ""
+    if room_id:
+        from models import get_room_by_id
+        room_obj = get_room_by_id(room_id)
+        if room_obj:
+            room_name = "_" + room_obj.get("name", "").replace(" ", "_")
+
     try:
         if date_param:
             ref_date = datetime.strptime(date_param, "%Y-%m-%d").date()
@@ -3900,8 +3997,8 @@ def export_occupancy_report():
     period_times = get_period_times()
 
     # Fetch all bookings for the week
-    all_bookings = get_bookings_for_week(monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d"))
-    blocked = get_blocked_slots_for_week(monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d"))
+    all_bookings = get_bookings_for_week(monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d"), room_id=room_id)
+    blocked = get_blocked_slots_for_week(monday.strftime("%Y-%m-%d"), friday.strftime("%Y-%m-%d"), room_id=room_id)
 
     bookings_map = {}
     for b in all_bookings:
@@ -3956,7 +4053,7 @@ def export_occupancy_report():
             writer.writerow([day_formatted, weekday_names[i], f'{period}. Stunde', kurs, status, total_students, max_students, f'{pct}%', teachers, students_str])
 
     output.seek(0)
-    filename = f"Belegungsbericht_KW{kw}_{monday.strftime('%Y')}.csv"
+    filename = f"Belegungsbericht_KW{kw}_{monday.strftime('%Y')}{room_name}.csv"
     return Response(
         output.getvalue(),
         mimetype='text/csv',
@@ -4068,9 +4165,11 @@ def admin_bulk_block():
             return redirect(url_for("admin_bulk_block"))
 
         admin_id = session.get("user_id")
+        room_id_form = request.form.get("room_id")
+        room_id = int(room_id_form) if room_id_form and room_id_form.strip() else None
 
         if action == "block":
-            result = bulk_block_slots(start_date, end_date, admin_id, reason, periods)
+            result = bulk_block_slots(start_date, end_date, admin_id, reason, periods, room_id=room_id)
             if result["success"]:
                 flash(
                     f"✅ {result['blocked_count']} Slots erfolgreich gesperrt ({result['skipped_count']} bereits gesperrt übersprungen).",
@@ -4082,7 +4181,7 @@ def admin_bulk_block():
                     "error",
                 )
         elif action == "unblock":
-            result = bulk_unblock_slots(start_date, end_date, periods)
+            result = bulk_unblock_slots(start_date, end_date, periods, room_id=room_id)
             if result["success"]:
                 flash(
                     f"✅ {result['unblocked_count']} Slots erfolgreich freigegeben.",
@@ -4100,6 +4199,7 @@ def admin_bulk_block():
         "admin_bulk_block.html",
         blocked_slots=blocked_slots,
         period_times=get_period_times(),
+        rooms=get_all_rooms(active_only=True),
     )
 
 

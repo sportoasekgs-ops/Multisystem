@@ -139,6 +139,7 @@
     <!-- Buchungsdetails -->
     <div class="booking-info-box">
         <h3>Buchungsdetails</h3>
+        <div class="info-row"><strong>Raum:</strong> {{ room.icon }} {{ room.name }}</div>
         <div class="info-row"><strong>Datum:</strong> {{ date_str }}</div>
         <div class="info-row"><strong>Stunde:</strong> {{ period }}. Stunde ({{ period_time.start }} – {{ period_time.end }})</div>
         <div class="info-row">
@@ -282,7 +283,7 @@
         </div>
 
         <div style="display:flex;gap:1rem;margin-top:1.5rem;">
-            <a href="{{ url_for('dashboard', date=date_str) }}" class="btn btn-secondary">Abbrechen</a>
+            <a href="{{ url_for('dashboard', date=date_str, room=room.id) }}" class="btn btn-secondary">Abbrechen</a>
             <button type="submit" class="btn btn-primary">Buchung abschließen</button>
         </div>
     </form>

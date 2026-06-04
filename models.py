@@ -61,6 +61,7 @@ class Booking(db.Model):
     is_exclusive = db.Column(db.Boolean, default=False, nullable=False)
     is_approved = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    room_id = db.Column(db.Integer, db.ForeignKey("rooms.id"), nullable=True)
 
     notifications = db.relationship(
         "Notification",
@@ -86,6 +87,7 @@ class Booking(db.Model):
             "notes": self.notes,
             "is_exclusive": self.is_exclusive,
             "is_approved": self.is_approved,
+            "room_id": self.room_id,
             "created_at": self.created_at.isoformat()
             if isinstance(self.created_at, datetime)
             else self.created_at,
@@ -130,9 +132,10 @@ class BlockedSlot(db.Model):
     icon = db.Column(db.String(10), default="🔧")
     blocked_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    room_id = db.Column(db.Integer, db.ForeignKey("rooms.id"), nullable=True)
 
     __table_args__ = (
-        db.UniqueConstraint("date", "period", name="unique_date_period_block"),
+        db.UniqueConstraint("date", "period", "room_id", name="unique_date_period_room_block"),
     )
 
     def to_dict(self):
@@ -145,6 +148,7 @@ class BlockedSlot(db.Model):
             "reason": self.reason,
             "icon": self.icon or "🔧",
             "blocked_by": self.blocked_by,
+            "room_id": self.room_id,
             "created_at": self.created_at.isoformat()
             if isinstance(self.created_at, datetime)
             else self.created_at,
@@ -249,6 +253,33 @@ class SchoolClass(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "sort_order": self.sort_order,
+            "is_active": self.is_active,
+        }
+
+
+class Room(db.Model):
+    """Raum-Modell"""
+
+    __tablename__ = "rooms"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(300), nullable=True)
+    color = db.Column(db.String(7), default="#6366f1")  # Hex-Farbe
+    icon = db.Column(db.String(10), default="🏫")
+    max_students = db.Column(db.Integer, nullable=True)  # NULL = globale Einstellung
+    sort_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "color": self.color,
+            "icon": self.icon,
+            "max_students": self.max_students,
             "sort_order": self.sort_order,
             "is_active": self.is_active,
         }
@@ -443,6 +474,7 @@ def create_booking(
     calendar_event_id=None,
     notes=None,
     is_exclusive=False,
+    room_id=None,
 ):
     """Erstellt eine neue Buchung in der Datenbank"""
     try:
@@ -461,6 +493,7 @@ def create_booking(
             notes=notes,
             is_exclusive=is_exclusive,
             is_approved=not is_exclusive,
+            room_id=room_id,
             created_at=datetime.now(),
         )
         db.session.add(booking)
@@ -472,19 +505,18 @@ def create_booking(
         return None
 
 
-def get_bookings_for_date_period(date, period):
+def get_bookings_for_date_period(date, period, room_id=None):
     """Gibt alle Buchungen für ein bestimmtes Datum und Stunde zurück"""
-    bookings = (
-        Booking.query.filter_by(date=date, period=period)
-        .order_by(Booking.created_at)
-        .all()
-    )
+    query = Booking.query.filter_by(date=date, period=period)
+    if room_id is not None:
+        query = query.filter_by(room_id=room_id)
+    bookings = query.order_by(Booking.created_at).all()
     return [b.to_dict() for b in bookings]
 
 
-def count_students_for_period(date, period):
+def count_students_for_period(date, period, room_id=None):
     """Zählt die Gesamtzahl der Schüler für eine bestimmte Stunde"""
-    bookings = get_bookings_for_date_period(date, period)
+    bookings = get_bookings_for_date_period(date, period, room_id=room_id)
     total = 0
     for booking in bookings:
         students = json.loads(booking["students_json"])
@@ -544,13 +576,12 @@ def get_bookings_by_date(date):
     return [b.to_dict() for b in bookings]
 
 
-def get_bookings_for_week(start_date, end_date):
+def get_bookings_for_week(start_date, end_date, room_id=None):
     """Gibt alle Buchungen für eine Woche zurück"""
-    bookings = (
-        Booking.query.filter(Booking.date >= start_date, Booking.date <= end_date)
-        .order_by(Booking.date, Booking.period)
-        .all()
-    )
+    query = Booking.query.filter(Booking.date >= start_date, Booking.date <= end_date)
+    if room_id is not None:
+        query = query.filter_by(room_id=room_id)
+    bookings = query.order_by(Booking.date, Booking.period).all()
     return [b.to_dict() for b in bookings]
 
 
@@ -560,11 +591,14 @@ def get_booking_by_id(booking_id):
     return booking.to_dict() if booking else None
 
 
-def get_exclusive_booking_for_date_period(date, period):
+def get_exclusive_booking_for_date_period(date, period, room_id=None):
     """Prüft ob eine genehmigte exklusive Buchung für diesen Slot existiert"""
-    booking = Booking.query.filter_by(
+    query = Booking.query.filter_by(
         date=date, period=period, is_exclusive=True, is_approved=True
-    ).first()
+    )
+    if room_id is not None:
+        query = query.filter_by(room_id=room_id)
+    booking = query.first()
     return booking.to_dict() if booking else None
 
 
@@ -611,6 +645,7 @@ def update_booking(
     teacher_name=None,
     teacher_class=None,
     notes=None,
+    room_id=None,
 ):
     """Aktualisiert eine bestehende Buchung in der Datenbank"""
     try:
@@ -628,6 +663,8 @@ def update_booking(
         booking.offer_type = offer_type
         booking.offer_label = offer_label
         booking.notes = notes
+        if room_id is not None:
+            booking.room_id = room_id
 
         db.session.commit()
         return True
@@ -697,22 +734,28 @@ def is_holiday_blocked_reason(reason):
     return "ferien" in str(reason).strip().lower()
 
 
-def is_slot_blocked(date, period):
+def is_slot_blocked(date, period, room_id=None):
     """Prüft, ob ein Slot für ein bestimmtes Datum und Stunde blockiert ist"""
-    blocked = BlockedSlot.query.filter_by(date=date, period=period).first()
+    query = BlockedSlot.query.filter_by(date=date, period=period)
+    if room_id is not None:
+        query = query.filter_by(room_id=room_id)
+    blocked = query.first()
     return blocked is not None
 
 
-def get_blocked_slot(date, period):
+def get_blocked_slot(date, period, room_id=None):
     """Gibt den blockierten Slot zurück, falls vorhanden"""
-    blocked = BlockedSlot.query.filter_by(date=date, period=period).first()
+    query = BlockedSlot.query.filter_by(date=date, period=period)
+    if room_id is not None:
+        query = query.filter_by(room_id=room_id)
+    blocked = query.first()
     return blocked.to_dict() if blocked else None
 
 
-def block_slot(date, weekday, period, admin_id, reason="Beratung", icon="🔧"):
+def block_slot(date, weekday, period, admin_id, reason="Beratung", icon="🔧", room_id=None):
     """Blockiert einen Slot für Beratungsgespräche (nur Admin)"""
     try:
-        if is_slot_blocked(date, period):
+        if is_slot_blocked(date, period, room_id=room_id):
             return False
 
         blocked = BlockedSlot(
@@ -722,6 +765,7 @@ def block_slot(date, weekday, period, admin_id, reason="Beratung", icon="🔧"):
             reason=reason,
             icon=icon,
             blocked_by=admin_id,
+            room_id=room_id,
             created_at=datetime.now(),
         )
         db.session.add(blocked)
@@ -733,10 +777,13 @@ def block_slot(date, weekday, period, admin_id, reason="Beratung", icon="🔧"):
         return False
 
 
-def unblock_slot(date, period):
+def unblock_slot(date, period, room_id=None):
     """Gibt einen blockierten Slot wieder frei"""
     try:
-        blocked = BlockedSlot.query.filter_by(date=date, period=period).first()
+        query = BlockedSlot.query.filter_by(date=date, period=period)
+        if room_id is not None:
+            query = query.filter_by(room_id=room_id)
+        blocked = query.first()
         if not blocked:
             return False
 
@@ -749,17 +796,23 @@ def unblock_slot(date, period):
         return False
 
 
-def get_blocked_slots_for_date(date):
+def get_blocked_slots_for_date(date, room_id=None):
     """Gibt alle blockierten Slots für ein bestimmtes Datum zurück"""
-    blocked_slots = BlockedSlot.query.filter_by(date=date).all()
+    query = BlockedSlot.query.filter_by(date=date)
+    if room_id is not None:
+        query = query.filter_by(room_id=room_id)
+    blocked_slots = query.all()
     return [b.to_dict() for b in blocked_slots]
 
 
-def get_blocked_slots_for_week(start_date, end_date):
+def get_blocked_slots_for_week(start_date, end_date, room_id=None):
     """Gibt alle blockierten Slots für eine Woche zurück"""
-    blocked_slots = BlockedSlot.query.filter(
+    query = BlockedSlot.query.filter(
         BlockedSlot.date >= start_date, BlockedSlot.date <= end_date
-    ).all()
+    )
+    if room_id is not None:
+        query = query.filter_by(room_id=room_id)
+    blocked_slots = query.all()
     return [b.to_dict() for b in blocked_slots]
 
 
@@ -772,7 +825,7 @@ def get_all_blocked_slots():
 
 
 def bulk_block_slots(
-    start_date, end_date, admin_id, reason="Ferien", periods=None, icon=None
+    start_date, end_date, admin_id, reason="Ferien", periods=None, icon=None, room_id=None
 ):
     """
     Blockiert alle Slots in einem Zeitraum (z.B. für Ferien).
@@ -784,6 +837,7 @@ def bulk_block_slots(
         reason: Grund für die Sperrung
         periods: Liste der Stunden (1-6), None = alle Stunden
         icon: Emoji-Icon für die Blockierung (optional)
+        room_id: Optionaler Raum
 
     Returns:
         Dict mit 'success', 'blocked_count', 'skipped_count'
@@ -817,6 +871,14 @@ def bulk_block_slots(
         blocked_count = 0
         skipped_count = 0
 
+        if room_id is not None:
+            rooms_to_block = [room_id]
+        else:
+            try:
+                rooms_to_block = [r.id for r in Room.query.all()] or [None]
+            except:
+                rooms_to_block = [None]
+
         current = start
         while current <= end:
             # Nur Wochentage (Montag-Freitag)
@@ -825,21 +887,23 @@ def bulk_block_slots(
                 weekday = weekday_map[current.weekday()]
 
                 for period in periods:
-                    # Prüfe ob bereits blockiert
-                    if not is_slot_blocked(date_str, period):
-                        blocked = BlockedSlot(
-                            date=date_str,
-                            weekday=weekday,
-                            period=period,
-                            reason=reason,
-                            icon=icon,
-                            blocked_by=admin_id,
-                            created_at=datetime.now(),
-                        )
-                        db.session.add(blocked)
-                        blocked_count += 1
-                    else:
-                        skipped_count += 1
+                    for r_id in rooms_to_block:
+                        # Prüfe ob bereits blockiert
+                        if not is_slot_blocked(date_str, period, room_id=r_id):
+                            blocked = BlockedSlot(
+                                date=date_str,
+                                weekday=weekday,
+                                period=period,
+                                reason=reason,
+                                icon=icon,
+                                blocked_by=admin_id,
+                                room_id=r_id,
+                                created_at=datetime.now(),
+                            )
+                            db.session.add(blocked)
+                            blocked_count += 1
+                        else:
+                            skipped_count += 1
 
             current += timedelta(days=1)
 
@@ -860,7 +924,7 @@ def bulk_block_slots(
         }
 
 
-def bulk_unblock_slots(start_date, end_date, periods=None):
+def bulk_unblock_slots(start_date, end_date, periods=None, room_id=None):
     """
     Gibt alle blockierten Slots in einem Zeitraum wieder frei.
 
@@ -868,6 +932,7 @@ def bulk_unblock_slots(start_date, end_date, periods=None):
         start_date: Startdatum (YYYY-MM-DD String)
         end_date: Enddatum (YYYY-MM-DD String)
         periods: Liste der Stunden (1-6), None = alle Stunden
+        room_id: Optionaler Raum
 
     Returns:
         Dict mit 'success', 'unblocked_count'
@@ -879,6 +944,9 @@ def bulk_unblock_slots(start_date, end_date, periods=None):
 
         if periods:
             query = query.filter(BlockedSlot.period.in_(periods))
+
+        if room_id is not None:
+            query = query.filter_by(room_id=room_id)
 
         blocked_slots = query.all()
         unblocked_count = len(blocked_slots)
@@ -1021,4 +1089,81 @@ def delete_notification(notification_id):
     except Exception as e:
         db.session.rollback()
         print(f"Fehler beim Löschen der Benachrichtigung: {e}")
+        return False
+
+
+def get_all_rooms(active_only=True):
+    """Gibt alle Räume zurück"""
+    query = Room.query
+    if active_only:
+        query = query.filter_by(is_active=True)
+    return query.order_by(Room.sort_order, Room.name).all()
+
+
+def get_room_by_id(room_id):
+    """Sucht einen Raum nach ID"""
+    return Room.query.get(room_id)
+
+
+def get_default_room():
+    """Gibt den Standardraum zurück (erster Raum)"""
+    room = Room.query.order_by(Room.id).first()
+    if not room:
+        return None
+    return room
+
+
+def create_room(name, description=None, color="#6366f1", icon="🏫", max_students=None, sort_order=0):
+    """Erstellt einen neuen Raum"""
+    try:
+        room = Room(
+            name=name,
+            description=description,
+            color=color,
+            icon=icon,
+            max_students=max_students,
+            sort_order=sort_order
+        )
+        db.session.add(room)
+        db.session.commit()
+        return room.id
+    except Exception as e:
+        db.session.rollback()
+        print(f"Fehler beim Erstellen des Raums: {e}")
+        return None
+
+
+def update_room(room_id, **kwargs):
+    """Aktualisiert Raumdaten"""
+    try:
+        room = Room.query.get(room_id)
+        if not room:
+            return False
+        for key, value in kwargs.items():
+            if hasattr(room, key):
+                setattr(room, key, value)
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        print(f"Fehler beim Aktualisieren des Raums: {e}")
+        return False
+
+
+def delete_room(room_id):
+    """Löscht einen Raum"""
+    try:
+        room = Room.query.get(room_id)
+        if not room:
+            return False
+        # Prüfen ob Buchungen vorhanden sind
+        bookings_count = Booking.query.filter_by(room_id=room_id).count()
+        if bookings_count > 0:
+            return False
+        db.session.delete(room)
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        print(f"Fehler beim Löschen des Raums: {e}")
         return False

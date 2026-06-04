@@ -45,6 +45,16 @@
                         <input type="date" id="block_end_date" name="end_date" required>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="block_room_id">Raum:</label>
+                    <select id="block_room_id" name="room_id" style="width:100%; padding:.6rem; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;">
+                        <option value="">-- Alle Räume --</option>
+                        {% for room in rooms %}
+                        <option value="{{ room.id }}">{{ room.icon }} {{ room.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 
                 <div class="form-group">
                     <label>Schnellauswahl:</label>
@@ -106,6 +116,16 @@
                         <input type="date" id="unblock_end_date" name="end_date" required>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="unblock_room_id">Raum:</label>
+                    <select id="unblock_room_id" name="room_id" style="width:100%; padding:.6rem; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;">
+                        <option value="">-- Alle Räume --</option>
+                        {% for room in rooms %}
+                        <option value="{{ room.id }}">{{ room.icon }} {{ room.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 
                 <div class="form-group">
                     <label>Stunden:</label>
@@ -132,11 +152,12 @@
         <h3>📋 Aktuell gesperrte Slots ({{ blocked_slots|length }})</h3>
         {% if blocked_slots %}
         <div class="blocked-slots-list">
-            <table class="blocked-table">
+             <table class="blocked-table">
                 <thead>
                     <tr>
                         <th>Datum</th>
                         <th>Stunde</th>
+                        <th>Raum</th>
                         <th>Grund</th>
                         <th>Aktion</th>
                     </tr>
@@ -146,12 +167,26 @@
                     <tr>
                         <td>{{ slot.date }}</td>
                         <td>{{ slot.period }}.</td>
+                        <td>
+                            {% if slot.room_id %}
+                                {% set found = false %}
+                                {% for r in rooms %}
+                                    {% if r.id == slot.room_id %}
+                                        {{ r.icon }} {{ r.name }}
+                                        {% set found = true %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <span style="color:#aaa;">Alle Räume</span>
+                            {% endif %}
+                        </td>
                         <td>{{ slot.reason }}</td>
                         <td>
                             <form method="POST" action="{{ url_for('admin_unblock_slot') }}" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <input type="hidden" name="date" value="{{ slot.date }}">
                                 <input type="hidden" name="period" value="{{ slot.period }}">
+                                <input type="hidden" name="room_id" value="{{ slot.room_id or '' }}">
                                 <button type="submit" class="btn btn-xs btn-success" title="Freigeben">🔓</button>
                             </form>
                         </td>
