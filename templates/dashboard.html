@@ -17,21 +17,21 @@
     {% endif %}
 
     <!-- Unified Header Cards -->
-    <div class="dashboard-top-section">
+    <div class="dashboard-top-section" style="margin-top: 0.2rem; margin-bottom: 0.2rem; gap: 0.5rem;">
         {% if dashboard_title %}
-        <div class="dashboard-card dashboard-card-title">
+        <div class="dashboard-card dashboard-card-title" style="padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: var(--radius-md);">
             <span class="card-icon">📅</span>
             <span class="card-text">{{ dashboard_title }}</span>
         </div>
         {% endif %}
         
-        <div class="dashboard-card dashboard-card-date">
+        <div class="dashboard-card dashboard-card-date" style="padding: 0.5rem 1rem; font-size: 0.82rem; border-radius: var(--radius-md);">
             <span class="card-icon">📆</span>
             <form method="GET" action="{{ url_for('dashboard') }}" class="date-form-inline">
                 <span class="card-text">Datum:</span>
-                <input type="date" id="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()" class="date-input-inline">
+                <input type="date" id="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()" class="date-input-inline" style="padding: 0.25rem 0.5rem; font-size: 0.82rem;">
             </form>
-            <a href="{{ url_for('calendar_view', year=selected_date.year, month=selected_date.month) }}" class="calendar-btn" title="Kalenderansicht öffnen">
+            <a href="{{ url_for('calendar_view', year=selected_date.year, month=selected_date.month) }}" class="calendar-btn" title="Kalenderansicht öffnen" style="font-size: 0.9rem;">
                 🗓️
             </a>
         </div>
@@ -39,8 +39,8 @@
 
     <!-- Gebrauchsanleitung & FAQ (aufklappbar) -->
     {% if help_content %}
-    <details class="help-section">
-        <summary class="help-toggle">
+    <details class="help-section" style="margin-top: 0.4rem; margin-bottom: 0.4rem;">
+        <summary class="help-toggle" style="padding: 0.5rem 1rem; font-size: 0.82rem;">
             <span class="help-icon">📖</span>
             <span>Anleitung & FAQ</span>
             <span class="toggle-arrow">▼</span>
@@ -433,7 +433,7 @@
     </details>
     {% endif %}
 
-    <div class="selected-date-info" style="display: flex; flex-direction: column; background: {% if current_room and current_room.color %}{{ current_room.color }}{% else %}var(--primary){% endif %}; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 1.5rem; transition: background var(--transition-slow);">
+    <div class="selected-date-info" style="display: flex; flex-direction: column; background: {% if current_room and current_room.color %}{{ current_room.color }}{% else %}var(--primary){% endif %}; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 0.75rem; transition: background var(--transition-slow);">
         <!-- Browser-style Room Tabs Area -->
         {% if all_rooms and all_rooms|length > 1 %}
         <div class="room-browser-tabs" style="display: flex; background: rgba(0,0,0,0.14); padding: 8px 12px 0; gap: 4px;">
@@ -452,7 +452,7 @@
         {% endif %}
         
         <!-- Selected Date Header Area -->
-        <h3 style="background: transparent; color: white; padding: 1.25rem 1.5rem; margin: 0; text-align: center; font-size: 1.125rem; font-weight: 600; box-shadow: none; width: 100%; box-sizing: border-box;">
+        <h3 style="background: transparent; color: white; padding: 0.75rem 1.5rem; margin: 0; text-align: center; font-size: 1.05rem; font-weight: 600; box-shadow: none; width: 100%; box-sizing: border-box;">
             {{ weekday }}, {{ selected_date.strftime('%d.%m.%Y') }}
         </h3>
     </div>
