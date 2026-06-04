@@ -9,73 +9,100 @@
         <p class="admin-subtitle">Verwaltung von Buchungen und Slots</p>
     </div>
     
-    <div class="admin-cards">
-        <a href="{{ url_for('meine_buchungen') }}" class="admin-card">
-            <span class="card-icon">📋</span>
-            <span class="card-title">Alle Buchungen</span>
-            <span class="card-desc">Übersicht & Verwaltung</span>
-        </a>
-        <a href="{{ url_for('admin_create_booking') }}" class="admin-card">
-            <span class="card-icon">➕</span>
-            <span class="card-title">Neue Buchung</span>
-            <span class="card-desc">Buchung erstellen</span>
-        </a>
-        <a href="{{ url_for('manage_slots') }}" class="admin-card">
-            <span class="card-icon">📝</span>
-            <span class="card-title">Slot-Namen</span>
-            <span class="card-desc">Angebote umbenennen</span>
-        </a>
-        <a href="{{ url_for('admin_bulk_block') }}" class="admin-card">
-            <span class="card-icon">🔒</span>
-            <span class="card-title">Ferien-Sperrung</span>
-            <span class="card-desc">Bulk-Sperrung</span>
-        </a>
-        <a href="{{ url_for('admin_dyn.periods') }}" class="admin-card">
-            <span class="card-icon">⏱️</span>
-            <span class="card-title">Stunden</span>
-            <span class="card-desc">Unterrichtszeiten</span>
-        </a>
-        <a href="{{ url_for('admin_dyn.courses') }}" class="admin-card">
-            <span class="card-icon">📚</span>
-            <span class="card-title">Kurse & Angebote</span>
-            <span class="card-desc">Feste & freie Module</span>
-        </a>
-        <a href="{{ url_for('admin_dyn.classes') }}" class="admin-card">
-            <span class="card-icon">🏫</span>
-            <span class="card-title">Schulklassen</span>
-            <span class="card-desc">Klassen verwalten</span>
-        </a>
-        <a href="{{ url_for('admin_dyn.booking_settings') }}" class="admin-card">
-            <span class="card-icon">🎛️</span>
-            <span class="card-title">Buchungs-Regeln</span>
-            <span class="card-desc">Kapazität & Vorlaufzeit</span>
-        </a>
-        <a href="{{ url_for('admin_cms') }}#tab-smtp" class="admin-card" style="border-color: #60a5fa; background: rgba(96, 165, 250, 0.05);">
-            <span class="card-icon">📧</span>
-            <span class="card-title">E-Mail / SMTP</span>
-            <span class="card-desc">Postausgang konfigurieren</span>
-        </a>
-        <a href="{{ url_for('admin_dyn.database_settings') }}" class="admin-card">
-            <span class="card-icon">🗄️</span>
-            <span class="card-title">Datenbank</span>
-            <span class="card-desc">Externe DB konfigurieren</span>
-        </a>
-        <a href="{{ url_for('setup.reopen') }}" class="admin-card">
-            <span class="card-icon">⚙️</span>
-            <span class="card-title">Grundeinstellungen</span>
-            <span class="card-desc">System konfigurieren</span>
-        </a>
-        <a href="{{ url_for('admin_cms') }}" class="admin-card">
-            <span class="card-icon">✏️</span>
-            <span class="card-title">Texte & Layout</span>
-            <span class="card-desc">CMS, Branding & Demo</span>
-        </a>
-        <a href="{{ url_for('admin_factory_reset') }}" class="admin-card" style="border-color: #fc8181; background: rgba(252, 129, 129, 0.05);">
-            <span class="card-icon">🔴</span>
-            <span class="card-title" style="color: #c53030;">Werksreset</span>
-            <span class="card-desc">Daten löschen & neu starten</span>
-        </a>
-    </div>
+    <!-- KATEGORIE 1: Buchungs- & Stunden-Verwaltung -->
+    <section class="admin-section-modern" style="margin-bottom: 1.5rem;">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h3><span class="section-icon">📅</span> Buchungen & Belegungsplan</h3>
+            <span class="info-hint">Tägliche Verwaltung von Reservierungen, manuellen Buchungen und Ferien-Sperren</span>
+        </div>
+        <div class="admin-cards" style="margin-bottom: 0;">
+            <a href="{{ url_for('meine_buchungen') }}" class="admin-card">
+                <span class="card-icon">📋</span>
+                <span class="card-title">Alle Buchungen</span>
+                <span class="card-desc">Übersicht & Stornierungen</span>
+            </a>
+            <a href="{{ url_for('admin_create_booking') }}" class="admin-card">
+                <span class="card-icon">➕</span>
+                <span class="card-title">Neue Buchung</span>
+                <span class="card-desc">Reservierung manuell eintragen</span>
+            </a>
+            <a href="{{ url_for('admin_bulk_block') }}" class="admin-card">
+                <span class="card-icon">🔒</span>
+                <span class="card-title">Ferien-Sperrung</span>
+                <span class="card-desc">Stundenplan wochenweise sperren</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- KATEGORIE 2: Stammdaten & Regeln -->
+    <section class="admin-section-modern" style="margin-bottom: 1.5rem;">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h3><span class="section-icon">📚</span> Stammdaten & Buchungsregeln</h3>
+            <span class="info-hint">Unterrichtsstunden, Kurse, Klassen und Kapazitätsgrenzen festlegen</span>
+        </div>
+        <div class="admin-cards" style="margin-bottom: 0;">
+            <a href="{{ url_for('admin_dyn.periods') }}" class="admin-card">
+                <span class="card-icon">⏱️</span>
+                <span class="card-title">Stunden</span>
+                <span class="card-desc">Unterrichtszeiten & Pausen definieren</span>
+            </a>
+            <a href="{{ url_for('admin_dyn.courses') }}" class="admin-card">
+                <span class="card-icon">📚</span>
+                <span class="card-title">Kurse & Angebote</span>
+                <span class="card-desc">Feste Kurse und freie Angebote pflegen</span>
+            </a>
+            <a href="{{ url_for('admin_dyn.classes') }}" class="admin-card">
+                <span class="card-icon">🏫</span>
+                <span class="card-title">Schulklassen</span>
+                <span class="card-desc">Klassenstufen & Bezeichnungen</span>
+            </a>
+            <a href="{{ url_for('manage_slots') }}" class="admin-card">
+                <span class="card-icon">📝</span>
+                <span class="card-title">Slot-Namen</span>
+                <span class="card-desc">Angebote im Belegungsplan umbenennen</span>
+            </a>
+            <a href="{{ url_for('admin_dyn.booking_settings') }}" class="admin-card">
+                <span class="card-icon">🎛️</span>
+                <span class="card-title">Buchungs-Regeln</span>
+                <span class="card-desc">Maximale Kapazität & Storno-Vorlaufzeiten</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- KATEGORIE 3: System- & Schnittstellen-Konfiguration -->
+    <section class="admin-section-modern" style="margin-bottom: 1.5rem;">
+        <div class="section-header" style="margin-bottom: 1rem;">
+            <h3><span class="section-icon">⚙️</span> System- & Schnittstellen-Konfiguration</h3>
+            <span class="info-hint">Texte, Design, SMTP/E-Mail-Dienst und IServ OAuth Schnittstelle</span>
+        </div>
+        <div class="admin-cards" style="margin-bottom: 0;">
+            <a href="{{ url_for('admin_cms') }}" class="admin-card">
+                <span class="card-icon">✏️</span>
+                <span class="card-title">Texte & Layout (CMS)</span>
+                <span class="card-desc">Schulname, Branding, Typografie & IServ</span>
+            </a>
+            <a href="{{ url_for('admin_cms') }}#tab-smtp" class="admin-card" style="border-color: #60a5fa; background: rgba(96, 165, 250, 0.05);">
+                <span class="card-icon">📧</span>
+                <span class="card-title">E-Mail / SMTP</span>
+                <span class="card-desc">Postausgang & Benachrichtigungen</span>
+            </a>
+            <a href="{{ url_for('admin_dyn.database_settings') }}" class="admin-card">
+                <span class="card-icon">🗄️</span>
+                <span class="card-title">Datenbank</span>
+                <span class="card-desc">PostgreSQL-Verbindung verwalten</span>
+            </a>
+            <a href="{{ url_for('setup.reopen') }}" class="admin-card">
+                <span class="card-icon">⚙️</span>
+                <span class="card-title">Grundeinstellungen</span>
+                <span class="card-desc">Setup-Wizard erneut ausführen</span>
+            </a>
+            <a href="{{ url_for('admin_factory_reset') }}" class="admin-card" style="border-color: #fc8181; background: rgba(252, 129, 129, 0.05);">
+                <span class="card-icon">🔴</span>
+                <span class="card-title" style="color: #c53030;">Werksreset</span>
+                <span class="card-desc">Gesamte Datenbank zurücksetzen</span>
+            </a>
+        </div>
+    </section>
     
     <div class="admin-stats">
         <div class="stat-card">

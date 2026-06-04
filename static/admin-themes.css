@@ -1358,7 +1358,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel .draggable-widget {
         margin: 0 !important;
         padding: 0 !important;
-        height: 180px !important;
+        height: auto !important;
     }
     html[data-admin-theme="slotra-reloaded"] .dashboard-left-panel > *,
     html[data-admin-theme="slotra-reloaded"] .dashboard-right-panel > * {
@@ -1371,7 +1371,8 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     /* Uniform Height Constraints & Compact Styles for Widgets */
     html[data-admin-theme="slotra-reloaded"] .dashboard-widget,
     html[data-admin-theme="slotra-reloaded"] .dashboard-ticker {
-        height: 180px !important;
+        height: var(--widget-height, 180px) !important;
+        max-height: var(--widget-height, 180px) !important;
         margin: 0 !important;
         display: flex !important;
         flex-direction: column !important;

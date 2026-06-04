@@ -990,7 +990,7 @@
                 type="range"
                 id="widgetHeightRange"
                 min="150"
-                max="600"
+                max="800"
                 step="10"
                 value="300"
                 oninput="setWidgetHeight(this.value, true)"
@@ -1584,10 +1584,13 @@ function restoreWeekPlanWidth() {
 function setWidgetHeight(val, persist) {
     val = parseInt(val);
     document.querySelectorAll('.dashboard-widget').forEach(function(w) {
-        w.style.height = val + 'px';
-        w.style.maxHeight = val + 'px';
+        w.style.setProperty('height', val + 'px', 'important');
+        w.style.setProperty('max-height', val + 'px', 'important');
         w.style.overflow = 'auto';
     });
+    // Set variable for themes overriding height with !important
+    document.documentElement.style.setProperty('--widget-height', val + 'px');
+    
     var label = document.getElementById('widgetHeightValue');
     if (label) label.textContent = val + 'px';
     if (persist) {
