@@ -237,6 +237,24 @@
     <div class="bg-glow-orb orb-1"></div>
     <div class="bg-glow-orb orb-2"></div>
 
+    {% if session.user_id and session.user_role == 'admin' %}
+    <div class="notification-container" style="position: fixed; top: 15px; right: 15px; z-index: 999999;">
+        <button class="notification-bell" onclick="toggleNotifications()" style="background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); font-size: 1.45rem; cursor: pointer; padding: 10px; border-radius: var(--radius-lg); box-shadow: var(--shadow-glow); display: flex; align-items: center; justify-content: center; line-height: 1; transition: all var(--transition-fast);">🔔
+            <span id="notificationBadge" class="notification-badge" style="display:none; position: absolute; top: -3px; right: -3px; background: #EF4444; color: white; border-radius: 12px; padding: 2px 6px; font-size: 0.75rem; font-weight: bold; min-width: 18px; text-align: center; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);">0</span>
+        </button>
+
+        <div id="notificationDropdown" class="notification-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); min-width: 350px; max-width: 400px; max-height: 500px; overflow: hidden; z-index: 1000000; margin-top: 10px;">
+            <div class="notification-header" style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">Benachrichtigungen</h4>
+                <button class="mark-all-read" onclick="markAllAsRead()">Alle gelesen</button>
+            </div>
+            <div id="notificationList" class="notification-list">
+                <p>Keine neuen Benachrichtigungen</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="app-layout-wrapper">
         {% if session.user_id %}
         <div class="top-nav">
@@ -283,21 +301,6 @@
                         <div class="nav-tools">
                         {% if session.user_role == 'admin' %}
                         {% include 'partials/admin_theme_picker.html' %}
-                        <div class="notification-container" style="position: relative; display: inline-flex; align-items: center; justify-content: center; z-index: 1000; margin: 0 10px;">
-                            <button class="notification-bell" onclick="toggleNotifications()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; position: relative; padding: 4px; display: flex; align-items: center; justify-content: center; line-height: 1;">🔔
-                                <span id="notificationBadge" class="notification-badge" style="display:none; position: absolute; top: -4px; right: -4px; background: #EF4444; color: white; border-radius: 12px; padding: 1px 5px; font-size: 0.7rem; font-weight: bold; min-width: 16px; text-align: center; box-shadow: 0 1.5px 3px rgba(239, 68, 68, 0.4);">0</span>
-                            </button>
-
-                            <div id="notificationDropdown" class="notification-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); min-width: 350px; max-width: 400px; max-height: 500px; overflow: hidden; z-index: 1000; margin-top: 10px;">
-                                <div class="notification-header" style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-                                    <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">Benachrichtigungen</h4>
-                                    <button class="mark-all-read" onclick="markAllAsRead()">Alle gelesen</button>
-                                </div>
-                                <div id="notificationList" class="notification-list">
-                                    <p>Keine neuen Benachrichtigungen</p>
-                                </div>
-                            </div>
-                        </div>
                         {% endif %}
 
                         <div class="user-info">
