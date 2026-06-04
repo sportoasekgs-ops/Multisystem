@@ -331,6 +331,47 @@ if not _BOOTSTRAP_MODE:
 
     oauth_instance, iserv_client = init_oauth(app)
 
+    _registered_iserv_config = {
+        "client_id": None,
+        "client_secret": None,
+        "domain": None,
+    }
+
+    def get_iserv_client():
+        """Gibt den IServ-Client zurück und reinitialisiert ihn dynamisch bei Änderungen in der DB/Umgebung"""
+        global iserv_client, _registered_iserv_config
+        from oauth_config import _load_iserv_credentials, reinit_oauth
+        try:
+            db_client_id, db_client_secret, db_domain = _load_iserv_credentials()
+        except Exception:
+            db_client_id, db_client_secret, db_domain = "", "", ""
+        
+        config_changed = (
+            db_client_id != _registered_iserv_config["client_id"] or
+            db_client_secret != _registered_iserv_config["client_secret"] or
+            db_domain != _registered_iserv_config["domain"]
+        )
+        
+        if config_changed or (iserv_client is None and db_client_id and db_client_secret and db_domain):
+            if not db_client_id or not db_client_secret or not db_domain:
+                iserv_client = None
+                _registered_iserv_config = {
+                    "client_id": None,
+                    "client_secret": None,
+                    "domain": None,
+                }
+            else:
+                print(f"[OAuth] Dynamische (Re-)Initialisierung von IServ Client für aktuellen Worker...")
+                iserv_client = reinit_oauth(app, oauth_instance)
+                _registered_iserv_config = {
+                    "client_id": db_client_id,
+                    "client_secret": db_client_secret,
+                    "domain": db_domain,
+                }
+                
+        return iserv_client
+
+
     # System-Konfiguration (Setup-Wizard)
     from system_config import get_branding, get_config, is_setup_complete
 
@@ -419,6 +460,18 @@ if not _BOOTSTRAP_MODE:
             seed_initial_data()
         except Exception as e:
             print(f"[DynConfig] Seeding beim Start fehlgeschlagen: {e}")
+
+        # Initialisiere registrierte IServ-Konfiguration für get_iserv_client()
+        try:
+            from oauth_config import _load_iserv_credentials
+            db_client_id, db_client_secret, db_domain = _load_iserv_credentials()
+            _registered_iserv_config = {
+                "client_id": db_client_id,
+                "client_secret": db_client_secret,
+                "domain": db_domain,
+            }
+        except Exception:
+            pass
 
 # Setup-Wizard Blueprint registrieren
 from setup import setup_bp
@@ -718,7 +771,7 @@ def index():
     if "user_id" in session:
         return redirect(url_for("dashboard"))
     # Wenn IServ nicht konfiguriert, zeige Login-Seite
-    if not iserv_client:
+    if not get_iserv_client():
         return redirect(url_for("login"))
     return redirect(url_for("login_iserv"))
 
@@ -1024,7 +1077,8 @@ def reset_password(token):
 @app.route("/login/iserv")
 def login_iserv():
     """Startet den IServ OAuth2-Login-Flow"""
-    if not iserv_client:
+    client = get_iserv_client()
+    if not client:
         flash(
             "IServ-Login ist nicht konfiguriert. Bitte ISERV_CLIENT_ID und ISERV_CLIENT_SECRET in den Umgebungsvariablen setzen.",
             "error",
@@ -1034,7 +1088,7 @@ def login_iserv():
     try:
         redirect_uri = url_for("oauth_callback", _external=True)
         print(f"🔐 IServ OAuth: Starte Login, Redirect URI: {redirect_uri}")
-        return iserv_client.authorize_redirect(redirect_uri)
+        return client.authorize_redirect(redirect_uri)
     except Exception as e:
         print(f"❌ IServ OAuth Fehler: {e}")
         flash(f"Fehler beim Starten des IServ-Logins: {str(e)}", "error")
@@ -1045,12 +1099,13 @@ def login_iserv():
 @app.route("/oauth/callback")
 def oauth_callback():
     """Callback-Route für IServ OAuth2"""
-    if not iserv_client:
+    client = get_iserv_client()
+    if not client:
         flash("IServ-Login ist nicht konfiguriert.", "error")
         return redirect(url_for("login"))
 
     try:
-        token = iserv_client.authorize_access_token()
+        token = client.authorize_access_token()
 
         # === AUSFÜHRLICHES DEBUG-LOGGING ===
         print("=" * 80)
@@ -1075,7 +1130,7 @@ def oauth_callback():
 
         if not userinfo:
             print("   → Rufe userinfo separat ab...")
-            userinfo = iserv_client.userinfo(token=token)
+            userinfo = client.userinfo(token=token)
 
         # Vollständige Userinfo ausgeben
         print("\n📋 KOMPLETTE USERINFO:")
@@ -4387,9 +4442,18 @@ def admin_cms_save():
         if new_client_id:
             os.environ["ISERV_CLIENT_ID"] = new_client_id
         invalidate_iserv_domain_cache()
-        from oauth_config import reinit_oauth
-        global iserv_client
+        from oauth_config import reinit_oauth, _load_iserv_credentials
+        global iserv_client, _registered_iserv_config
         iserv_client = reinit_oauth(app, oauth_instance)
+        try:
+            db_client_id, db_client_secret, db_domain = _load_iserv_credentials()
+            _registered_iserv_config = {
+                "client_id": db_client_id,
+                "client_secret": db_client_secret,
+                "domain": db_domain,
+            }
+        except Exception:
+            pass
         flash("IServ-Konfiguration gespeichert. ✅", "success")
 
     elif section == "typography":
