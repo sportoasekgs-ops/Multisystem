@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Impressum von Slotra – Schul-Buchungssystem">
+    <title>Impressum – Slotra</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .legal-content {
+            padding: 5rem 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .legal-content h1 {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--text);
+        }
+        .legal-content h2 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+        .legal-content p {
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <span class="logo-mark" aria-hidden="true">S</span>
+                Slotra
+            </a>
+            <nav class="nav-desktop" aria-label="Hauptnavigation">
+                <a href="index.html#vorteile">Vorteile</a>
+                <a href="index.html#produkt">Produkt</a>
+                <a href="index.html#team">Ihr Team</a>
+                <a href="index.html#betrieb">Betreiber</a>
+                <a href="index.html#design">Ihr Auftritt</a>
+                <a href="index.html#kontakt">Kontakt</a>
+            </nav>
+            <a href="index.html#kontakt" class="btn btn-primary">Demo anfragen</a>
+            <button type="button" class="menu-toggle" id="menuToggle" aria-label="Menü öffnen" aria-expanded="false">☰</button>
+        </div>
+        <nav class="nav-mobile container" id="navMobile" aria-label="Mobile Navigation">
+            <a href="index.html#vorteile">Vorteile</a>
+            <a href="index.html#produkt">Produkt</a>
+            <a href="index.html#team">Ihr Team</a>
+            <a href="index.html#betrieb">Betreiber</a>
+            <a href="index.html#design">Ihr Auftritt</a>
+            <a href="index.html#kontakt">Kontakt</a>
+            <a href="index.html#kontakt" class="btn btn-primary" style="margin-top:0.5rem;text-align:center;">Demo anfragen</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <article class="legal-content">
+            <h1>Impressum</h1>
+            
+            <h2>Angaben gemäß § 5 TMG</h2>
+            <p>
+                Maurizio Morelli<br>
+                Lindenweg 62<br>
+                30966 Hemmingen
+            </p>
+
+            <h2>Kontakt</h2>
+            <p>
+                Telefon: [Telefonnummer auf Anfrage]<br>
+                E-Mail: info@slotra.de
+            </p>
+
+            <h2>Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV</h2>
+            <p>
+                Maurizio Morelli<br>
+                Lindenweg 62<br>
+                30966 Hemmingen
+            </p>
+
+            <h2>EU-Streitschlichtung</h2>
+            <p>
+                Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: 
+                <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr/</a>.<br>
+                Unsere E-Mail-Adresse finden Sie oben im Impressum.
+            </p>
+
+            <h2>Verbraucherstreitbeilegung/Universalschlichtungsstelle</h2>
+            <p>
+                Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
+            </p>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p><strong>Slotra</strong> – weil jeder Zeitslot zählt.</p>
+            <p>
+                <a href="impressum.html">Impressum</a> · 
+                <a href="datenschutz.html">Datenschutzerklärung</a>
+            </p>
+            <p>Handcrafted by Maurizio Morelli · Für Schulen &amp; Bildungsträger</p>
+        </div>
+    </footer>
+
+    <script>
+        const toggle = document.getElementById('menuToggle');
+        const nav = document.getElementById('navMobile');
+        toggle.addEventListener('click', () => {
+            const open = nav.classList.toggle('is-open');
+            toggle.setAttribute('aria-expanded', open);
+        });
+    </script>
+</body>
+
+</html>
