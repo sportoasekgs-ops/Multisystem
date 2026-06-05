@@ -20,6 +20,10 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=True)
     role = db.Column(db.String(20), nullable=False)
 
+    # Brute-Force-Schutz für lokalen Login
+    failed_login_attempts = db.Column(db.Integer, default=0, nullable=False)
+    locked_until = db.Column(db.DateTime, nullable=True)
+
     bookings = db.relationship("Booking", backref="teacher", lazy=True)
 
     def set_password(self, password):

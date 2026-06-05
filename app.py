@@ -419,16 +419,19 @@ if not _BOOTSTRAP_MODE:
         except Exception as e:
             print(f"[DB] db.create_all() skipped (tables may already exist): {e}")
 
-        # --- Auto-Seeding: Lehrer Test-Benutzer ---
-        try:
-            from models import User, create_user
-            lehrer_user = User.query.filter_by(username="lehrer").first()
-            if not lehrer_user:
-                print("[SEEDING] Erstelle Test-Lehrer-Benutzer 'lehrer'...")
-                create_user("lehrer", "lehrer", "teacher", "lehrer@schule.local")
-                print("[SEEDING] Test-Lehrer-Benutzer 'lehrer' erfolgreich erstellt.")
-        except Exception as e:
-            print(f"[SEEDING] Fehler beim Erstellen des Test-Lehrers: {e}")
+        # --- Auto-Seeding: Lehrer Test-Benutzer (nur im Entwicklungsmodus) ---
+        # Sicherheit: Standardmäßig deaktiviert. Nur erstellt, wenn SEED_TEST_TEACHER=true
+        # gesetzt ist. Verhindert einen erratbaren Standard-Login (lehrer/lehrer) in Produktion.
+        if os.environ.get("SEED_TEST_TEACHER", "").lower() == "true":
+            try:
+                from models import User, create_user
+                lehrer_user = User.query.filter_by(username="lehrer").first()
+                if not lehrer_user:
+                    print("[SEEDING] Erstelle Test-Lehrer-Benutzer 'lehrer' (SEED_TEST_TEACHER=true)...")
+                    create_user("lehrer", "lehrer", "teacher", "lehrer@schule.local")
+                    print("[SEEDING] Test-Lehrer-Benutzer 'lehrer' erfolgreich erstellt.")
+            except Exception as e:
+                print(f"[SEEDING] Fehler beim Erstellen des Test-Lehrers: {e}")
 
 
         # --- Auto-Migration Suite ---
@@ -557,6 +560,18 @@ if not _BOOTSTRAP_MODE:
                         conn.execute(text("UPDATE bookings SET is_request = FALSE WHERE is_request IS NULL"))
                         conn.commit()
                         print("[MIGRATION] Spalte 'is_request' zu 'bookings' hinzugefügt.")
+
+                # 12. Brute-Force-Schutz-Spalten in users
+                if db.engine.dialect.has_table(conn, 'users'):
+                    cols = [col['name'] for col in inspector.get_columns('users')]
+                    if 'failed_login_attempts' not in cols:
+                        print("[MIGRATION] Füge Spalte 'failed_login_attempts' zu 'users' hinzu...")
+                        conn.execute(text("ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER DEFAULT 0 NOT NULL"))
+                        conn.commit()
+                    if 'locked_until' not in cols:
+                        print("[MIGRATION] Füge Spalte 'locked_until' zu 'users' hinzu...")
+                        conn.execute(text("ALTER TABLE users ADD COLUMN locked_until TIMESTAMP"))
+                        conn.commit()
 
         except Exception as e:
             db.session.rollback()
@@ -1085,6 +1100,17 @@ def login_demo():
 @app.route("/login/local", methods=["POST"])
 def login_local():
     """Lokaler Admin-Login mit Benutzername und Passwort (nur für Admins)"""
+    from datetime import datetime, timedelta
+
+    # Brute-Force-Schutz: nach MAX_LOGIN_ATTEMPTS Fehlversuchen wird der Account gesperrt
+    MAX_LOGIN_ATTEMPTS = 5
+    LOCKOUT_MINUTES = 15
+
+    # CSRF-Token Validierung
+    if not validate_csrf_token(request.form.get("csrf_token", "")):
+        flash("Ungültiges Sicherheits-Token. Bitte versuchen Sie es erneut.", "error")
+        return redirect(url_for("login"))
+
     username = request.form.get("username", "").strip()
     password = request.form.get("password", "")
 
@@ -1092,30 +1118,80 @@ def login_local():
         flash("Bitte Benutzername und Passwort eingeben.", "error")
         return redirect(url_for("login"))
 
-    user = get_user_by_username(username)
-    if not user:
-        flash("Ungültige Anmeldedaten.", "error")
-        return redirect(url_for("login"))
-
-    # Erlaube lokalen Login für Admins und Lehrkräfte
-    if user["role"] not in ["admin", "teacher"]:
-        flash("Lokaler Login ist nur für Administratoren und Lehrkräfte verfügbar.", "error")
-        return redirect(url_for("login"))
-
     user_obj = User.query.filter_by(username=username).first()
-    if (
-        not user_obj
-        or not user_obj.password_hash
-        or not user_obj.check_password(password)
-    ):
-        flash("Ungültige Anmeldedaten.", "error")
+
+    # Generische Fehlermeldung (kein User-Enumeration)
+    invalid_msg = "Ungültige Anmeldedaten."
+
+    if not user_obj or user_obj.role not in ["admin", "teacher"]:
+        flash(invalid_msg, "error")
         return redirect(url_for("login"))
+
+    # Kontosperre prüfen
+    if user_obj.locked_until and user_obj.locked_until > datetime.utcnow():
+        remaining = int((user_obj.locked_until - datetime.utcnow()).total_seconds() // 60) + 1
+        flash(
+            f"Konto vorübergehend gesperrt wegen zu vieler Fehlversuche. "
+            f"Bitte in ca. {remaining} Minute(n) erneut versuchen.",
+            "error",
+        )
+        return redirect(url_for("login"))
+
+    # Passwort prüfen
+    if not user_obj.password_hash or not user_obj.check_password(password):
+        # Atomares Hochzählen auf DB-Ebene (concurrency-safe bei mehreren Workern):
+        # vermeidet Lost-Updates durch parallele Login-Versuche.
+        from sqlalchemy import text
+
+        attempts = db.session.execute(
+            text(
+                "UPDATE users SET failed_login_attempts = failed_login_attempts + 1 "
+                "WHERE id = :uid RETURNING failed_login_attempts"
+            ),
+            {"uid": user_obj.id},
+        ).scalar()
+        db.session.commit()
+
+        if attempts is not None and attempts >= MAX_LOGIN_ATTEMPTS:
+            lock_until = datetime.utcnow() + timedelta(minutes=LOCKOUT_MINUTES)
+            db.session.execute(
+                text(
+                    "UPDATE users SET locked_until = :until, failed_login_attempts = 0 "
+                    "WHERE id = :uid"
+                ),
+                {"until": lock_until, "uid": user_obj.id},
+            )
+            db.session.commit()
+            app.logger.warning(
+                f"[LOGIN] Konto '{username}' nach zu vielen Fehlversuchen für "
+                f"{LOCKOUT_MINUTES} Min. gesperrt."
+            )
+            flash(
+                f"Konto wegen zu vieler Fehlversuche für {LOCKOUT_MINUTES} Minuten gesperrt.",
+                "error",
+            )
+            return redirect(url_for("login"))
+
+        flash(invalid_msg, "error")
+        return redirect(url_for("login"))
+
+    # Erfolgreicher Login: Zähler und Sperre atomar zurücksetzen
+    from sqlalchemy import text
+
+    db.session.execute(
+        text(
+            "UPDATE users SET failed_login_attempts = 0, locked_until = NULL "
+            "WHERE id = :uid"
+        ),
+        {"uid": user_obj.id},
+    )
+    db.session.commit()
 
     session.clear()
-    session["user_id"] = user["id"]
-    session["user_username"] = user["username"]
-    session["user_email"] = user["email"]
-    session["user_role"] = user["role"]
+    session["user_id"] = user_obj.id
+    session["user_username"] = user_obj.username
+    session["user_email"] = user_obj.email
+    session["user_role"] = user_obj.role
 
     flash(f"Willkommen, {username}! (Lokaler Login)", "success")
     return redirect(url_for("dashboard"))
@@ -1156,10 +1232,15 @@ def forgot_password():
             PasswordResetToken.query.filter_by(user_id=user.id, used=False).delete()
             db.session.flush()
 
+            import hashlib
+
             token_str = secrets.token_urlsafe(48)
+            # Sicherheit: nur den Hash des Tokens speichern, nie das Klartext-Token.
+            # Bei DB-Leak ist das gespeicherte Token damit nicht nutzbar.
+            token_hash = hashlib.sha256(token_str.encode()).hexdigest()
             token = PasswordResetToken(
                 user_id=user.id,
-                token=token_str,
+                token=token_hash,
                 expires_at=datetime.utcnow() + timedelta(hours=1),
             )
             db.session.add(token)
@@ -1183,11 +1264,14 @@ def forgot_password():
 @app.route("/login/reset/<token>", methods=["GET", "POST"])
 def reset_password(token):
     """Passwort-Reset via Token"""
+    import hashlib
     from datetime import datetime
 
     from models import PasswordResetToken
 
-    tok = PasswordResetToken.query.filter_by(token=token, used=False).first()
+    # Eingehendes Klartext-Token hashen und mit dem gespeicherten Hash vergleichen
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    tok = PasswordResetToken.query.filter_by(token=token_hash, used=False).first()
 
     if not tok or tok.expires_at < datetime.utcnow():
         flash(
@@ -1526,8 +1610,8 @@ def change_password():
             flash("Die neuen Passwörter stimmen nicht überein.", "error")
             return redirect(url_for("change_password"))
 
-        if len(new_password) < 6:
-            flash("Das neue Passwort muss mindestens 6 Zeichen lang sein.", "error")
+        if len(new_password) < 8:
+            flash("Das neue Passwort muss mindestens 8 Zeichen lang sein.", "error")
             return redirect(url_for("change_password"))
 
         # Passwort ändern

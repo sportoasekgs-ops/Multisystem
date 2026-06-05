@@ -5,6 +5,9 @@ admin_dynamic.py – Admin-Blueprint für dynamische Stunden, Kurse & Klassen
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from database import db
 import json as _json
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Eingebaute Vorlagen (werden nicht in der DB gespeichert)
 _BUILTIN_TEMPLATES = [
@@ -287,7 +290,8 @@ def periods_add():
         flash(f'{kind_label} {number} ({name}) hinzugefügt.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods'))
 
 
@@ -344,7 +348,8 @@ def periods_insert_break():
             flash(err or 'Pause konnte nicht eingefügt werden.', 'error')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods'))
 
 
@@ -405,7 +410,8 @@ def periods_setup_standard_breaks():
         flash(msg, 'success' if (added or removed) else 'warning')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods'))
 
 
@@ -437,7 +443,8 @@ def periods_edit(period_id):
         flash('Zeitfenster aktualisiert.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods'))
 
 
@@ -460,7 +467,8 @@ def periods_delete(period_id):
         flash(f'Zeitfenster {num} gelöscht.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods'))
 
 
@@ -511,8 +519,8 @@ def periods_templates_save():
         flash(f'Vorlage „{template_name}" gespeichert ({len(periods_data)} Stunden).', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Speichern: {e}', 'error')
-
+        logger.error("Fehler beim Speichern: %s", e)
+        flash('Fehler beim Speichern. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods'))
 
 
@@ -568,7 +576,8 @@ def periods_templates_delete(tmpl_id):
         flash(f'Vorlage „{name}" gelöscht.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods'))
 
 
@@ -594,9 +603,8 @@ def _apply_period_template(periods_data, name):
         flash(f'Vorlage „{name}" geladen – {len(periods_data)} Stunden übernommen.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Laden der Vorlage: {e}', 'error')
-
-
+        logger.error("Fehler beim Laden der Vorlage: %s", e)
+        flash('Fehler beim Laden der Vorlage. Bitte versuchen Sie es erneut.', 'error')
 # ─── Kurse (Courses) ──────────────────────────────────────────────────────────
 
 @admin_dyn_bp.route('/courses')
@@ -700,7 +708,8 @@ def courses_add():
         flash(f'Kurs „{name}" hinzugefügt.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
 
@@ -731,7 +740,8 @@ def courses_edit(course_id):
         flash(f'Kurs „{c.name}" aktualisiert.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
 
@@ -756,7 +766,8 @@ def courses_delete(course_id):
         flash(f'Kurs „{name}" gelöscht.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
 
@@ -797,7 +808,8 @@ def classes_add():
         flash(f'Klasse „{name}" hinzugefügt.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.classes'))
 
 
@@ -819,7 +831,8 @@ def classes_edit(class_id):
         flash(f'Klasse „{sc.name}" aktualisiert.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.classes'))
 
 
@@ -841,7 +854,8 @@ def classes_delete(class_id):
         flash(f'Klasse „{name}" gelöscht.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.classes'))
 
 
@@ -930,9 +944,11 @@ def booking_settings():
             set_config('booking_advance_minutes', str(advance_minutes), category='booking')
             flash('Buchungs-Einstellungen gespeichert.', 'success')
         except ValueError as e:
-            flash(str(e), 'error')
+            logger.error("Fehler: %s", e)
+            flash('Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.', 'error')
         except Exception as e:
-            flash(f'Fehler: {e}', 'error')
+            logger.error("Fehler: %s", e)
+            flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
         return redirect(url_for('admin_dyn.booking_settings'))
 
     max_students = get_config('max_students_per_period') or '5'
@@ -986,7 +1002,8 @@ def rooms_add():
         flash(f'Raum „{name}" hinzugefügt.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.rooms'))
 
 
@@ -1018,7 +1035,8 @@ def rooms_edit(room_id):
         flash(f'Raum „{name}" aktualisiert.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.rooms'))
 
 
@@ -1082,8 +1100,8 @@ def room_schedule_toggle(room_id):
         _after_periods_changed()
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Umschalten des Stundenplans: {e}', 'error')
-        
+        logger.error("Fehler beim Umschalten des Stundenplans: %s", e)
+        flash('Fehler beim Umschalten des Stundenplans. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
@@ -1128,8 +1146,8 @@ def room_schedule_load_builtin(room_id):
         flash(f'Vorlage „{tmpl["name"]}" geladen – {len(tmpl["periods"])} Stunden übernommen.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Laden der Vorlage: {e}', 'error')
-
+        logger.error("Fehler beim Laden der Vorlage: %s", e)
+        flash('Fehler beim Laden der Vorlage. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
@@ -1156,8 +1174,8 @@ def room_schedule_copy_global(room_id):
         _after_periods_changed()
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Kopieren des globalen Stundenplans: {e}', 'error')
-        
+        logger.error("Fehler beim Kopieren des globalen Stundenplans: %s", e)
+        flash('Fehler beim Kopieren des globalen Stundenplans. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
@@ -1216,8 +1234,8 @@ def room_schedule_period_add(room_id):
         _after_periods_changed()
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Hinzufügen der Periode: {e}', 'error')
-        
+        logger.error("Fehler beim Hinzufügen der Periode: %s", e)
+        flash('Fehler beim Hinzufügen der Periode. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
@@ -1273,8 +1291,8 @@ def room_schedule_period_edit(room_id, period_id):
         _after_periods_changed()
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Aktualisieren der Periode: {e}', 'error')
-        
+        logger.error("Fehler beim Aktualisieren der Periode: %s", e)
+        flash('Fehler beim Aktualisieren der Periode. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
@@ -1299,8 +1317,8 @@ def room_schedule_period_delete(room_id, period_id):
         _after_periods_changed()
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Löschen der Periode: {e}', 'error')
-        
+        logger.error("Fehler beim Löschen der Periode: %s", e)
+        flash('Fehler beim Löschen der Periode. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
@@ -1349,8 +1367,8 @@ def room_schedule_courses_save(room_id):
         _after_periods_changed()
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler beim Speichern der Kurs-Zuordnungen: {e}', 'error')
-        
+        logger.error("Fehler beim Speichern der Kurs-Zuordnungen: %s", e)
+        flash('Fehler beim Speichern der Kurs-Zuordnungen. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
 
@@ -1387,8 +1405,8 @@ def room_admin_add(user_id):
             flash(f'Raum-Admin-Rolle für „{room.name}" zugewiesen.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
-
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin'))
 
 
@@ -1418,7 +1436,7 @@ def room_admin_remove(user_id):
             flash('Alle Raum-Admin-Rollen entfernt.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Fehler: {e}', 'error')
-
+        logger.error("Fehler: %s", e)
+        flash('Fehler. Bitte versuchen Sie es erneut.', 'error')
     return redirect(url_for('admin'))
 

@@ -27,6 +27,15 @@ def _safe_str(value, default=""):
     return str(value).strip()
 
 
+def _esc(value, default=""):
+    """HTML-escaped Wert für die Einbettung in E-Mail-HTML (verhindert XSS/HTML-Injection)."""
+    from markupsafe import escape
+
+    if value is None:
+        return default
+    return str(escape(value))
+
+
 def _get_config_or_env(config_key, env_key=None, default=""):
     value = None
     try:
@@ -339,7 +348,7 @@ def send_password_reset_email(to_email, username, reset_url):
                 <h2 style="color:white;margin:0;font-size:20px;">Passwort zurücksetzen</h2>
             </div>
             <div style="padding:30px;">
-                <p style="color:#1f2937;font-size:15px;">Hallo <strong>{username}</strong>,</p>
+                <p style="color:#1f2937;font-size:15px;">Hallo <strong>{_esc(username)}</strong>,</p>
                 <p style="color:#4b5563;font-size:14px;">
                     du hast eine Anfrage zum Zurücksetzen deines Passworts gestellt.<br>
                     Klicke auf den folgenden Button, um ein neues Passwort zu setzen:
@@ -422,12 +431,12 @@ def create_booking_notification_email(data):
     count = len(students)
 
     if students and students[0].get("name") == "":
-        students_html = f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• 🏫 Ganze Klasse {students[0].get("klasse")}</div>'
+        students_html = f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• 🏫 Ganze Klasse {_esc(students[0].get("klasse"))}</div>'
     else:
         students_html = (
             "".join(
                 [
-                    f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• {s["name"]} (Klasse {s["klasse"]})</div>'
+                    f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• {_esc(s["name"])} (Klasse {_esc(s["klasse"])})</div>'
                     for s in students
                 ]
             )
@@ -443,10 +452,10 @@ def create_booking_notification_email(data):
             </div>
             <div style="padding:30px;">
                 <div style="background:#f8fafc;border-radius:10px;padding:20px;">
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #3b82f6;"><strong style="color:#3b82f6;">Lehrkraft:</strong> {teacher} {f"({teacher_class})" if teacher_class else ""}</div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #3b82f6;"><strong style="color:#3b82f6;">Lehrkraft:</strong> {_esc(teacher)} {f"({_esc(teacher_class)})" if teacher_class else ""}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #3b82f6;"><strong style="color:#3b82f6;">Datum:</strong> {weekday}, {date}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #3b82f6;"><strong style="color:#3b82f6;">Zeit:</strong> {period}. Stunde ({period_time} Uhr)</div>
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #3b82f6;"><strong style="color:#3b82f6;">Angebot:</strong> {offer} <span style="background:#3b82f6;color:white;padding:2px 10px;border-radius:12px;font-size:11px;margin-left:8px;">{offer_type.upper()}</span></div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #3b82f6;"><strong style="color:#3b82f6;">Angebot:</strong> {_esc(offer)} <span style="background:#3b82f6;color:white;padding:2px 10px;border-radius:12px;font-size:11px;margin-left:8px;">{offer_type.upper()}</span></div>
                     <div style="padding:16px;background:white;border-radius:8px;margin:12px 0;">
                         <strong style="color:#3b82f6;">Schüler*innen ({count}):</strong>
                         <div style="margin-top:10px;">{students_html}</div>
@@ -502,12 +511,12 @@ def create_user_confirmation_email(data):
     count = len(students)
 
     if students and students[0].get("name") == "":
-        students_html = f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• 🏫 Ganze Klasse {students[0].get("klasse")}</div>'
+        students_html = f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• 🏫 Ganze Klasse {_esc(students[0].get("klasse"))}</div>'
     else:
         students_html = (
             "".join(
                 [
-                    f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• {s["name"]} (Klasse {s["klasse"]})</div>'
+                    f'<div style="padding:8px 12px;background:white;border-radius:6px;margin:6px 0;">• {_esc(s["name"])} (Klasse {_esc(s["klasse"])})</div>'
                     for s in students
                 ]
             )
@@ -526,10 +535,10 @@ def create_user_confirmation_email(data):
                     <strong>Deine Buchung wurde erfolgreich gespeichert!</strong>
                 </div>
                 <div style="background:#f8fafc;border-radius:10px;padding:20px;">
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #E91E63;"><strong style="color:#E91E63;">Lehrkraft:</strong> {teacher} {f"({teacher_class})" if teacher_class else ""}</div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #E91E63;"><strong style="color:#E91E63;">Lehrkraft:</strong> {_esc(teacher)} {f"({_esc(teacher_class)})" if teacher_class else ""}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #E91E63;"><strong style="color:#E91E63;">Datum:</strong> {weekday}, {date}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #E91E63;"><strong style="color:#E91E63;">Zeit:</strong> {period}. Stunde ({period_time} Uhr)</div>
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #E91E63;"><strong style="color:#E91E63;">Angebot:</strong> {offer} <span style="background:#E91E63;color:white;padding:2px 10px;border-radius:12px;font-size:11px;margin-left:8px;">{offer_type.upper()}</span></div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #E91E63;"><strong style="color:#E91E63;">Angebot:</strong> {_esc(offer)} <span style="background:#E91E63;color:white;padding:2px 10px;border-radius:12px;font-size:11px;margin-left:8px;">{offer_type.upper()}</span></div>
                     <div style="padding:16px;background:white;border-radius:8px;margin:12px 0;">
                         <strong style="color:#E91E63;">Angemeldete Schüler*innen ({count}):</strong>
                         <div style="margin-top:10px;">{students_html}</div>
@@ -586,11 +595,11 @@ def send_exclusive_pending_email(email, data):
                     <p style="margin:10px 0 0 0;font-size:14px;">Du bekommst eine E-Mail, sobald deine Anfrage bearbeitet wurde.</p>
                 </div>
                 <div style="background:#f8fafc;border-radius:10px;padding:20px;">
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Lehrkraft:</strong> {teacher} {f"({teacher_class})" if teacher_class else ""}</div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Lehrkraft:</strong> {_esc(teacher)} {f"({_esc(teacher_class)})" if teacher_class else ""}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Datum:</strong> {weekday}, {date}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Zeit:</strong> {period}. Stunde ({period_time} Uhr)</div>
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Angebot:</strong> {offer}</div>
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Schüler*in:</strong> {student_name} (Klasse {student_class})</div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Angebot:</strong> {_esc(offer)}</div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Schüler*in:</strong> {_esc(student_name)} (Klasse {_esc(student_class)})</div>
                 </div>
                 {_footer()}
             </div>
@@ -625,13 +634,13 @@ def send_exclusive_approved_email(
             </div>
             <div style="padding:30px;">
                 <div style="background:#dcfce7;border:1px solid #86efac;color:#166534;padding:16px 20px;border-radius:10px;margin-bottom:20px;">
-                    <strong>Hallo {teacher_name}!</strong>
+                    <strong>Hallo {_esc(teacher_name)}!</strong>
                     <p style="margin:10px 0 0 0;">Deine exklusive Einzelbuchung wurde <strong>genehmigt</strong>.</p>
                 </div>
                 <div style="background:#f8fafc;border-radius:10px;padding:20px;">
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #22c55e;"><strong style="color:#E91E63;">Datum:</strong> {date_formatted}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #22c55e;"><strong style="color:#E91E63;">Zeit:</strong> {period}. Stunde ({period_time} Uhr)</div>
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #22c55e;"><strong style="color:#E91E63;">Schüler*in:</strong> {student_name}</div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #22c55e;"><strong style="color:#E91E63;">Schüler*in:</strong> {_esc(student_name)}</div>
                 </div>
                 {_footer()}
             </div>
@@ -657,7 +666,7 @@ def send_exclusive_rejected_email(
     date_formatted = format_date_german(date_str)
     subject = f"Einzelbuchung abgelehnt – {_get_app_name()}"
     reason_html = (
-        f'<p style="margin:10px 0 0 0;font-size:14px;">Grund: {rejection_reason}</p>'
+        f'<p style="margin:10px 0 0 0;font-size:14px;">Grund: {_esc(rejection_reason)}</p>'
         if rejection_reason
         else ""
     )
@@ -671,14 +680,14 @@ def send_exclusive_rejected_email(
             </div>
             <div style="padding:30px;">
                 <div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:16px 20px;border-radius:10px;margin-bottom:20px;">
-                    <strong>Hallo {teacher_name},</strong>
+                    <strong>Hallo {_esc(teacher_name)},</strong>
                     <p style="margin:10px 0 0 0;">deine exklusive Einzelbuchung wurde leider <strong>abgelehnt</strong>.</p>
                     {reason_html}
                 </div>
                 <div style="background:#f8fafc;border-radius:10px;padding:20px;">
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #ef4444;"><strong style="color:#E91E63;">Datum:</strong> {date_formatted}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #ef4444;"><strong style="color:#E91E63;">Zeit:</strong> {period}. Stunde ({period_time} Uhr)</div>
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #ef4444;"><strong style="color:#E91E63;">Schüler*in:</strong> {student_name}</div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #ef4444;"><strong style="color:#E91E63;">Schüler*in:</strong> {_esc(student_name)}</div>
                 </div>
                 {_footer()}
             </div>
@@ -714,13 +723,13 @@ def send_booking_removed_due_to_exclusive(
             </div>
             <div style="padding:30px;">
                 <div style="background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:16px 20px;border-radius:10px;margin-bottom:20px;">
-                    <strong>Hallo {teacher_name},</strong>
-                    <p style="margin:10px 0 0 0;">deine Buchung musste storniert werden, weil der Slot exklusiv für <strong>{exclusive_student}</strong> durch <strong>{exclusive_teacher}</strong> reserviert wurde.</p>
+                    <strong>Hallo {_esc(teacher_name)},</strong>
+                    <p style="margin:10px 0 0 0;">deine Buchung musste storniert werden, weil der Slot exklusiv für <strong>{_esc(exclusive_student)}</strong> durch <strong>{_esc(exclusive_teacher)}</strong> reserviert wurde.</p>
                 </div>
                 <div style="background:#f8fafc;border-radius:10px;padding:20px;">
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Datum:</strong> {date_formatted}</div>
                     <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Zeit:</strong> {period}. Stunde</div>
-                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Angebot:</strong> {offer_label}</div>
+                    <div style="padding:12px 16px;background:white;border-radius:8px;margin:8px 0;border-left:4px solid #f59e0b;"><strong style="color:#E91E63;">Angebot:</strong> {_esc(offer_label)}</div>
                 </div>
                 {_footer()}
             </div>

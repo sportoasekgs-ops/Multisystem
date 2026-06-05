@@ -1,0 +1,1 @@
+- [Multi-worker Gunicorn pitfalls](multi-worker-gunicorn.md) — auto-migration DuplicateColumn races are benign first-boot noise; per-row counters (login lockout, quotas) MUST use atomic SQL UPDATE...RETURNING, not Python read-modify-write.
