@@ -111,7 +111,7 @@ body {
 .orb-1 {
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(var(--primary-rgb), 0.18) 0%, rgba(var(--primary-rgb), 0.05) 50%, transparent 100%);
+    background: transparent;
     top: -150px;
     right: -150px;
     animation: float-orb-1 25s ease-in-out infinite;
@@ -120,7 +120,7 @@ body {
 .orb-2 {
     width: 700px;
     height: 700px;
-    background: radial-gradient(circle, rgba(144, 202, 249, 0.22) 0%, rgba(30, 136, 229, 0.05) 50%, transparent 100%);
+    background: transparent;
     bottom: -200px;
     left: -200px;
     animation: float-orb-2 30s ease-in-out infinite;
@@ -1685,7 +1685,7 @@ details.help-section[open] .toggle-arrow {
     min-height: 65px;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,249,250,1) 100%);
+    background: #ffffff;
     transition: all 0.15s ease-in-out;
     overflow: hidden;
     max-width: 100%;
@@ -1800,7 +1800,7 @@ details.help-section[open] .toggle-arrow {
 .slot-card.slot-full {
     border-color: #ef4444 !important;
     border-left: 4px solid #ef4444 !important;
-    background: linear-gradient(135deg, rgba(239,68,68,0.06) 0%, rgba(254,202,202,0.04) 100%) !important;
+    background: rgba(239,68,68,0.05) !important;
     opacity: 0.85;
 }
 
@@ -3651,12 +3651,12 @@ footer {
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    background: #EF4444;
     color: white;
 }
 
 .btn-danger:hover {
-    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+    background: #DC2626;
 }
 
 .blocked-slots-list {
@@ -3900,7 +3900,7 @@ footer {
 }
 
 [data-theme="dark"] .selected-date-info h3 {
-    background: linear-gradient(135deg, #1e3a5f 0%, #0c4a6e 100%);
+    background: #1e3a5f;
 }
 
 [data-theme="dark"] .notification-dropdown {
@@ -7102,7 +7102,7 @@ footer {
     top: 0;
     bottom: 0;
     width: 36px;
-    background: linear-gradient(to left, rgba(0,0,0,0.25), transparent);
+    background: transparent;
     pointer-events: none;
     border-radius: 0 0 0 0;
 }

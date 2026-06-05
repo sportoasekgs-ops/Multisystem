@@ -89,7 +89,7 @@ a:hover {
     width: 40px;
     height: 40px;
     border-radius: 12px;
-    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    background: var(--brand);
     display: grid;
     place-items: center;
     color: #fff;
@@ -165,7 +165,7 @@ a:hover {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    background: var(--brand);
     color: #fff;
     box-shadow: 0 6px 20px rgba(233, 30, 99, 0.3);
 }
@@ -194,7 +194,7 @@ a:hover {
     right: -80px;
     width: 480px;
     height: 480px;
-    background: radial-gradient(circle, var(--brand-light) 0%, transparent 70%);
+    background: transparent;
     pointer-events: none;
 }
 
@@ -264,7 +264,7 @@ a:hover {
     align-items: center;
     gap: 0.4rem;
     padding: 0.65rem 0.85rem;
-    background: linear-gradient(180deg, #f8f7fa 0%, #efedf2 100%);
+    background: #f8f7fa;
     border-bottom: 1px solid var(--border);
 }
 
@@ -482,7 +482,7 @@ section {
 }
 
 .alt-bg {
-    background: linear-gradient(180deg, #fff 0%, var(--brand-light) 120%);
+    background: #ffffff;
 }
 
 /* Themes */
@@ -514,15 +514,14 @@ section {
 }
 
 .theme-preview.classic {
-    background: linear-gradient(135deg, var(--brand) 50%, #475569 50%);
+    background: var(--brand);
     font-family: "Poppins", sans-serif;
 }
 
 .theme-preview.professional {
     background: #f1f5f9;
     color: #0f172a;
-    background-image: linear-gradient(#e2e8f0 1px, transparent 1px),
-        linear-gradient(90deg, #e2e8f0 1px, transparent 1px);
+    background-image: none;
     background-size: 12px 12px;
 }
 
@@ -533,18 +532,18 @@ section {
 }
 
 .theme-preview.slotra2 {
-    background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+    background: #7c3aed;
     color: #fff;
 }
 
 .theme-preview.slotra-reloaded {
-    background: linear-gradient(135deg, #111019 0%, #1a1926 100%);
+    background: #111019;
     color: #a78bfa;
     border-bottom: 2px solid #a78bfa;
 }
 
 .theme-preview.iserv {
-    background: linear-gradient(135deg, #005691 0%, #007bc4 100%);
+    background: #005691;
     color: #fff;
 }
 
@@ -591,7 +590,7 @@ section {
 
 /* CTA */
 .cta {
-    background: linear-gradient(135deg, var(--brand-dark), var(--brand));
+    background: var(--brand);
     color: #fff;
     border-radius: calc(var(--radius) + 12px);
     padding: 3.5rem 2.5rem;
