@@ -19,22 +19,47 @@
 # ============================================================
 set -euo pipefail
 
-# ── Konfiguration ───────────────────────────────────────────
-# SRC_DIR: automatisch suchen wenn nicht explizit gesetzt
-if [[ -z "${SRC_DIR:-}" ]]; then
-    for _candidate in \
-        "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)" \
-        /opt/learngrid \
-        /opt/buchungssystem \
-        /opt/slotra \
-        /var/www/learngrid; do
-        if [[ -f "$_candidate/main.py" ]]; then
-            SRC_DIR="$_candidate"
-            break
+# ── Quellcode-Verzeichnis automatisch ermitteln ─────────────
+_find_src_dir() {
+    # 1. Eigenes uebergeordnetes Verzeichnis (Skript liegt in deploy/)
+    local _self
+    _self="$(cd "$(dirname "${BASH_SOURCE[1]}")/.." 2>/dev/null && pwd)"
+    if [[ -f "$_self/main.py" && -f "$_self/models.py" ]]; then
+        echo "$_self"; return
+    fi
+
+    # 2. Bekannte Standardpfade (schnell, ohne find)
+    local _p
+    for _p in /opt/learngrid /opt/buchungssystem /opt/slotra \
+               /srv/learngrid/src /var/www/learngrid /root/learngrid; do
+        if [[ -f "$_p/main.py" && -f "$_p/models.py" ]]; then
+            echo "$_p"; return
         fi
     done
+
+    # 3. Filesystem-Suche in typischen Deploy-Wurzeln
+    local _hit
+    _hit="$(find /opt /srv /var/www /home /root \
+        -maxdepth 5 -name "main.py" -not -path "*/venv/*" \
+        -not -path "*/__pycache__/*" -not -path "*/.git/*" \
+        2>/dev/null \
+        | while read -r _f; do
+            _dir="$(dirname "$_f")"
+            [[ -f "$_dir/models.py" && -f "$_dir/requirements.txt" ]] && echo "$_dir" && break
+          done | head -1)"
+    [[ -n "$_hit" ]] && echo "$_hit"
+}
+
+if [[ -z "${SRC_DIR:-}" ]]; then
+    SRC_DIR="$(_find_src_dir)"
 fi
-SRC_DIR="${SRC_DIR:-/opt/learngrid}"
+
+if [[ -z "${SRC_DIR:-}" ]]; then
+    echo -e "\033[0;31m✘ Quellcode-Verzeichnis konnte nicht automatisch gefunden werden.\033[0m"
+    echo "  Bitte als Umgebungsvariable angeben:"
+    echo "    SRC_DIR=/pfad/zum/code bash $(basename "$0") \"Schulname\""
+    exit 1
+fi
 BASE_ROOT="/srv/learngrid"
 SHARED_VENV="$BASE_ROOT/venv"
 CONF_FILE="/etc/learngrid/provision.conf"
