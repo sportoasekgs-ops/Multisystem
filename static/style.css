@@ -1797,12 +1797,14 @@ details.help-section[open] .toggle-arrow {
 /* Slot mit Buchungen – leicht hervorgehoben */
 .slot-card.slot-has-bookings {
     border-width: 2px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-left: 4px solid #22c55e;
+    box-shadow: 0 2px 8px rgba(34,197,94,0.12);
 }
 
 /* Ausgebuchter Slot */
 .slot-card.slot-full {
     border-color: #ef4444 !important;
+    border-left: 4px solid #ef4444 !important;
     background: linear-gradient(135deg, rgba(239,68,68,0.06) 0%, rgba(254,202,202,0.04) 100%) !important;
     opacity: 0.85;
 }
@@ -7078,6 +7080,52 @@ footer {
     background: rgba(var(--primary-rgb), 0.06) !important;
     color: var(--primary) !important;
     transform: none !important;
+}
+
+/* ── Room Browser Tabs – mobile scrollbar ── */
+.room-browser-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    position: relative;
+}
+.room-browser-tabs::-webkit-scrollbar { display: none; }
+
+.room-browser-tab {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Fade-Effekt an den Rändern (zeigt an, dass es mehr Tabs gibt) */
+.room-browser-tabs-wrapper {
+    position: relative;
+}
+.room-browser-tabs-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 36px;
+    background: linear-gradient(to left, rgba(0,0,0,0.25), transparent);
+    pointer-events: none;
+    border-radius: 0 0 0 0;
+}
+
+/* ── Flash-Message Auto-Dismiss ── */
+@keyframes messageDismiss {
+    0%   { opacity: 1; transform: translateX(0);   max-height: 120px; margin-bottom: 0.75rem; padding: 1rem 1.25rem; }
+    60%  { opacity: 0; transform: translateX(30px); max-height: 120px; }
+    100% { opacity: 0; max-height: 0; margin-bottom: 0; padding: 0; }
+}
+.message.dismissing {
+    animation: messageDismiss 0.5s ease-in forwards;
+    overflow: hidden;
+    pointer-events: none;
 }
 
 /* ── Typography Scale (configurable via Admin CMS) ── */

@@ -436,18 +436,20 @@
     <div class="selected-date-info" style="display: flex; flex-direction: column; background: {% if current_room and current_room.color %}{{ current_room.color }}{% else %}var(--primary){% endif %}; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 0.75rem; transition: background var(--transition-slow);">
         <!-- Browser-style Room Tabs Area -->
         {% if all_rooms and all_rooms|length > 1 %}
-        <div class="room-browser-tabs" style="display: flex; background: rgba(0,0,0,0.14); padding: 8px 12px 0; gap: 4px;">
-            {% for room in all_rooms %}
-            <a href="{{ url_for('dashboard', date=selected_date.strftime('%Y-%m-%d'), room=room.id) }}" 
-               class="room-browser-tab {% if current_room and room.id == current_room.id %}active{% endif %}"
-               style="text-decoration: none; padding: 8px 18px; border-radius: 8px 8px 0 0; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast); 
-                      background: {% if current_room and room.id == current_room.id %}var(--bg-primary, #fff){% else %}rgba(0,0,0,0.15){% endif %}; 
-                      border-top: 3px solid {% if current_room and room.id == current_room.id %}{{ room.color or 'var(--primary)' }}{% else %}transparent{% endif %};
-                      color: {% if current_room and room.id == current_room.id %}var(--text-primary, #1e1b4b){% else %}rgba(255,255,255,0.85){% endif %};">
-                <span>{{ room.icon }}</span>
-                <span>{{ room.name }}</span>
-            </a>
-            {% endfor %}
+        <div class="room-browser-tabs-wrapper">
+            <div class="room-browser-tabs" style="display: flex; background: rgba(0,0,0,0.14); padding: 8px 12px 0; gap: 4px;">
+                {% for room in all_rooms %}
+                <a href="{{ url_for('dashboard', date=selected_date.strftime('%Y-%m-%d'), room=room.id) }}"
+                   class="room-browser-tab {% if current_room and room.id == current_room.id %}active{% endif %}"
+                   style="text-decoration: none; padding: 8px 18px; border-radius: 8px 8px 0 0; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; transition: all var(--transition-fast);
+                          background: {% if current_room and room.id == current_room.id %}var(--bg-primary, #fff){% else %}rgba(0,0,0,0.15){% endif %};
+                          border-top: 3px solid {% if current_room and room.id == current_room.id %}{{ room.color or 'var(--primary)' }}{% else %}transparent{% endif %};
+                          color: {% if current_room and room.id == current_room.id %}var(--text-primary, #1e1b4b){% else %}rgba(255,255,255,0.85){% endif %};">
+                    <span>{{ room.icon }}</span>
+                    <span>{{ room.name }}</span>
+                </a>
+                {% endfor %}
+            </div>
         </div>
         {% endif %}
         

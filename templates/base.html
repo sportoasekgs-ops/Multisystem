@@ -733,6 +733,14 @@
             updateUnreadCount();
             setInterval(updateUnreadCount, 10000); // check every 10s
             {% endif %}
+
+            // Auto-Dismiss: Erfolgsmeldungen nach 4s ausblenden
+            document.querySelectorAll('.message-success, .message-info').forEach(function(msg) {
+                setTimeout(function() {
+                    msg.classList.add('dismissing');
+                    setTimeout(function() { msg.remove(); }, 520);
+                }, 4000);
+            });
         });
 
         function toggleAdminQuickMenu(e) {
