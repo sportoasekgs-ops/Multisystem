@@ -288,7 +288,10 @@ if _BOOTSTRAP_MODE:
             User,
         )
 
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"[DB] db.create_all() (bootstrap) skipped: {e}")
 
 # Importiere Modelle und Hilfsfunktionen (nur wenn DB verfügbar)
 if not _BOOTSTRAP_MODE:
@@ -411,7 +414,10 @@ if not _BOOTSTRAP_MODE:
             Room,
         )
 
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"[DB] db.create_all() skipped (tables may already exist): {e}")
 
         # --- Auto-Seeding: Lehrer Test-Benutzer ---
         try:

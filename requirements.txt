@@ -11,3 +11,8 @@ requests==2.31.0
 SQLAlchemy==2.0.23
 blinker==1.7.0
 python-dotenv==1.0.0
+email_validator
+flask
+flask-sqlalchemy
+gunicorn
+psycopg2-binary
