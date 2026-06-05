@@ -3341,7 +3341,7 @@ footer {
 .contact-info-box {
     margin: 2rem auto;
     max-width: 800px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    background: var(--primary);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: var(--radius-xl);
     padding: 1.5rem 2rem;
@@ -4145,7 +4145,7 @@ footer {
 
 /* Kontakt-Kachel im Dark Mode */
 [data-theme="dark"] .contact-info-box {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary)) !important;
+    background: var(--primary) !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
     box-shadow: var(--shadow-lg);
     color: #ffffff;
@@ -4842,7 +4842,7 @@ footer {
     justify-content: space-between;
     align-items: center;
     padding: 1.1rem 1.4rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background: var(--primary);
     border-bottom: 1px solid var(--glass-border);
     color: white;
 }

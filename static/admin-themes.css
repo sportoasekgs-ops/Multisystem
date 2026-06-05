@@ -663,7 +663,7 @@ html[data-admin-theme="slotra2"] .btn {
 }
 
 html[data-admin-theme="slotra2"] .btn-primary {
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     color: #fff;
 }
 
@@ -715,7 +715,7 @@ html[data-admin-theme="slotra2"] .admin-card:hover {
 
 html[data-admin-theme="slotra2"] .dashboard-card .card-icon {
     border-radius: 14px;
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     box-shadow: 0 6px 16px rgb(var(--primary-rgb) / 0.25);
 }
 
@@ -797,7 +797,7 @@ html[data-admin-theme="slotra2"] .week-day-header .day-name {
 }
 
 html[data-admin-theme="slotra2"] .week-day-header.today-header .day-name {
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     color: #fff;
     box-shadow: 0 4px 14px rgb(var(--primary-rgb) / 0.28);
 }
@@ -833,7 +833,7 @@ html[data-admin-theme="slotra2"] .week-table td.today-column {
 }
 
 html[data-admin-theme="slotra2"] .selected-date-info h3 {
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     color: #fff;
     border-radius: var(--radius-xl);
     font-weight: 600;
@@ -901,14 +901,14 @@ html[data-admin-theme="slotra2"] .course-tag {
     padding: 0.2rem 0.55rem;
     font-size: 0.62rem;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     color: #fff;
     border: none;
 }
 
 html[data-admin-theme="slotra2"] .book-btn {
     border-radius: var(--radius);
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     font-weight: 600;
     font-size: 0.72rem;
     padding: 0.5rem 0.65rem;
@@ -919,7 +919,7 @@ html[data-admin-theme="slotra2"] .book-btn {
 html[data-admin-theme="slotra2"] .book-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 18px rgb(var(--primary-rgb) / 0.3);
-    background: linear-gradient(135deg, var(--brand-secondary), var(--brand-primary));
+    background: var(--brand-primary);
 }
 
 html[data-admin-theme="slotra2"] .slot-availability .book-link,
@@ -947,7 +947,7 @@ html[data-admin-theme="slotra2"] .pending-exclusive-hint {
 }
 
 html[data-admin-theme="slotra2"] .exclusive-header {
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     border-radius: var(--radius);
 }
 
@@ -1013,7 +1013,7 @@ html[data-admin-theme="slotra2"] .dashboard-title {
 }
 
 html[data-admin-theme="slotra2"] .stat-card {
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md);
 }
@@ -1703,7 +1703,7 @@ html[data-admin-theme="slotra-reloaded"] .admin-card:hover {
 
 html[data-admin-theme="slotra-reloaded"] .dashboard-card .card-icon {
     border-radius: 14px;
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.35);
 }
 
@@ -1816,7 +1816,7 @@ html[data-admin-theme="slotra-reloaded"] .week-day-header .day-name {
 }
 
 html[data-admin-theme="slotra-reloaded"] .week-day-header.today-header .day-name {
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     color: #fff;
     box-shadow: 0 4px 18px rgba(var(--primary-rgb), 0.4);
 }
@@ -1854,7 +1854,7 @@ html[data-admin-theme="slotra-reloaded"] .week-table td.today-column {
 
 /* ── Selected date banner ── */
 html[data-admin-theme="slotra-reloaded"] .selected-date-info h3 {
-    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    background: var(--brand-primary);
     color: #fff;
     border-radius: var(--radius-xl);
     font-weight: 600;
