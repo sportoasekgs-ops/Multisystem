@@ -90,23 +90,35 @@ systemctl restart learngrid@igs-badenstedt
 
 ---
 
-## Updates einspielen
+## Updates einspielen (Redeploy)
 
-**Wenn Code per GitHub:**
+**Multi-School (empfohlen):** aktualisiert den Code in **allen** Schul-Instanzen
+und startet sie neu. Pro Schule bleiben `.env`, `buchungssystem_local.json` und
+`static/uploads` (Logos) unberührt.
+
 ```bash
 ssh root@87.106.155.5
-bash /opt/buchungssystem/deploy/update.sh
+bash /opt/buchungssystem/deploy/redeploy.sh
 ```
 
-**Wenn Code per rsync:**
+Varianten:
 ```bash
-# Erst Code übertragen
+bash deploy/redeploy.sh --no-pull        # ohne git pull (Code schon aktuell)
+bash deploy/redeploy.sh igs-badenstedt   # nur eine bestimmte Schule
+```
+
+Wenn der Code per rsync statt git kommt, erst übertragen, dann `--no-pull`:
+```bash
 rsync -avz --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
   --exclude='.env' --exclude='buchungssystem_local.json' \
   /pfad/zum/projekt/ root@87.106.155.5:/opt/buchungssystem/
+ssh root@87.106.155.5 "bash /opt/buchungssystem/deploy/redeploy.sh --no-pull"
+```
 
-# Dann Service neustarten
-ssh root@87.106.155.5 "systemctl restart buchungssystem"
+**Altes Einzel-Setup (nur eine Schule, ohne Multi-School):**
+```bash
+ssh root@87.106.155.5
+bash /opt/buchungssystem/deploy/update.sh
 ```
 
 ---
