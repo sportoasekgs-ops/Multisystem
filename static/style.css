@@ -30,14 +30,20 @@
     --shadow: 4px 4px 0px rgba(71, 85, 105, 0.7);
     --shadow-md: 6px 6px 0px rgba(71, 85, 105, 0.7);
     --shadow-lg: 8px 8px 0px rgba(71, 85, 105, 0.7);
-    --shadow-glow: 0 0 0 transparent;
+    --shadow-glow: 0 0 0 0 transparent;
     /* Radien */
     --radius-sm: 8px;
     --radius: 12px;
+    --radius-md: 10px;
     --radius-lg: 16px;
     --radius-xl: 20px;
     --radius-2xl: 24px;
+    /* Glass-Effekte */
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-blur: blur(12px);
+    --glass-border: rgba(71, 85, 105, 0.12);
     /* Spezielle Farben */
+    --danger: #DC2626;
     --login-gradient: #f5f5f7;
     --success-bg: #E8F5E9;
     --success-text: #2E7D32;
@@ -840,7 +846,7 @@ h4 {
 .btn-primary:hover {
     background: var(--primary-dark);
     transform: translate(2px, 2px);
-    box-shadow: 0px 0px 0px rgba(71, 85, 105, 0.7);
+    box-shadow: none;
 }
 
 .btn-secondary {
@@ -851,7 +857,7 @@ h4 {
 .btn-secondary:hover {
     background: var(--border-light);
     transform: translate(2px, 2px);
-    box-shadow: 0px 0px 0px rgba(71, 85, 105, 0.7);
+    box-shadow: none;
 }
 
 .btn-success {
@@ -1694,17 +1700,6 @@ details.help-section[open] .toggle-arrow {
 }
 
 /* Clickable slot for desktop booking */
-@media (min-width: 768px) {
-    .clickable-slot {
-        cursor: pointer;
-    }
-    
-    .clickable-slot:hover .slot-card {
-        transform: scale(1.03);
-        box-shadow: 0 8px 24px rgb(var(--primary-rgb) / 0.18);
-        border-color: var(--primary);
-    }
-}
 
 .slot-course-name {
     font-family: var(--font-heading);
@@ -1936,7 +1931,7 @@ details.help-section[open] .toggle-arrow {
 }
 
 /* Desktop: Kleinerer Button, aber sichtbar */
-@media (min-width: 769px) {
+@media (min-width: 768px) {
     .book-btn {
         padding: 0.4rem 0.5rem;
         font-size: 0.7rem;
@@ -2322,6 +2317,17 @@ details.help-section[open] .toggle-arrow {
 }
 
 /* Filter Form */
+@keyframes navSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .filter-form {
     display: flex;
     gap: 0.75rem;
@@ -2507,17 +2513,6 @@ details.help-section[open] .toggle-arrow {
         width: calc(100% - 20px) !important;
         margin: 0 !important;
         z-index: 1001 !important;
-    }
-
-    @keyframes navSlideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
     }
     
     /* Buttons - Größer für Touch */
@@ -2749,10 +2744,6 @@ details.help-section[open] .toggle-arrow {
         width: 148px;
         max-width: 148px;
         padding: 0.4rem 0.35rem;
-    }
-
-    .slot-card {
-        min-height: 58px;
     }
 
     .slot-card .slot-course-name {

@@ -177,20 +177,7 @@ html[data-admin-theme="classic"] h3 {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-
-html[data-admin-theme="professional"] .form-group input,
-html[data-admin-theme="professional"] .form-group select {
-    border-radius: 4px;
-    border-color: #cbd5e1;
-}
-
-html[data-admin-theme="professional"] .message {
-    border-radius: 4px;
-    border-left-width: 4px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   3. MINIMAL – Swiss / Editorial (scharf, schwarz-weiß, Mono-Akzente)
+   2. MINIMAL – Swiss / Editorial (scharf, schwarz-weiß, Mono-Akzente)
    ═══════════════════════════════════════════════════════════════════════════ */
 html[data-admin-theme="minimal"] {
     /* Minimal: nur Primär- + Hintergrundfarbe aus dem CMS (kein Sekundär-Blau) */
