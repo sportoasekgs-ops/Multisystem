@@ -944,6 +944,12 @@ def index():
     """Startseite - eingeloggte Nutzer zum Dashboard, Besucher zur Marketing-Homepage"""
     if "user_id" in session:
         return redirect(url_for("dashboard"))
+    # Wenn Setup noch nicht abgeschlossen → Wizard zeigen, nicht Marketing-Homepage
+    try:
+        if not is_setup_complete():
+            return redirect(url_for("setup.index"))
+    except Exception:
+        return redirect(url_for("setup.index"))
     return redirect(url_for("serve_homepage"))
 
 
