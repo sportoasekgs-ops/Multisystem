@@ -666,6 +666,14 @@ h4 {
     background: var(--error-bg);
 }
 
+.login-main-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
 /* Login Page - Clean Modern */
 .login-container {
     display: flex;
