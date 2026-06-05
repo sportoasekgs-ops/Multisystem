@@ -1,0 +1,17 @@
+[Unit]
+Description=Buchungssystem (Gunicorn)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/buchungssystem
+ExecStart=/opt/buchungssystem/venv/bin/gunicorn --config gunicorn_config.py main:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+
+EnvironmentFile=/opt/buchungssystem/.env
+
+[Install]
+WantedBy=multi-user.target

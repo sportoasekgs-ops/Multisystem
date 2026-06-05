@@ -77,9 +77,15 @@
         const pct = Math.min((attempts / maxAttempts) * 100, 95);
         bar.style.width = pct + '%';
 
-        fetch('/setup/welcome', { method: 'HEAD' })
+        // redirect: 'manual' verhindert, dass fetch Redirects automatisch folgt.
+        // Im Bootstrap-Modus gibt /setup/welcome einen 302 zurück (opaqueredirect, status=0).
+        // Nach dem Neustart mit echter DB gibt /setup/welcome direkt 200 zurück → fertig.
+        fetch('/setup/welcome', { method: 'HEAD', redirect: 'manual' })
             .then(r => {
-                if (r.ok || r.status === 302 || r.status === 200) {
+                if (r.type === 'opaqueredirect' || r.status === 0) {
+                    // Noch im Bootstrap-Modus oder App startet noch – warten
+                    retry();
+                } else if (r.ok || r.status === 200) {
                     bar.style.width = '100%';
                     spinner.style.borderTopColor = '#22c55e';
                     title.textContent = '✅ Neustart abgeschlossen!';
