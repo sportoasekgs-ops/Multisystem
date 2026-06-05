@@ -771,6 +771,19 @@ def inject_app_theme():
     return dict(admin_theme=_resolve_admin_theme())
 
 
+@app.context_processor
+def inject_room_admin_rooms():
+    """Stellt Raum-Admin-Räume in allen Templates zur Verfügung."""
+    try:
+        if "user_id" in session and session.get("user_role") == "teacher":
+            from models import get_rooms_for_room_admin
+            rooms = get_rooms_for_room_admin(session["user_id"])
+            return dict(room_admin_rooms=rooms)
+    except Exception:
+        pass
+    return dict(room_admin_rooms=[])
+
+
 # Hilfsfunktion: Zeitzone Europe/Berlin
 def get_berlin_tz():
     """Gibt die Zeitzone Europe/Berlin zurück"""
@@ -3391,13 +3404,149 @@ def admin():
             }
         )
 
+    # Raum-Admin Zuordnungen für User-Karten
+    from models import RoomAdmin, Room as RoomModel
+    all_rooms = RoomModel.query.filter_by(is_active=True).order_by(RoomModel.sort_order, RoomModel.name).all()
+    room_admin_entries = RoomAdmin.query.all()
+    room_admins_map = {}  # user_id → [room, ...]
+    for ra in room_admin_entries:
+        room_admins_map.setdefault(ra.user_id, [])
+        if ra.room:
+            room_admins_map[ra.user_id].append(ra.room)
+
     return render_template(
         "admin.html",
         users=users,
         bookings=bookings_display,
         pending_exclusive=pending_exclusive_display,
         filter_date=filter_date,
+        all_rooms=all_rooms,
+        room_admins_map=room_admins_map,
     )
+
+
+# ─── Raum-Admin Dashboard ─────────────────────────────────────────────────────
+
+@app.route("/room-admin/<int:room_id>", methods=["GET"])
+@login_required
+def room_admin_dashboard(room_id):
+    """Raum-Admin Dashboard – zeigt Buchungen und ausstehende Anfragen für den Raum"""
+    from models import Room, is_room_admin, get_pending_bookings_for_room, get_bookings_for_week
+    from datetime import date as py_date, timedelta
+
+    user_id = session["user_id"]
+    user_role = session.get("user_role")
+
+    if user_role != "admin" and not is_room_admin(user_id, room_id):
+        flash("Kein Zugriff auf diesen Raum.", "error")
+        return redirect(url_for("dashboard"))
+
+    room = Room.query.get_or_404(room_id)
+
+    pending_raw = get_pending_bookings_for_room(room_id)
+    pending = []
+    for b in pending_raw:
+        students = json.loads(b.get("students_json", "[]")) if b.get("students_json") else []
+        pending.append({**b, "students": students, "student_count": len(students)})
+
+    today = py_date.today()
+    monday = today - timedelta(days=today.weekday())
+    end = monday + timedelta(days=13)
+    recent_raw = get_bookings_for_week(monday.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d"), room_id=room_id)
+    bookings = []
+    for b in recent_raw:
+        students = json.loads(b.get("students_json", "[]")) if b.get("students_json") else []
+        bookings.append({**b, "students": students, "student_count": len(students)})
+
+    return render_template(
+        "room_admin.html",
+        room=room,
+        pending_bookings=pending,
+        bookings=bookings,
+    )
+
+
+@app.route("/room-admin/<int:room_id>/approve/<int:booking_id>", methods=["POST"])
+@login_required
+def room_admin_approve(room_id, booking_id):
+    """Raum-Admin: Buchungsanfrage genehmigen"""
+    from models import Booking, is_room_admin, create_notification
+
+    user_id = session["user_id"]
+    if session.get("user_role") != "admin" and not is_room_admin(user_id, room_id):
+        flash("Kein Zugriff.", "error")
+        return redirect(url_for("dashboard"))
+
+    if not validate_csrf_token(request.form.get("csrf_token", "")):
+        flash("Ungültiges Sicherheits-Token.", "error")
+        return redirect(url_for("room_admin_dashboard", room_id=room_id))
+
+    booking = Booking.query.get(booking_id)
+    if not booking or booking.room_id != room_id:
+        flash("Buchung nicht gefunden oder gehört nicht zu diesem Raum.", "error")
+        return redirect(url_for("room_admin_dashboard", room_id=room_id))
+
+    try:
+        admin_reply = request.form.get("admin_reply", "").strip()
+        booking.is_approved = True
+        booking.status = "booked"
+        if admin_reply:
+            booking.admin_reply = admin_reply
+        db.session.commit()
+        create_notification(
+            booking_id=booking.id,
+            message=f"✅ Deine Buchung für {booking.offer_label} am {booking.date} ({booking.period}. Stunde) wurde genehmigt.{' ' + admin_reply if admin_reply else ''}",
+            notification_type="booking_approved",
+            recipient_role="teacher",
+            recipient_user_id=booking.teacher_id,
+        )
+        flash("Buchung genehmigt.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Fehler: {e}", "error")
+
+    return redirect(url_for("room_admin_dashboard", room_id=room_id))
+
+
+@app.route("/room-admin/<int:room_id>/reject/<int:booking_id>", methods=["POST"])
+@login_required
+def room_admin_reject(room_id, booking_id):
+    """Raum-Admin: Buchungsanfrage ablehnen"""
+    from models import Booking, is_room_admin, create_notification
+
+    user_id = session["user_id"]
+    if session.get("user_role") != "admin" and not is_room_admin(user_id, room_id):
+        flash("Kein Zugriff.", "error")
+        return redirect(url_for("dashboard"))
+
+    if not validate_csrf_token(request.form.get("csrf_token", "")):
+        flash("Ungültiges Sicherheits-Token.", "error")
+        return redirect(url_for("room_admin_dashboard", room_id=room_id))
+
+    booking = Booking.query.get(booking_id)
+    if not booking or booking.room_id != room_id:
+        flash("Buchung nicht gefunden oder gehört nicht zu diesem Raum.", "error")
+        return redirect(url_for("room_admin_dashboard", room_id=room_id))
+
+    try:
+        reason = request.form.get("reason", "").strip()
+        booking.status = "rejected"
+        booking.is_approved = False
+        booking.admin_reply = reason
+        db.session.commit()
+        create_notification(
+            booking_id=booking.id,
+            message=f"❌ Deine Buchung für {booking.offer_label} am {booking.date} ({booking.period}. Stunde) wurde abgelehnt.{' Begründung: ' + reason if reason else ''}",
+            notification_type="booking_rejected",
+            recipient_role="teacher",
+            recipient_user_id=booking.teacher_id,
+        )
+        flash("Buchung abgelehnt.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Fehler: {e}", "error")
+
+    return redirect(url_for("room_admin_dashboard", room_id=room_id))
 
 
 # Route: Exklusive Buchung genehmigen

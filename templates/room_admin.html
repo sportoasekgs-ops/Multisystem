@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% block title %}🔑 {{ room.icon }} {{ room.name }} – Raumverwaltung{% endblock %}
+
+{% block content %}
+<style>
+.ra-page { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem; }
+.ra-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+}
+.ra-room-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: color-mix(in srgb, {{ room.color or 'var(--primary)' }} 12%, var(--bg-card));
+    border: 2px solid {{ room.color or 'var(--primary)' }};
+    border-radius: 14px;
+    padding: .5rem 1.1rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: {{ room.color or 'var(--primary)' }};
+}
+.ra-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.4rem;
+}
+.ra-section h3 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.ra-quick-links {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+.ra-quick-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .55rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    transition: all .15s;
+}
+.ra-quick-link:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 8%, var(--bg-card));
+}
+.booking-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: .85rem 1rem;
+    margin-bottom: .75rem;
+}
+.booking-card:last-child { margin-bottom: 0; }
+.booking-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-bottom: .5rem;
+}
+.booking-date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 8px;
+    padding: .2rem .6rem;
+    font-size: .82rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.booking-offer { font-weight: 700; font-size: .95rem; color: var(--text-primary); }
+.booking-meta { font-size: .82rem; color: var(--text-secondary); margin-top: .2rem; }
+.booking-actions {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-top: .65rem;
+}
+.btn-approve {
+    padding: .35rem .85rem;
+    background: #4caf50;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: .83rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-reject {
+    padding: .35rem .85rem;
+    background: #f44336;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: .83rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-approve:hover { background: #388e3c; }
+.btn-reject:hover { background: #c62828; }
+.empty-hint { color: var(--text-secondary); font-size: .9rem; text-align: center; padding: 1.5rem 0; }
+.status-badge {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: .15rem .45rem;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.status-booked { background: #e8f5e9; color: #2e7d32; }
+.status-rejected { background: #fce4ec; color: #c2185b; }
+.status-pending { background: #fff3e0; color: #e65100; }
+
+/* Modal */
+.modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+}
+.modal-box {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 1.5rem;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18);
+}
+.modal-box h4 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 700; }
+.modal-box textarea {
+    width: 100%; padding: .55rem .7rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: .9rem;
+    resize: vertical;
+    margin-bottom: .75rem;
+    box-sizing: border-box;
+}
+.modal-actions { display: flex; gap: .5rem; justify-content: flex-end; }
+</style>
+
+<div class="ra-page">
+    <!-- Header -->
+    <div class="ra-header">
+        <div>
+            <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:.25rem;">
+                <a href="{{ url_for('dashboard') }}" style="color:var(--text-secondary);text-decoration:none;">Dashboard</a> /
+                Raumverwaltung
+            </div>
+            <h2 style="margin:0;display:flex;align-items:center;gap:.6rem;font-size:1.5rem;font-weight:800;">
+                <span class="ra-room-badge">{{ room.icon }} {{ room.name }}</span>
+                Raumverwaltung
+            </h2>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat,msg in messages %}
+    <div class="flash-message flash-{{ cat }}" style="margin-bottom:1rem;">{{ msg }}</div>
+    {% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- Schnellzugriff -->
+    <div class="ra-quick-links">
+        <a href="{{ url_for('admin_dyn.periods', room_id=room.id) }}" class="ra-quick-link">⏱️ Stundenplan</a>
+        <a href="{{ url_for('admin_dyn.courses', room_id=room.id) }}" class="ra-quick-link">📚 Kurse & Angebote</a>
+        <a href="{{ url_for('admin_bulk_block') }}" class="ra-quick-link">🔒 Ferien-Sperrung</a>
+        <a href="{{ url_for('dashboard') }}" class="ra-quick-link">🏠 Zum Dashboard</a>
+    </div>
+
+    <!-- Ausstehende Anfragen -->
+    <div class="ra-section" style="border-left: 5px solid {% if pending_bookings %}#ff9800{% else %}var(--border){% endif %};">
+        <h3>
+            ⏳ Ausstehende Anfragen
+            {% if pending_bookings %}
+            <span style="background:#ff9800;color:#fff;border-radius:10px;padding:.1rem .5rem;font-size:.75rem;font-weight:700;">{{ pending_bookings|length }}</span>
+            {% endif %}
+        </h3>
+
+        {% if pending_bookings %}
+        {% for b in pending_bookings %}
+        <div class="booking-card" style="border-left: 3px solid #ff9800;">
+            <div class="booking-card-header">
+                <div>
+                    <div class="booking-offer">{{ b.offer_label }}</div>
+                    <div class="booking-meta">
+                        <span class="booking-date-pill">📅 {{ b.date[8:10] }}.{{ b.date[5:7] }}.{{ b.date[:4] }}</span>
+                        &nbsp;{{ b.period }}. Stunde &nbsp;·&nbsp;
+                        <strong>{{ b.teacher_name }}</strong>
+                        {% if b.teacher_class %}&nbsp;(Klasse {{ b.teacher_class }}){% endif %}
+                        &nbsp;·&nbsp; {{ b.student_count }} Schüler*innen
+                    </div>
+                    {% if b.notes %}
+                    <div class="booking-meta" style="margin-top:.3rem;">📝 {{ b.notes }}</div>
+                    {% endif %}
+                </div>
+                <span class="status-badge status-pending">Ausstehend</span>
+            </div>
+            <div class="booking-actions">
+                <button type="button" class="btn-approve"
+                    onclick="openApproveModal({{ b.id }}, '{{ b.teacher_name|e }}', '{{ b.date }}')">
+                    ✅ Genehmigen
+                </button>
+                <button type="button" class="btn-reject"
+                    onclick="openRejectModal({{ b.id }}, '{{ b.teacher_name|e }}', '{{ b.date }}')">
+                    ❌ Ablehnen
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="empty-hint">✅ Keine ausstehenden Anfragen – alles erledigt!</p>
+        {% endif %}
+    </div>
+
+    <!-- Aktuelle Buchungen (diese + nächste Woche) -->
+    <div class="ra-section">
+        <h3>📅 Buchungen – diese & nächste Woche</h3>
+
+        {% if bookings %}
+        {% for b in bookings %}
+        <div class="booking-card">
+            <div class="booking-card-header">
+                <div>
+                    <div class="booking-offer">{{ b.offer_label }}</div>
+                    <div class="booking-meta">
+                        <span class="booking-date-pill">📅 {{ b.date[8:10] }}.{{ b.date[5:7] }}.{{ b.date[:4] }}</span>
+                        &nbsp;{{ b.period }}. Stunde &nbsp;·&nbsp;
+                        <strong>{{ b.teacher_name }}</strong>
+                        {% if b.teacher_class %}&nbsp;(Klasse {{ b.teacher_class }}){% endif %}
+                        &nbsp;·&nbsp; {{ b.student_count }} Schüler*innen
+                    </div>
+                </div>
+                <span class="status-badge status-{{ b.status or 'booked' }}">
+                    {% if b.status == 'rejected' %}Abgelehnt
+                    {% elif not b.is_approved %}Ausstehend
+                    {% else %}Gebucht{% endif %}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p class="empty-hint">Noch keine Buchungen für diese Woche.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Genehmigungsmodal -->
+<div id="approveModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeApproveModal()">
+    <div class="modal-box">
+        <h4>✅ Buchung genehmigen</h4>
+        <p id="approveInfo" style="font-size:.9rem;color:var(--text-secondary);margin-bottom:.75rem;"></p>
+        <form method="POST" id="approveForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <textarea name="admin_reply" rows="3" placeholder="Optionale Nachricht an die Lehrkraft …"></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeApproveModal()">Abbrechen</button>
+                <button type="submit" class="btn-approve">Genehmigen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Ablehnungsmodal -->
+<div id="rejectModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeRejectModal()">
+    <div class="modal-box">
+        <h4>❌ Buchung ablehnen</h4>
+        <p id="rejectInfo" style="font-size:.9rem;color:var(--text-secondary);margin-bottom:.75rem;"></p>
+        <form method="POST" id="rejectForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <textarea name="reason" rows="3" placeholder="Begründung (optional) …"></textarea>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Abbrechen</button>
+                <button type="submit" class="btn-reject">Ablehnen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openApproveModal(bookingId, teacherName, date) {
+    document.getElementById('approveForm').action = '/room-admin/{{ room.id }}/approve/' + bookingId;
+    document.getElementById('approveInfo').textContent = 'Anfrage von ' + teacherName + ' am ' + date + ' genehmigen?';
+    document.getElementById('approveModal').style.display = 'flex';
+}
+function closeApproveModal() {
+    document.getElementById('approveModal').style.display = 'none';
+}
+function openRejectModal(bookingId, teacherName, date) {
+    document.getElementById('rejectForm').action = '/room-admin/{{ room.id }}/reject/' + bookingId;
+    document.getElementById('rejectInfo').textContent = 'Anfrage von ' + teacherName + ' am ' + date + ' ablehnen?';
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+function closeRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+</script>
+{% endblock %}

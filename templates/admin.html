@@ -196,7 +196,8 @@
         </div>
         <div class="users-grid">
             {% for user in users %}
-            <div class="user-card">
+            {% set user_room_admins = room_admins_map.get(user.id, []) %}
+            <div class="user-card" style="{% if user_room_admins %}border-color: var(--primary);{% endif %}">
                 <div class="user-avatar {% if user.role == 'admin' %}admin{% endif %}">
                     {{ user.username[0]|upper }}
                 </div>
@@ -205,7 +206,33 @@
                     <span class="role-badge-modern {% if user.role == 'admin' %}admin{% else %}teacher{% endif %}">
                         {{ 'Admin' if user.role == 'admin' else 'Lehrkraft' }}
                     </span>
+                    {% for r in user_room_admins %}
+                    <span style="display:inline-flex;align-items:center;gap:.2rem;background:color-mix(in srgb,{{ r.color or 'var(--primary)' }} 15%,var(--bg-secondary));color:{{ r.color or 'var(--primary)' }};border:1px solid {{ r.color or 'var(--primary)' }};border-radius:6px;font-size:.7rem;font-weight:700;padding:.1rem .45rem;margin-top:.2rem;">
+                        {{ r.icon }} {{ r.name }}
+                        <form method="POST" action="{{ url_for('admin_dyn.room_admin_remove', user_id=user.id) }}" style="display:inline;margin:0;" onsubmit="return confirm('Raum-Admin für {{ r.name }} entfernen?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="room_id" value="{{ r.id }}">
+                            <button type="submit" title="Entfernen" style="background:none;border:none;cursor:pointer;color:inherit;font-size:.8rem;padding:0 0 0 .15rem;line-height:1;">✕</button>
+                        </form>
+                    </span>
+                    {% endfor %}
                 </div>
+                {% if user.role != 'admin' and all_rooms %}
+                <div class="user-room-admin-assign" style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--border-light);">
+                    <form method="POST" action="{{ url_for('admin_dyn.room_admin_add', user_id=user.id) }}" style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <select name="room_id" style="flex:1;min-width:110px;padding:.3rem .5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);font-size:.78rem;">
+                            <option value="">— Raum wählen —</option>
+                            {% for r in all_rooms %}
+                            {% if r not in user_room_admins %}
+                            <option value="{{ r.id }}">{{ r.icon }} {{ r.name }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <button type="submit" style="padding:.3rem .7rem;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;">🔑 Raum-Admin</button>
+                    </form>
+                </div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>

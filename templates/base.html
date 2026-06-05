@@ -300,6 +300,14 @@
                                 <a href="{{ url_for('admin_cms') }}">✏️ Texte & Layout</a>
                             </div>
                         </div>
+                        {% elif room_admin_rooms %}
+                        {% for r in room_admin_rooms %}
+                        <a href="{{ url_for('room_admin_dashboard', room_id=r.id) }}"
+                           class="nav-link-admin{% if request.endpoint == 'room_admin_dashboard' and request.view_args.get('room_id') == r.id %} active{% endif %}"
+                           style="display:inline-flex;align-items:center;gap:.3rem;">
+                            🔑 {{ r.icon }} {{ r.name }}
+                        </a>
+                        {% endfor %}
                         {% endif %}
 
                         <div class="user-info">

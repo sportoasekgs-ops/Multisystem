@@ -370,6 +370,40 @@ class RoomCourse(db.Model):
 
 
 
+class RoomAdmin(db.Model):
+    """Raum-Admin-Zuordnung: Benutzer mit Admin-Rechten für bestimmte Räume"""
+
+    __tablename__ = "room_admins"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    room_id = db.Column(
+        db.Integer,
+        db.ForeignKey("rooms.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    user = db.relationship(
+        "User",
+        backref=db.backref("room_admin_roles", cascade="all, delete-orphan"),
+    )
+    room = db.relationship(
+        "Room",
+        backref=db.backref("room_admin_users", cascade="all, delete-orphan"),
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "room_id", name="uq_room_admin"),
+    )
+
+
 class PasswordResetToken(db.Model):
     """Einmal-Token für Passwort-Reset (lokale Admin-Accounts)"""
 
@@ -1296,6 +1330,44 @@ def copy_global_schedule_to_room(room_id):
         )
         db.session.add(rp)
     db.session.flush()
+
+
+def is_room_admin(user_id, room_id):
+    """Prüft ob ein Benutzer Raum-Admin für einen bestimmten Raum ist"""
+    try:
+        return RoomAdmin.query.filter_by(user_id=user_id, room_id=room_id).first() is not None
+    except Exception:
+        return False
+
+
+def get_rooms_for_room_admin(user_id):
+    """Gibt alle aktiven Räume zurück, für die ein Benutzer Raum-Admin ist"""
+    try:
+        entries = RoomAdmin.query.filter_by(user_id=user_id).all()
+        return [ra.room for ra in entries if ra.room and ra.room.is_active]
+    except Exception:
+        return []
+
+
+def get_room_admins_for_room(room_id):
+    """Gibt alle Benutzer zurück, die Raum-Admin für einen Raum sind"""
+    try:
+        entries = RoomAdmin.query.filter_by(room_id=room_id).all()
+        return [ra.user for ra in entries if ra.user]
+    except Exception:
+        return []
+
+
+def get_pending_bookings_for_room(room_id):
+    """Gibt ausstehende Buchungen/Anfragen für einen Raum zurück, die noch auf Freigabe warten"""
+    bookings = (
+        Booking.query.filter_by(room_id=room_id, is_approved=False)
+        .filter(Booking.status != "no_show")
+        .filter(Booking.status != "rejected")
+        .order_by(Booking.date, Booking.period)
+        .all()
+    )
+    return [b.to_dict() for b in bookings]
 
 
 def copy_global_courses_to_room(room_id):

@@ -1353,3 +1353,72 @@ def room_schedule_courses_save(room_id):
         
     return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
+
+# ─── Raum-Admin Verwaltung ─────────────────────────────────────────────────────
+
+@admin_dyn_bp.route('/users/<int:user_id>/room-admin/add', methods=['POST'])
+def room_admin_add(user_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('admin'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin'))
+
+    from models import RoomAdmin, Room
+    room_id = request.form.get('room_id', type=int)
+    if not room_id:
+        flash('Kein Raum ausgewählt.', 'error')
+        return redirect(url_for('admin'))
+
+    room = Room.query.get(room_id)
+    if not room:
+        flash('Raum nicht gefunden.', 'error')
+        return redirect(url_for('admin'))
+
+    try:
+        existing = RoomAdmin.query.filter_by(user_id=user_id, room_id=room_id).first()
+        if existing:
+            flash(f'Benutzer ist bereits Raum-Admin für {room.name}.', 'info')
+        else:
+            ra = RoomAdmin(user_id=user_id, room_id=room_id)
+            db.session.add(ra)
+            db.session.commit()
+            flash(f'Raum-Admin-Rolle für „{room.name}" zugewiesen.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler: {e}', 'error')
+
+    return redirect(url_for('admin'))
+
+
+@admin_dyn_bp.route('/users/<int:user_id>/room-admin/remove', methods=['POST'])
+def room_admin_remove(user_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('admin'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin'))
+
+    from models import RoomAdmin
+    room_id = request.form.get('room_id', type=int)
+
+    try:
+        if room_id:
+            ra = RoomAdmin.query.filter_by(user_id=user_id, room_id=room_id).first()
+            if ra:
+                room_name = ra.room.name if ra.room else 'Raum'
+                db.session.delete(ra)
+                db.session.commit()
+                flash(f'Raum-Admin-Rolle für „{room_name}" entfernt.', 'success')
+        else:
+            RoomAdmin.query.filter_by(user_id=user_id).delete()
+            db.session.commit()
+            flash('Alle Raum-Admin-Rollen entfernt.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler: {e}', 'error')
+
+    return redirect(url_for('admin'))
+
