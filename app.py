@@ -192,22 +192,34 @@ db_uri = get_database_url()
 
 def _trigger_restart():
     """Sendet SIGHUP an den Gunicorn-Master, um alle Worker neu zu starten.
-    Funktioniert auf Gunicorn-basierten Linux-Servern.
+    Läuft verzögert in einem Background-Thread, damit die aktuelle HTTP-Antwort
+    (z.B. bootstrap_saved.html) vollständig ausgeliefert wird bevor Workers sterben.
+    Verhindert 502 Bad Gateway beim Neustart.
     """
     import signal
     import subprocess
+    import threading
+    import time
 
-    try:
-        result = subprocess.run(
-            ["pgrep", "-f", "gunicorn"], capture_output=True, text=True
-        )
-        pids = [int(p) for p in result.stdout.strip().split() if p.isdigit()]
-        if pids:
-            master_pid = min(pids)
-            os.kill(master_pid, signal.SIGHUP)
-            print(f"[Restart] SIGHUP an Gunicorn-Master PID {master_pid} gesendet.")
-    except Exception as e:
-        print(f"[Restart] Neustart fehlgeschlagen: {e}")
+    def _do_restart():
+        # 1,5 Sekunden warten – genug Zeit damit nginx die Antwort gesendet hat
+        time.sleep(1.5)
+        try:
+            result = subprocess.run(
+                ["pgrep", "-f", "gunicorn"], capture_output=True, text=True
+            )
+            pids = [int(p) for p in result.stdout.strip().split() if p.isdigit()]
+            if pids:
+                master_pid = min(pids)
+                os.kill(master_pid, signal.SIGHUP)
+                print(f"[Restart] SIGHUP an Gunicorn-Master PID {master_pid} gesendet.")
+            else:
+                print("[Restart] Kein Gunicorn-Prozess gefunden.")
+        except Exception as e:
+            print(f"[Restart] Neustart fehlgeschlagen: {e}")
+
+    t = threading.Thread(target=_do_restart, daemon=True)
+    t.start()
 
 
 # ── Bootstrap-Modus: keine DB-URL vorhanden ──────────────────────────────────
