@@ -31,7 +31,9 @@ _find_src_dir() {
     # 2. Bekannte Standardpfade (schnell, ohne find)
     local _p
     for _p in /opt/learngrid /opt/buchungssystem /opt/slotra \
-               /srv/learngrid/src /var/www/learngrid /root/learngrid; do
+               /srv/learngrid/src \
+               /var/www/learngrid /var/www/multisystem /var/www/buchungssystem \
+               /root/Multisystem /root/learngrid /root/buchungssystem; do
         if [[ -f "$_p/main.py" && -f "$_p/models.py" ]]; then
             echo "$_p"; return
         fi
