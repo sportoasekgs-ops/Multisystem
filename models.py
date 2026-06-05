@@ -61,6 +61,7 @@ class Booking(db.Model):
     admin_reply = db.Column(db.Text, nullable=True)
     is_exclusive = db.Column(db.Boolean, default=False, nullable=False)
     is_approved = db.Column(db.Boolean, default=True, nullable=False)
+    is_request = db.Column(db.Boolean, default=False, nullable=False)
     status = db.Column(db.String(20), default="booked", nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     room_id = db.Column(db.Integer, db.ForeignKey("rooms.id"), nullable=True)
@@ -90,6 +91,7 @@ class Booking(db.Model):
             "admin_reply": self.admin_reply,
             "is_exclusive": self.is_exclusive,
             "is_approved": self.is_approved,
+            "is_request": self.is_request,
             "status": self.status,
             "room_id": self.room_id,
             "created_at": self.created_at.isoformat()
@@ -484,6 +486,7 @@ def create_booking(
     is_approved=None,
     room_id=None,
     status="booked",
+    is_request=False,
 ):
     """Erstellt eine neue Buchung in der Datenbank"""
     try:
@@ -505,6 +508,7 @@ def create_booking(
             admin_reply=admin_reply,
             is_exclusive=is_exclusive,
             is_approved=is_approved,
+            is_request=is_request,
             room_id=room_id,
             status=status,
             created_at=datetime.now(),
@@ -579,19 +583,19 @@ def check_student_double_booking(
 
 def get_all_bookings():
     """Gibt alle Buchungen zurück (für Admin-Ansicht)"""
-    bookings = Booking.query.order_by(Booking.date.desc(), Booking.period).all()
+    bookings = Booking.query.filter(Booking.is_request == False).order_by(Booking.date.desc(), Booking.period).all()
     return [b.to_dict() for b in bookings]
 
 
 def get_bookings_by_date(date):
     """Gibt alle Buchungen für ein bestimmtes Datum zurück"""
-    bookings = Booking.query.filter_by(date=date).filter(Booking.status != 'no_show').order_by(Booking.period).all()
+    bookings = Booking.query.filter_by(date=date).filter(Booking.status != 'no_show', Booking.is_request == False).order_by(Booking.period).all()
     return [b.to_dict() for b in bookings]
 
 
 def get_bookings_for_week(start_date, end_date, room_id=None):
     """Gibt alle Buchungen für eine Woche zurück"""
-    query = Booking.query.filter(Booking.date >= start_date, Booking.date <= end_date).filter(Booking.status != 'no_show')
+    query = Booking.query.filter(Booking.date >= start_date, Booking.date <= end_date).filter(Booking.status != 'no_show', Booking.is_request == False)
     if room_id is not None:
         query = query.filter_by(room_id=room_id)
     bookings = query.order_by(Booking.date, Booking.period).all()

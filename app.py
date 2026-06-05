@@ -559,6 +559,23 @@ if not _BOOTSTRAP_MODE:
                     print("[MIGRATION] Spalte 'recipient_user_id' erfolgreich hinzugefügt.")
         except Exception as e:
             print(f"[MIGRATION] Fehler bei der Notification recipient_user_id Migration: {e}")
+
+        # --- Auto-Migrator: Booking is_request Spalte hinzufügen ---
+        try:
+            inspector = db.inspect(db.engine)
+            if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
+                booking_columns = [col['name'] for col in inspector.get_columns('bookings')]
+                if 'is_request' not in booking_columns:
+                    print("[MIGRATION] Füge Spalte 'is_request' zu 'bookings' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("ALTER TABLE bookings ADD COLUMN is_request BOOLEAN DEFAULT FALSE"))
+                        conn.commit()
+                        conn.execute(text("UPDATE bookings SET is_request = FALSE WHERE is_request IS NULL"))
+                        conn.commit()
+                    print("[MIGRATION] Spalte 'is_request' erfolgreich hinzugefügt.")
+        except Exception as e:
+            print(f"[MIGRATION] Fehler bei der Booking is_request Migration: {e}")
         # --------------------------------------------------------------------------------
 
         # Für bestehende Installationen (vor Setup-Wizard-Feature):
@@ -2400,8 +2417,59 @@ def book(date_str, period):
 
     if request.method == "POST":
         # Hole Lehrkraft-Informationen
-        teacher_name = request.form.get("teacher_name", "").strip()
+        teacher_name = request.form.get("teacher_name", "").strip() or user_display_name
         teacher_class = request.form.get("teacher_class", "").strip()
+
+        if request_mode:
+            notes = request.form.get("notes", "").strip()
+            if not notes:
+                flash("Bitte geben Sie eine Nachricht/Begründung ein.", "error")
+                return render_template(
+                    "book.html",
+                    date_str=date_str,
+                    period=period,
+                    period_info=period_info,
+                    period_time=_get_period_dict(period),
+                    available_spots=available_spots,
+                    free_modules=get_free_courses(),
+                    user_name=user_display_name,
+                    user_email="",
+                    school_classes=get_school_classes_list(),
+                    max_students=get_max_students(),
+                    request_mode=request_mode,
+                )
+            
+            # Erstelle Anfrage in Datenbank (is_request = True)
+            booking_id = create_booking(
+                date=date_str,
+                weekday=weekday,
+                period=period,
+                teacher_id=session["user_id"],
+                students=[],
+                offer_type=period_info["type"],
+                offer_label=period_info["label"] if period_info["type"] == "fest" else "Freie Wahl",
+                teacher_name=teacher_name,
+                teacher_class="",
+                notes=notes,
+                is_exclusive=False,
+                is_approved=False,
+                room_id=room_id,
+                is_request=True,
+            )
+            if booking_id:
+                # Create notification for admin
+                notification_message = f"✉️ ANFRAGE: {teacher_name} möchte für {period_info['label'] if period_info['type'] == 'fest' else 'Freie Wahl'} am {date_str} (Stunde {period}) buchen: {notes}"
+                create_notification(
+                    booking_id=booking_id,
+                    message=notification_message,
+                    notification_type="booking_request",
+                    recipient_role="admin",
+                )
+                flash("Anfrage erfolgreich gesendet. ✉️", "success")
+                return redirect(url_for("meine_buchungen"))
+            else:
+                flash("Fehler beim Senden der Anfrage.", "error")
+                return redirect(url_for("dashboard", date=date_str, room=room_id))
 
         if not teacher_name or not teacher_class:
             flash("Bitte geben Sie Ihren Namen und Ihre Klasse ein.", "error")
@@ -2554,6 +2622,7 @@ def book(date_str, period):
             is_exclusive=is_exclusive,
             is_approved=False if request_mode else (not is_exclusive),
             room_id=room_id,
+            is_request=request_mode,
         )
 
         if booking_id:
@@ -2763,6 +2832,7 @@ def meine_buchungen():
     else:
         bookings_query = (
             Booking.query.filter_by(teacher_id=user_id)
+            .filter(Booking.is_request == False)
             .order_by(Booking.date.desc(), Booking.period)
             .all()
         )
@@ -3391,39 +3461,89 @@ def approve_exclusive(booking_id):
             removed_count += 1
 
     # Genehmige die Buchung und speichere die admin_reply
-    booking.is_approved = True
-    if admin_reply:
-        booking.admin_reply = admin_reply
-    db.session.commit()
+    if booking.is_request:
+        reply_text = admin_reply if admin_reply else "Ja, geht in Ordnung. Du kannst die Kinder schicken."
+        booking.admin_reply = reply_text
+        booking.is_approved = True
+        db.session.commit()
 
-    # System-Benachrichtigung für die Lehrkraft erzeugen
-    create_notification(
-        booking_id=booking.id,
-        message=f"✅ Deine Buchung für {booking.offer_label} am {booking.date} ({booking.period}. Stunde) wurde genehmigt.{' Antwort: ' + admin_reply if admin_reply else ''}",
-        notification_type="booking_approved",
-        recipient_role="teacher",
-        recipient_user_id=booking.teacher_id,
-        metadata={
-            "date": booking.date,
-            "period": booking.period,
-            "offer_label": booking.offer_label,
-            "admin_reply": admin_reply,
-        }
-    )
+        # System-Benachrichtigung für die Lehrkraft erzeugen (Reine Anfrage / Nachricht)
+        create_notification(
+            booking_id=booking.id,
+            message=f"💬 Freigabe für Deine Anfrage: {booking.offer_label} am {booking.date} ({booking.period}. Stunde). Antwort: {reply_text} (Du kannst die Kinder schicken)",
+            notification_type="request_approved",
+            recipient_role="teacher",
+            recipient_user_id=booking.teacher_id,
+            metadata={
+                "date": booking.date,
+                "period": booking.period,
+                "offer_label": booking.offer_label,
+                "admin_reply": reply_text,
+            }
+        )
+    else:
+        booking.is_approved = True
+        if admin_reply:
+            booking.admin_reply = admin_reply
+        db.session.commit()
+
+        # System-Benachrichtigung für die Lehrkraft erzeugen
+        create_notification(
+            booking_id=booking.id,
+            message=f"✅ Deine Buchung für {booking.offer_label} am {booking.date} ({booking.period}. Stunde) wurde genehmigt.{' Antwort: ' + admin_reply if admin_reply else ''}",
+            notification_type="booking_approved",
+            recipient_role="teacher",
+            recipient_user_id=booking.teacher_id,
+            metadata={
+                "date": booking.date,
+                "period": booking.period,
+                "offer_label": booking.offer_label,
+                "admin_reply": admin_reply,
+            }
+        )
 
     # Sende E-Mails im Hintergrund
-    def _send_approval_emails(t_email, t_name, s_name, d_str, per, affected):
+    def _send_approval_emails(t_email, t_name, s_name, d_str, per, affected, is_req=False, reply_txt=""):
         if t_email:
             try:
-                from email_service import send_exclusive_approved_email
-
-                send_exclusive_approved_email(
-                    teacher_email=t_email,
-                    teacher_name=t_name,
-                    student_name=s_name,
-                    date_str=d_str,
-                    period=per,
-                )
+                if is_req:
+                    from email_service import send_email
+                    from email_service import _get_app_name
+                    app_name = _get_app_name()
+                    subject = f"Antwort auf Deine Anfrage – {app_name}"
+                    html = f"""<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+                    <body style="margin:0;padding:20px;background:#f3f4f6;">
+                        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1);">
+                            <div style="background:linear-gradient(135deg,#E91E63 0%,#C2185B 100%);padding:24px 30px;">
+                                <h2 style="color:white;margin:0;font-size:20px;">Antwort auf Deine Anfrage</h2>
+                            </div>
+                            <div style="padding:30px;">
+                                <div style="background:#dcfce7;border:1px solid #86efac;color:#166534;padding:16px 20px;border-radius:10px;margin-bottom:20px;">
+                                    <strong>Hallo {t_name}!</strong>
+                                    <p style="margin:10px 0 0 0;">Deine Anfrage für den {d_str} ({per}. Stunde) wurde freigegeben.</p>
+                                </div>
+                                <div style="background:#f8fafc;border-radius:10px;padding:20px;margin-bottom:20px;">
+                                    <p style="margin:0;color:#6b7280;font-size:0.9rem;"><strong>Nachricht des Administrators:</strong></p>
+                                    <p style="margin:10px 0 0 0;font-size:1.1rem;color:#1f2937;font-style:italic;">"{reply_txt}"</p>
+                                    <p style="margin:15px 0 0 0;font-weight:600;color:#166534;">Du kannst die Kinder schicken. 🚸</p>
+                                </div>
+                                <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center;color:#6b7280;font-size:12px;">
+                                    Diese Anfrage ist keine feste Buchung im Kalender, sondern eine freigegebene Absprache.
+                                </div>
+                            </div>
+                        </div>
+                    </body></html>"""
+                    text = f"Hallo {t_name},\n\nDeine Anfrage für den {d_str} ({per}. Stunde) wurde freigegeben.\nAntwort des Admins: {reply_txt}\nDu kannst die Kinder schicken."
+                    send_email(t_email, subject, html, text)
+                else:
+                    from email_service import send_exclusive_approved_email
+                    send_exclusive_approved_email(
+                        teacher_email=t_email,
+                        teacher_name=t_name,
+                        student_name=s_name,
+                        date_str=d_str,
+                        period=per,
+                    )
             except Exception as e:
                 print(f"[EMAIL] Genehmigungs-E-Mail fehlgeschlagen: {e}")
         from email_service import send_booking_removed_due_to_exclusive
@@ -3448,6 +3568,8 @@ def approve_exclusive(booking_id):
         date_str,
         period,
         affected_teachers,
+        booking.is_request,
+        booking.admin_reply
     )
 
     if is_ajax:

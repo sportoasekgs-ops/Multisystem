@@ -136,8 +136,8 @@
     <!-- Ausstehende exklusive Buchungen -->
     <section class="admin-section-modern pending-exclusive-section">
         <div class="section-header">
-            <h3><span class="section-icon">⏳</span> Exklusive Buchungen zur Freigabe</h3>
-            <span class="info-hint">Diese Buchungen warten auf Ihre Genehmigung</span>
+            <h3><span class="section-icon">⏳</span> Freigaben &amp; Anfragen zur Prüfung</h3>
+            <span class="info-hint">Diese Buchungen und Anfragen warten auf Ihre Genehmigung</span>
         </div>
         <div class="pending-exclusive-list">
             {% for booking in pending_exclusive %}
@@ -149,8 +149,13 @@
                     </div>
                     <div class="pending-teacher">
                         <strong>{{ booking.teacher_name }}</strong>
-                        <span>({{ booking.teacher_class }})</span>
+                        {% if not booking.is_request %}<span>({{ booking.teacher_class }})</span>{% endif %}
                     </div>
+                    {% if booking.is_request %}
+                    <div class="pending-student" style="color: var(--primary); font-weight: 600;">
+                        ✉️ Reine Anfrage / Nachricht
+                    </div>
+                    {% else %}
                     <div class="pending-student">
                         👤 {% if booking.students and booking.students[0].name == '' %}
                             🏫 Ganze Klasse {{ booking.students[0].klasse }}
@@ -158,6 +163,7 @@
                             {% for student in booking.students %}{{ student.name|abbreviate_name }} ({{ student.klasse }}){% if not loop.last %}, {% endif %}{% endfor %}
                         {% endif %}
                     </div>
+                    {% endif %}
                     <div class="pending-offer">
                         {{ booking.offer_label }}
                     </div>

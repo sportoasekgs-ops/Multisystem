@@ -485,9 +485,15 @@
                                         </div>
                                         <div class="booking-teacher">von <strong>{{ pending.teacher_name }}</strong></div>
                                         <div class="booking-offer">{{ pending.offer_label }}</div>
-                                        <div class="booking-students" title="{{ pending.students_str }}">
-                                            Schüler: {{ pending.students_str }}
-                                        </div>
+                                        {% if pending.is_request %}
+                                         <div class="booking-students" style="color: var(--primary); font-weight: 600;">
+                                             ✉️ Reine Anfrage / Nachricht
+                                         </div>
+                                         {% else %}
+                                         <div class="booking-students" title="{{ pending.students_str }}">
+                                             Schüler: {{ pending.students_str }}
+                                         </div>
+                                         {% endif %}
                                         {% if pending.notes %}
                                         <div class="booking-note-snippet" title="{{ pending.notes }}">
                                             <span class="notes-icon">📝</span>

@@ -170,6 +170,7 @@
                 <label for="teacher_name">Ihr Name</label>
                 <input type="text" id="teacher_name" name="teacher_name" required placeholder="z.B. Max Mustermann" value="{{ user_name }}">
             </div>
+            {% if not request_mode %}
             <div class="form-group">
                 <label for="teacher_class">Ihre Klasse</label>
                 <select id="teacher_class" name="teacher_class" required onchange="onTeacherClassChange()">
@@ -179,8 +180,10 @@
                     {% endfor %}
                 </select>
             </div>
+            {% endif %}
         </div>
 
+        {% if not request_mode %}
         <!-- Buchungsart -->
         <div class="booking-section">
             <h3>🏫 Buchungsart</h3>
@@ -245,8 +248,9 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
-        {% if period_info.type == 'frei' %}
+        {% if period_info.type == 'frei' and not request_mode %}
         <div class="booking-section">
             <h3>📚 Modul-Auswahl</h3>
             <div class="form-group">
@@ -272,6 +276,7 @@
             </div>
         </div>
 
+        {% if not request_mode %}
         <div class="form-group email-confirmation-group">
             <label class="checkbox-label">
                 <input type="checkbox" name="send_email_confirmation" id="send_email_confirmation" value="1">
@@ -282,6 +287,8 @@
             </label>
             <p class="hint-text">Bestätigung wird an {{ user_email }} gesendet</p>
         </div>
+        {% endif %}
+
 
         <div style="display:flex;gap:1rem;margin-top:1.5rem;">
             <a href="{{ url_for('dashboard', date=date_str, room=room.id) }}" class="btn btn-secondary">Abbrechen</a>
@@ -290,6 +297,7 @@
     </form>
 </div>
 
+{% if not request_mode %}
 <script>
 const schoolClasses = {{ school_classes | tojson | safe }};
 const MAX_STUDENTS = {{ max_students }};
@@ -418,4 +426,5 @@ function updateStudentFields() {
 
 updateStudentFields();
 </script>
+{% endif %}
 {% endblock %}
