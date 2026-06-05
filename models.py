@@ -229,6 +229,17 @@ class Course(db.Model):
     period_number = db.Column(db.Integer, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
+    room_id = db.Column(
+        db.Integer,
+        db.ForeignKey("rooms.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+
+    room = db.relationship(
+        "Room",
+        backref=db.backref("courses", cascade="all, delete-orphan", lazy="dynamic"),
+    )
 
     def to_dict(self):
         return {
@@ -242,6 +253,7 @@ class Course(db.Model):
             "period_number": self.period_number,
             "is_active": self.is_active,
             "sort_order": self.sort_order,
+            "room_id": self.room_id,
         }
 
 

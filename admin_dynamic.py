@@ -609,11 +609,11 @@ def courses():
     room_id = request.args.get('room_id', default=0, type=int)
     rooms = Room.query.order_by(Room.sort_order, Room.name).all()
     
-    all_courses = Course.query.order_by(Course.course_type.desc(), Course.weekday, Course.period_number, Course.sort_order).all()
     weekdays = [('Mon', 'Montag'), ('Tue', 'Dienstag'), ('Wed', 'Mittwoch'), ('Thu', 'Donnerstag'), ('Fri', 'Freitag')]
     
     if room_id > 0:
         room = Room.query.get_or_404(room_id)
+        all_courses = Course.query.filter_by(room_id=room_id).order_by(Course.course_type.desc(), Course.weekday, Course.period_number, Course.sort_order).all()
         if room.use_custom_schedule:
             periods = RoomPeriod.query.filter_by(room_id=room_id).order_by(RoomPeriod.sort_order, RoomPeriod.period_number).all()
             custom_courses_list = RoomCourse.query.filter_by(room_id=room_id).all()
@@ -625,6 +625,7 @@ def courses():
             room_courses = {}
     else:
         room = None
+        all_courses = Course.query.filter_by(room_id=None).order_by(Course.course_type.desc(), Course.weekday, Course.period_number, Course.sort_order).all()
         periods = []
         room_courses = {}
         
@@ -653,9 +654,10 @@ def courses_add():
     if not _admin_required():
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
+    room_id = request.form.get('room_id', default=0, type=int)
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.courses'))
+        return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
     from models import Course
     try:
@@ -669,18 +671,17 @@ def courses_add():
 
         if not name:
             flash('Bitte einen Namen eingeben.', 'error')
-            return redirect(url_for('admin_dyn.courses'))
+            return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
         if course_type == 'fixed' and (not weekday or period_number is None):
             flash('Für feste Kurse bitte Wochentag und Stunde angeben.', 'error')
-            return redirect(url_for('admin_dyn.courses'))
+            return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
         if course_type == 'fixed' and period_number is not None:
             from dynamic_config import is_break_period
-
-            if is_break_period(period_number):
+            if is_break_period(period_number, room_id=room_id if room_id > 0 else None):
                 flash('Feste Kurse können nicht in großen Pausen gebucht werden.', 'error')
-                return redirect(url_for('admin_dyn.courses'))
+                return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
         max_order = db.session.query(db.func.max(Course.sort_order)).scalar() or 0
         c = Course(
@@ -692,6 +693,7 @@ def courses_add():
             icon=icon,
             is_active=True,
             sort_order=max_order + 1,
+            room_id=room_id if room_id > 0 else None
         )
         db.session.add(c)
         db.session.commit()
@@ -699,7 +701,7 @@ def courses_add():
     except Exception as e:
         db.session.rollback()
         flash(f'Fehler: {e}', 'error')
-    return redirect(url_for('admin_dyn.courses'))
+    return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
 
 @admin_dyn_bp.route('/courses/<int:course_id>/edit', methods=['POST'])
@@ -707,9 +709,10 @@ def courses_edit(course_id):
     if not _admin_required():
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
+    room_id = request.form.get('room_id', default=0, type=int)
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.courses'))
+        return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
     from models import Course
     c = Course.query.get_or_404(course_id)
@@ -729,7 +732,7 @@ def courses_edit(course_id):
     except Exception as e:
         db.session.rollback()
         flash(f'Fehler: {e}', 'error')
-    return redirect(url_for('admin_dyn.courses'))
+    return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
 
 @admin_dyn_bp.route('/courses/<int:course_id>/delete', methods=['POST'])
@@ -737,12 +740,15 @@ def courses_delete(course_id):
     if not _admin_required():
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
-    if not _validate_csrf(request.form.get('csrf_token', '')):
-        flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.courses'))
-
+    
     from models import Course
     c = Course.query.get_or_404(course_id)
+    room_id = c.room_id or 0
+    
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.courses', room_id=room_id))
+
     try:
         name = c.name
         db.session.delete(c)
@@ -751,7 +757,7 @@ def courses_delete(course_id):
     except Exception as e:
         db.session.rollback()
         flash(f'Fehler: {e}', 'error')
-    return redirect(url_for('admin_dyn.courses'))
+    return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
 
 # ─── Schulklassen ─────────────────────────────────────────────────────────────

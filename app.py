@@ -571,6 +571,21 @@ if not _BOOTSTRAP_MODE:
         except Exception as e:
             print(f"[MIGRATION] Fehler bei der Notification recipient_user_id Migration: {e}")
 
+        # --- Auto-Migrator: Course room_id Spalte hinzufügen ---
+        try:
+            inspector = db.inspect(db.engine)
+            if db.engine.dialect.has_table(db.engine.connect(), 'courses'):
+                course_columns = [col['name'] for col in inspector.get_columns('courses')]
+                if 'room_id' not in course_columns:
+                    print("[MIGRATION] Füge Spalte 'room_id' zu 'courses' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("ALTER TABLE courses ADD COLUMN room_id INTEGER REFERENCES rooms(id)"))
+                        conn.commit()
+                    print("[MIGRATION] Spalte 'room_id' erfolgreich zu 'courses' hinzugefügt.")
+        except Exception as e:
+            print(f"[MIGRATION] Fehler bei der Course room_id Migration: {e}")
+
         # --- Auto-Migrator: Booking is_request Spalte hinzufügen ---
         try:
             inspector = db.inspect(db.engine)

@@ -286,7 +286,7 @@ def get_fixed_offers(room_id=None):
     from models import Course
 
     try:
-        courses = Course.query.filter_by(course_type="fixed", is_active=True).all()
+        courses = Course.query.filter_by(course_type="fixed", is_active=True, room_id=None).all()
         result = {wd: {} for wd in ("Mon", "Tue", "Wed", "Thu", "Fri")}
         for c in courses:
             if c.weekday and c.period_number is not None:
@@ -304,13 +304,23 @@ def get_fixed_offers(room_id=None):
     return result
 
 
-def get_free_courses():
-    """Freie Module aus DB. Leere Liste wenn keine – KEIN Fallback auf Defaults."""
-    from models import Course
+def get_free_courses(room_id=None):
+    """Freie Module aus DB. Leere Liste wenn keine. Bei room_id: raumspezifisch."""
+    from models import Course, Room
 
     try:
+        if room_id:
+            room = Room.query.get(room_id)
+            if room and room.use_custom_schedule:
+                courses = (
+                    Course.query.filter_by(course_type="free", is_active=True, room_id=room_id)
+                    .order_by(Course.sort_order)
+                    .all()
+                )
+                return [c.name for c in courses]
+        
         courses = (
-            Course.query.filter_by(course_type="free", is_active=True)
+            Course.query.filter_by(course_type="free", is_active=True, room_id=None)
             .order_by(Course.sort_order)
             .all()
         )
