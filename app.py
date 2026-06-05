@@ -1078,8 +1078,9 @@ def login_local():
         flash("Ungültige Anmeldedaten.", "error")
         return redirect(url_for("login"))
 
-    if user["role"] != "admin":
-        flash("Lokaler Login ist nur für Administratoren verfügbar.", "error")
+    # Erlaube lokalen Login für Admins und Lehrkräfte
+    if user["role"] not in ["admin", "teacher"]:
+        flash("Lokaler Login ist nur für Administratoren und Lehrkräfte verfügbar.", "error")
         return redirect(url_for("login"))
 
     user_obj = User.query.filter_by(username=username).first()
@@ -1097,7 +1098,7 @@ def login_local():
     session["user_email"] = user["email"]
     session["user_role"] = user["role"]
 
-    flash(f"Willkommen, {username}! (Lokaler Admin-Login)", "success")
+    flash(f"Willkommen, {username}! (Lokaler Login)", "success")
     return redirect(url_for("dashboard"))
 
 
