@@ -656,6 +656,7 @@ def check_setup():
         "reset_password",
         "serve_homepage",
         "redirect_homepage",
+        "index",
     }
     if request.endpoint and (
         request.endpoint.startswith("setup.") or request.endpoint in _SETUP_BYPASS
@@ -940,10 +941,10 @@ def serve_homepage(filename="index.html"):
 # Route: Startseite
 @app.route("/")
 def index():
-    """Startseite - leitet zum Dashboard oder der Login-Seite weiter"""
+    """Startseite - eingeloggte Nutzer zum Dashboard, Besucher zur Marketing-Homepage"""
     if "user_id" in session:
         return redirect(url_for("dashboard"))
-    return redirect(url_for("login"))
+    return redirect(url_for("serve_homepage"))
 
 
 # Route: Direkter IServ-Embed Login (für iFrame-Integration)
