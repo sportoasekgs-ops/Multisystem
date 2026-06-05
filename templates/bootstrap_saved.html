@@ -58,7 +58,7 @@
     <p id="msg">Die Datenbank-URL wurde gespeichert. Die App startet jetzt neu und verbindet sich mit der Datenbank.</p>
     <div class="progress-bar"><div class="progress-fill" id="bar"></div></div>
     <div class="status" id="status">Warte auf Neustart…</div>
-    <a href="/setup/welcome" class="btn" id="btn">Weiter zum Setup →</a>
+    <a href="/setup/general" class="btn" id="btn">Weiter zum Setup →</a>
 </div>
 <script>
     const bar    = document.getElementById('bar');
@@ -92,7 +92,7 @@
                     msg.textContent   = 'Die App läuft jetzt mit der neuen Datenbank.';
                     status.textContent = 'Weiterleitung in 2 Sekunden…';
                     btn.style.display = 'inline-block';
-                    setTimeout(() => { window.location.href = '/setup/welcome'; }, 2000);
+                    setTimeout(() => { window.location.href = '/setup/general'; }, 2000);
                 } else {
                     retry();
                 }
