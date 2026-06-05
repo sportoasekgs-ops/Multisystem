@@ -261,15 +261,24 @@ def format_period_label(number, include_time=False, room_id=None):
 def get_fixed_offers(room_id=None):
     """Feste Angebote aus DB. Bei room_id: raumspezifisch."""
     if room_id:
-        from models import Room, RoomCourse
+        from models import Room, RoomCourse, Course
         try:
             room = Room.query.get(room_id)
-            if room and room.use_custom_schedule:
+            if room:
                 result = {wd: {} for wd in ("Mon", "Tue", "Wed", "Thu", "Fri")}
-                for rc in RoomCourse.query.filter_by(room_id=room_id).join(RoomCourse.course).all():
-                    if rc.course and rc.weekday and rc.course.is_active:
-                        result.setdefault(rc.weekday, {})[rc.period_number] = rc.course.name
-                return result
+                # Direkt am Raum hinterlegte feste Kurse (über die Kursverwaltung)
+                for c in Course.query.filter_by(room_id=room_id, course_type='fixed', is_active=True).all():
+                    if c.weekday and c.period_number is not None:
+                        result[c.weekday][c.period_number] = c.name
+                if room.use_custom_schedule:
+                    # RoomCourse-Raster-Zuordnungen (überschreiben direkte Einträge)
+                    for rc in RoomCourse.query.filter_by(room_id=room_id).join(RoomCourse.course).all():
+                        if rc.course and rc.weekday and rc.course.is_active:
+                            result[rc.weekday][rc.period_number] = rc.course.name
+                    return result
+                # Kein eigener Plan: nur zurückgeben, wenn raumspezifische Kurse vorhanden
+                if any(result[wd] for wd in result):
+                    return result
         except Exception:
             pass
 

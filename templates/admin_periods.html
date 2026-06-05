@@ -433,6 +433,31 @@
                 <button type="submit" class="btn btn-primary" style="height: 38px; padding: 0 1.2rem;">Hinzufügen</button>
             </form>
         </div>
+
+        <!-- ═══ VORLAGEN (raumspezifisch) ═══════════════════════════════════════════ -->
+        <div class="section-card">
+            <h3>📋 Vorlagen</h3>
+            <p style="font-size:.85rem;color:var(--text-secondary);margin:-.5rem 0 1rem;">
+                Lade eine eingebaute Vorlage für diesen Raum. Alle bisherigen Stunden dieses Raums werden dabei ersetzt.
+            </p>
+            <div class="template-grid">
+                {% for t in builtin_templates %}
+                <div class="template-card builtin">
+                    <div class="t-name">{{ t.name }}</div>
+                    <div class="t-desc">{{ t.description }}</div>
+                    <div class="t-periods">
+                        {% for p in t.periods %}{{ p.number }}. {{ p.start }}–{{ p.end }}{% if not loop.last %} · {% endif %}{% endfor %}
+                    </div>
+                    <form method="POST" action="{{ url_for('admin_dyn.room_schedule_load_builtin', room_id=room.id) }}"
+                          onsubmit="return confirm('Vorlage „{{ t.name }}" laden? Aktuelle Stunden dieses Raums werden ersetzt.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="builtin_id" value="{{ t.id }}">
+                        <button type="submit" class="btn-load" style="width:100%;">⬇️ Laden</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
         {% endif %}
 
     {% else %}

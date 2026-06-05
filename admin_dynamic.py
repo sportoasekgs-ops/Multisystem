@@ -1087,6 +1087,52 @@ def room_schedule_toggle(room_id):
     return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
+@admin_dyn_bp.route('/rooms/<int:room_id>/schedule/load-builtin', methods=['POST'])
+def room_schedule_load_builtin(room_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
+
+    from models import Room, RoomPeriod
+    room = Room.query.get_or_404(room_id)
+    if not room.use_custom_schedule:
+        flash('Der raumspezifische Stundenplan ist nicht aktiv.', 'error')
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
+
+    builtin_id = request.form.get('builtin_id', '')
+    tmpl = next((t for t in _BUILTIN_TEMPLATES if t['id'] == builtin_id), None)
+    if not tmpl:
+        flash('Vorlage nicht gefunden.', 'error')
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
+
+    try:
+        RoomPeriod.query.filter_by(room_id=room_id).delete()
+        for idx, p in enumerate(tmpl['periods']):
+            rp = RoomPeriod(
+                room_id=room_id,
+                period_number=p['number'],
+                name=p['name'],
+                start_time=p['start'],
+                end_time=p['end'],
+                sort_order=idx + 1,
+                is_active=True,
+                period_kind=p.get('kind', 'lesson'),
+                after_lesson=p.get('after_lesson'),
+            )
+            db.session.add(rp)
+        db.session.commit()
+        _after_periods_changed()
+        flash(f'Vorlage „{tmpl["name"]}" geladen – {len(tmpl["periods"])} Stunden übernommen.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Laden der Vorlage: {e}', 'error')
+
+    return redirect(url_for('admin_dyn.periods', room_id=room_id))
+
+
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/copy_global', methods=['POST'])
 def room_schedule_copy_global(room_id):
     if not _admin_required():
