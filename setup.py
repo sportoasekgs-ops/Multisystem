@@ -75,6 +75,31 @@ def restart_wait():
     return render_template("bootstrap_saved.html")
 
 
+@setup_bp.route("/db-check")
+def db_check():
+    """Prüft ob die Datenbankverbindung nach dem Neustart erfolgreich ist."""
+    from flask import jsonify
+    try:
+        from database import db
+        from sqlalchemy import text
+        with db.engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        from local_config import get_local
+        from urllib.parse import urlparse
+        raw_url = get_local("database_url", "")
+        if raw_url:
+            try:
+                p = urlparse(raw_url)
+                display = f"{p.scheme}://***@{p.hostname}{p.path}"
+            except Exception:
+                display = "(konfiguriert)"
+        else:
+            display = "(Umgebungsvariable)"
+        return jsonify({"ok": True, "db": display})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 503
+
+
 @setup_bp.route("/<step_id>", methods=["GET", "POST"])
 def step(step_id):
     if step_id not in STEP_IDS:

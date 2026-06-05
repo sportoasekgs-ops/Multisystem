@@ -32,6 +32,8 @@
             animation: spin 0.9s linear infinite;
             margin: 0 auto 1.2rem;
         }
+        .spinner.done  { animation: none; border-color: #bbf7d0; border-top-color: #22c55e; }
+        .spinner.error { animation: none; border-color: #fecaca; border-top-color: #ef4444; }
         @keyframes spin { to { transform: rotate(360deg); } }
         h1 { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; margin-bottom: 0.5rem; }
         p  { color: #6c757d; font-size: 0.9rem; margin-bottom: 1.2rem; line-height: 1.6; }
@@ -40,15 +42,57 @@
         }
         .progress-fill {
             height: 100%; background: #E91E63; border-radius: 3px;
-            width: 0%; transition: width 0.3s ease;
+            width: 0%; transition: width 0.4s ease;
         }
-        .status { font-size: 0.8rem; color: #9ca3af; }
+        .progress-fill.success { background: #22c55e; }
+        .progress-fill.error   { background: #ef4444; }
+        .status { font-size: 0.8rem; color: #9ca3af; margin-bottom: 0.5rem; }
+
+        .db-result {
+            display: none;
+            margin: 1rem 0;
+            padding: 0.9rem 1rem;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .db-result.success {
+            background: #f0fdf4;
+            border: 1.5px solid #86efac;
+            color: #166534;
+        }
+        .db-result.error {
+            background: #fef2f2;
+            border: 1.5px solid #fca5a5;
+            color: #991b1b;
+        }
+        .db-result .label {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            display: block;
+        }
+        .db-result .detail {
+            font-family: monospace;
+            font-size: 0.78rem;
+            word-break: break-all;
+            color: inherit;
+            opacity: 0.8;
+        }
+
         .btn {
-            display: inline-block; margin-top: 1.2rem;
-            padding: 0.6rem 1.4rem; background: #E91E63; color: #fff;
-            border-radius: 8px; text-decoration: none; font-size: 0.9rem;
-            font-weight: 600; display: none;
+            display: none;
+            margin-top: 1rem;
+            padding: 0.65rem 1.6rem;
+            background: #E91E63;
+            color: #fff;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
         }
+        .btn.error-btn { background: #6b7280; }
     </style>
 </head>
 <body>
@@ -58,46 +102,100 @@
     <p id="msg">Die Datenbank-URL wurde gespeichert. Die App startet jetzt neu und verbindet sich mit der Datenbank.</p>
     <div class="progress-bar"><div class="progress-fill" id="bar"></div></div>
     <div class="status" id="status">Warte auf Neustart…</div>
+
+    <div class="db-result" id="db-result">
+        <span class="label" id="db-label"></span>
+        <span class="detail" id="db-detail"></span>
+    </div>
+
     <a href="/setup/general" class="btn" id="btn">Weiter zum Setup →</a>
+    <a href="/setup/database" class="btn error-btn" id="btn-retry" style="display:none; margin-left:0.5rem;">Zurück zur Datenbank</a>
 </div>
 <script>
-    const bar    = document.getElementById('bar');
-    const status = document.getElementById('status');
-    const title  = document.getElementById('title');
-    const msg    = document.getElementById('msg');
-    const btn    = document.getElementById('btn');
-    const spinner = document.getElementById('spinner');
+    const bar      = document.getElementById('bar');
+    const status   = document.getElementById('status');
+    const title    = document.getElementById('title');
+    const msg      = document.getElementById('msg');
+    const btn      = document.getElementById('btn');
+    const btnRetry = document.getElementById('btn-retry');
+    const spinner  = document.getElementById('spinner');
+    const dbResult = document.getElementById('db-result');
+    const dbLabel  = document.getElementById('db-label');
+    const dbDetail = document.getElementById('db-detail');
 
-    let attempts = 0;
-    const maxAttempts = 40;   // 40 × 1.5 s = 60 s Timeout
-    const waitBefore  = 3000; // 3 s warten bevor erster Ping
+    let attempts   = 0;
+    const maxAttempts = 40;  // 40 × 1.5 s = 60 s Timeout
+    const waitBefore  = 3000;
 
+    // Phase 1: Warten bis App neu gestartet ist
     function ping() {
         attempts++;
-        const pct = Math.min((attempts / maxAttempts) * 100, 95);
+        const pct = Math.min((attempts / maxAttempts) * 80, 80); // max 80% in Phase 1
         bar.style.width = pct + '%';
 
-        // redirect: 'manual' verhindert, dass fetch Redirects automatisch folgt.
-        // Im Bootstrap-Modus gibt /setup/welcome einen 302 zurück (opaqueredirect, status=0).
-        // Nach dem Neustart mit echter DB gibt /setup/welcome direkt 200 zurück → fertig.
         fetch('/setup/welcome', { method: 'HEAD', redirect: 'manual' })
             .then(r => {
                 if (r.type === 'opaqueredirect' || r.status === 0) {
-                    // Noch im Bootstrap-Modus oder App startet noch – warten
                     retry();
                 } else if (r.ok || r.status === 200) {
-                    bar.style.width = '100%';
-                    spinner.style.borderTopColor = '#22c55e';
-                    title.textContent = '✅ Neustart abgeschlossen!';
-                    msg.textContent   = 'Die App läuft jetzt mit der neuen Datenbank.';
-                    status.textContent = 'Weiterleitung in 2 Sekunden…';
-                    btn.style.display = 'inline-block';
-                    setTimeout(() => { window.location.href = '/setup/general'; }, 2000);
+                    // App ist oben – Phase 2: DB prüfen
+                    status.textContent = 'App gestartet – prüfe Datenbankverbindung…';
+                    bar.style.width = '85%';
+                    setTimeout(checkDb, 600);
                 } else {
                     retry();
                 }
             })
             .catch(() => retry());
+    }
+
+    // Phase 2: Tatsächliche DB-Verbindung prüfen
+    function checkDb() {
+        fetch('/setup/db-check')
+            .then(r => r.json())
+            .then(data => {
+                bar.style.width = '100%';
+                if (data.ok) {
+                    // Erfolg
+                    bar.classList.add('success');
+                    spinner.classList.add('done');
+                    title.textContent = '✅ Datenbank verbunden!';
+                    msg.textContent   = 'Die App läuft jetzt mit der neuen Datenbank.';
+                    status.textContent = 'Weiterleitung in 3 Sekunden…';
+
+                    dbResult.className = 'db-result success';
+                    dbResult.style.display = 'block';
+                    dbLabel.textContent = '✔ Verbindung erfolgreich';
+                    dbDetail.textContent = data.db || '';
+
+                    btn.style.display = 'inline-block';
+                    setTimeout(() => { window.location.href = '/setup/general'; }, 3000);
+                } else {
+                    // DB-Fehler
+                    bar.classList.add('error');
+                    spinner.classList.add('error');
+                    title.textContent = '⚠️ Datenbankfehler';
+                    msg.textContent   = 'Die App ist gestartet, aber die Datenbankverbindung ist fehlgeschlagen.';
+                    status.textContent = 'Bitte URL prüfen und erneut versuchen.';
+
+                    dbResult.className = 'db-result error';
+                    dbResult.style.display = 'block';
+                    dbLabel.textContent = '✘ Verbindung fehlgeschlagen';
+                    dbDetail.textContent = data.error || 'Unbekannter Fehler';
+
+                    btn.style.display = 'none';
+                    btnRetry.style.display = 'inline-block';
+                }
+            })
+            .catch(() => {
+                // db-check nicht erreichbar – trotzdem weiterleiten
+                bar.style.width = '100%';
+                spinner.classList.add('done');
+                title.textContent = '✅ Neustart abgeschlossen';
+                status.textContent = 'Weiterleitung…';
+                btn.style.display = 'inline-block';
+                setTimeout(() => { window.location.href = '/setup/general'; }, 2000);
+            });
     }
 
     function retry() {
@@ -106,7 +204,7 @@
             btn.style.display = 'inline-block';
             return;
         }
-        status.textContent = `Warte… (Versuch ${attempts}/${maxAttempts})`;
+        status.textContent = `Warte auf Neustart… (${attempts}/${maxAttempts})`;
         setTimeout(ping, 1500);
     }
 
