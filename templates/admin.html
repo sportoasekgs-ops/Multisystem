@@ -285,6 +285,31 @@
     </section>
 </div>
 
+<!-- Modal für Freigabe mit Begründung/Antwort -->
+<div id="approveModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✅ Buchung / Anfrage freigeben</h3>
+            <button type="button" class="modal-close" onclick="closeApproveModal()">&times;</button>
+        </div>
+        <form method="POST" id="approveForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="modal-body">
+                <p class="modal-info" id="approveInfo"></p>
+                <div class="form-group">
+                    <label for="approveReply">Nachricht / Antwort an die Lehrkraft (optional für Buchungen, empfohlen für Anfragen):</label>
+                    <textarea name="admin_reply" id="approveReply" rows="3" placeholder="z.B. Ja, geht in Ordnung. Du kannst die Kinder schicken..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; resize: vertical;"></textarea>
+                    <p class="hint-text">Diese Nachricht wird der Lehrkraft im Posteingang / in den Details angezeigt.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeApproveModal()">Abbrechen</button>
+                <button type="submit" class="btn btn-primary">Genehmigen & Freigeben</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal für Ablehnung mit Begründung -->
 <div id="rejectModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
@@ -312,27 +337,14 @@
 
 <script>
 function approveRequest(bookingId, teacherName, date) {
-    const reply = prompt("Antwort/Nachricht an " + teacherName + " senden (optional):");
-    if (reply === null) return; // Abgebrochen
-    
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/admin/approve_exclusive/' + bookingId;
-    
-    const csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = 'csrf_token';
-    csrfInput.value = '{{ csrf_token }}';
-    form.appendChild(csrfInput);
-    
-    const replyInput = document.createElement('input');
-    replyInput.type = 'hidden';
-    replyInput.name = 'admin_reply';
-    replyInput.value = reply;
-    form.appendChild(replyInput);
-    
-    document.body.appendChild(form);
-    form.submit();
+    document.getElementById('approveForm').action = '/admin/approve_exclusive/' + bookingId;
+    document.getElementById('approveInfo').innerHTML = 'Anfrage/Buchung von <strong>' + teacherName + '</strong> am <strong>' + date + '</strong> freigeben?';
+    document.getElementById('approveReply').value = '';
+    document.getElementById('approveModal').style.display = 'flex';
+}
+
+function closeApproveModal() {
+    document.getElementById('approveModal').style.display = 'none';
 }
 
 function openRejectModal(bookingId, teacherName, date) {
@@ -345,6 +357,12 @@ function openRejectModal(bookingId, teacherName, date) {
 function closeRejectModal() {
     document.getElementById('rejectModal').style.display = 'none';
 }
+
+document.getElementById('approveModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeApproveModal();
+    }
+});
 
 document.getElementById('rejectModal').addEventListener('click', function(e) {
     if (e.target === this) {

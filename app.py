@@ -2946,18 +2946,34 @@ def meine_buchungen():
 @login_required
 def posteingang():
     """Zeigt alle Benachrichtigungen im persönlichen Posteingang"""
-    from models import get_recent_notifications
+    from models import get_recent_notifications, Booking
 
     user_id = session["user_id"]
     is_admin = session.get("user_role") == "admin"
 
     if is_admin:
         notifications = get_recent_notifications(recipient_role="admin", limit=50)
+        inquiries = (
+            Booking.query.filter_by(is_request=True)
+            .order_by(Booking.date.desc(), Booking.period)
+            .all()
+        )
     else:
         notifications = get_recent_notifications(recipient_user_id=user_id, limit=50)
+        inquiries = (
+            Booking.query.filter_by(teacher_id=user_id, is_request=True)
+            .order_by(Booking.date.desc(), Booking.period)
+            .all()
+        )
+
+    # Convert to dict for uniform rendering
+    inquiries_data = [b.to_dict() for b in inquiries]
 
     return render_template(
-        "posteingang.html", notifications=notifications, is_admin=is_admin
+        "posteingang.html",
+        notifications=notifications,
+        inquiries=inquiries_data,
+        is_admin=is_admin
     )
 
 

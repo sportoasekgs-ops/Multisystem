@@ -3,8 +3,86 @@
 {% block title %}Posteingang – {{ school_name or 'Buchungssystem' }}{% endblock %}
 
 {% block content %}
+<style>
+.posteingang-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 2px solid var(--border-light);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.25rem;
+}
+.posteingang-tab {
+    padding: 0.55rem 1.2rem;
+    border-radius: var(--radius);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.posteingang-tab:hover {
+    color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.05);
+}
+.posteingang-tab.active {
+    color: var(--primary);
+    background: rgba(var(--primary-rgb), 0.1);
+    box-shadow: inset 0 0 0 1px rgba(var(--primary-rgb), 0.15);
+}
+.tab-content-panel {
+    display: none;
+}
+.tab-content-panel.active {
+    display: block;
+}
+
+.inquiry-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1.5px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    transition: all var(--transition);
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.inquiry-card:hover {
+    border-color: rgba(var(--primary-rgb), 0.3);
+}
+
+.inquiry-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.inquiry-status-badge.pending {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.inquiry-status-badge.approved {
+    background: rgba(34, 197, 94, 0.12);
+    color: #166534;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.inquiry-status-badge.rejected {
+    background: rgba(239, 68, 68, 0.12);
+    color: #991b1b;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+</style>
+
 <div class="inbox-page" style="max-width: 800px; margin: 0 auto; padding: 1rem 1rem 3rem;">
-    <div class="page-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div class="page-header" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <h2 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-heading); font-weight: 800; color: var(--text-primary);">
                 <span class="page-icon">📥</span> Posteingang
@@ -14,79 +92,162 @@
             </p>
         </div>
         {% if notifications %}
-        <button onclick="markAllInboxRead()" class="btn btn-edit" style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 1rem; border-radius: var(--radius); font-weight: 600; font-size: 0.85rem;">
+        <button id="mark-all-read-btn" onclick="markAllInboxRead()" class="btn btn-edit" style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 1rem; border-radius: var(--radius); font-weight: 600; font-size: 0.85rem;">
             <span>✔️</span> Alle als gelesen markieren
         </button>
         {% endif %}
     </div>
 
-    {% if notifications %}
-    <div class="notifications-list" style="display: flex; flex-direction: column; gap: 1rem;">
-        {% for n in notifications %}
-        <div class="notification-card {% if not n.is_read %}unread{% endif %}" id="notif-{{ n.id }}"
-             style="background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1.5px solid {% if not n.is_read %}var(--primary){% else %}var(--glass-border){% endif %}; border-radius: var(--radius-lg); padding: 1.25rem; transition: all var(--transition); position: relative; box-shadow: {% if not n.is_read %}0 0 10px rgba(var(--primary-rgb), 0.1){% else %}var(--shadow-sm){% endif %};">
-            
-            {% if not n.is_read %}
-            <span class="unread-dot" style="position: absolute; top: 1.25rem; left: 0.5rem; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 6px var(--primary);"></span>
-            {% endif %}
+    <!-- Reiter/Tab Navigation -->
+    <div class="posteingang-tabs">
+        <button class="posteingang-tab active" onclick="switchInboxTab('notifications-panel', this)">
+            📥 Benachrichtigungen ({% if notifications %}{{ notifications|length }}{% else %}0{% endif %})
+        </button>
+        <button class="posteingang-tab" onclick="switchInboxTab('inquiries-panel', this)">
+            ✉️ Anfragen ({% if inquiries %}{{ inquiries|length }}{% else %}0{% endif %})
+        </button>
+    </div>
 
-            <div style="display: flex; align-items: flex-start; gap: 1rem; padding-left: {% if not n.is_read %}0.75rem{% else %}0{% endif %};">
-                <div class="notification-icon" style="font-size: 1.5rem; line-height: 1;">
-                    {% if 'genehmigt' in n.message or 'freigegeben' in n.message or '✅' in n.message %}
-                        ✅
-                    {% elif 'abgelehnt' in n.message or '❌' in n.message or 'storniert' in n.message %}
-                        ❌
-                    {% elif 'gelöscht' in n.message or 'storniert' in n.message %}
-                        🗑️
-                    {% else %}
-                        ✉️
-                    {% endif %}
-                </div>
+    <!-- ── TAB: BENACHRICHTIGUNGEN ── -->
+    <div id="tab-notifications-panel" class="tab-content-panel active">
+        {% if notifications %}
+        <div class="notifications-list" style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for n in notifications %}
+            <div class="notification-card {% if not n.is_read %}unread{% endif %}" id="notif-{{ n.id }}"
+                 style="background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1.5px solid {% if not n.is_read %}var(--primary){% else %}var(--glass-border){% endif %}; border-radius: var(--radius-lg); padding: 1.25rem; transition: all var(--transition); position: relative; box-shadow: {% if not n.is_read %}0 0 10px rgba(var(--primary-rgb), 0.1){% else %}var(--shadow-sm){% endif %};">
                 
-                <div style="flex-grow: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
-                        <p class="notification-message" style="margin: 0; color: var(--text-primary); font-weight: 500; font-size: 0.925rem; line-height: 1.4;">
-                            {{ n.message }}
-                        </p>
-                        <span class="notification-time" style="color: var(--text-tertiary); font-size: 0.75rem; white-space: nowrap;">
-                            {{ n.created_at }}
-                        </span>
-                    </div>
+                {% if not n.is_read %}
+                <span class="unread-dot" style="position: absolute; top: 1.25rem; left: 0.5rem; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 6px var(--primary);"></span>
+                {% endif %}
 
-                    {% if n.booking %}
-                    <div class="notification-booking-details" 
-                         style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border-light); font-size: 0.8rem; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 1rem;">
-                        <div><strong>Termin:</strong> {{ n.booking.date }} ({{ n.booking.period }}. Stunde)</div>
-                        <div><strong>Kurs/Angebot:</strong> {{ n.booking.offer_label }}</div>
-                        {% if n.booking.admin_reply %}
-                        <div style="width: 100%; border-top: 1px solid var(--border-light); margin-top: 0.4rem; padding-top: 0.4rem;">
-                            <strong style="color: var(--primary);">Antwort:</strong> <span style="color: var(--text-primary);">{{ n.booking.admin_reply }}</span>
+                <div style="display: flex; align-items: flex-start; gap: 1rem; padding-left: {% if not n.is_read %}0.75rem{% else %}0{% endif %};">
+                    <div class="notification-icon" style="font-size: 1.5rem; line-height: 1;">
+                        {% if 'genehmigt' in n.message or 'freigegeben' in n.message or '✅' in n.message %}
+                            ✅
+                        {% elif 'abgelehnt' in n.message or '❌' in n.message or 'storniert' in n.message %}
+                            ❌
+                        {% elif 'gelöscht' in n.message or 'storniert' in n.message %}
+                            🗑️
+                        {% else %}
+                            ✉️
+                        {% endif %}
+                    </div>
+                    
+                    <div style="flex-grow: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                            <p class="notification-message" style="margin: 0; color: var(--text-primary); font-weight: 500; font-size: 0.925rem; line-height: 1.4;">
+                                {{ n.message }}
+                            </p>
+                            <span class="notification-time" style="color: var(--text-tertiary); font-size: 0.75rem; white-space: nowrap;">
+                                {{ n.created_at }}
+                            </span>
+                        </div>
+
+                        {% if n.booking %}
+                        <div class="notification-booking-details" 
+                             style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border-light); font-size: 0.8rem; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 1rem;">
+                            <div><strong>Termin:</strong> {{ n.booking.date }} ({{ n.booking.period }}. Stunde)</div>
+                            <div><strong>Kurs/Angebot:</strong> {{ n.booking.offer_label }}</div>
+                            {% if n.booking.admin_reply %}
+                            <div style="width: 100%; border-top: 1px solid var(--border-light); margin-top: 0.4rem; padding-top: 0.4rem;">
+                                <strong style="color: var(--primary);">Antwort:</strong> <span style="color: var(--text-primary);">{{ n.booking.admin_reply }}</span>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
+
+                    {% if not n.is_read %}
+                    <button onclick="markInboxRead({{ n.id }})" class="btn-mark-read" title="Als gelesen markieren"
+                            style="background: transparent; border: none; color: var(--text-tertiary); font-size: 1.1rem; cursor: pointer; padding: 0.2rem; transition: color var(--transition); flex-shrink: 0;">
+                        ✔️
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-bookings" style="text-align: center; padding: 3rem 1.5rem; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1.5px solid var(--glass-border); border-radius: var(--radius-lg); margin-top: 1rem;">
+            <div class="no-bookings-icon" style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+            <h3 style="margin: 0; color: var(--text-primary);">Dein Posteingang ist leer</h3>
+            <p style="margin: 0.5rem 0 0; color: var(--text-secondary);">Hier erscheinen Benachrichtigungen zu Deinen Buchungsanfragen.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ── TAB: ANFRAGEN ── -->
+    <div id="tab-inquiries-panel" class="tab-content-panel">
+        {% if inquiries %}
+        <div class="inquiries-list" style="display: flex; flex-direction: column; gap: 1rem;">
+            {% for inq in inquiries %}
+            <div class="inquiry-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                    <div>
+                        <span class="inquiry-status-badge {% if inq.status == 'rejected' %}rejected{% elif inq.is_approved %}approved{% else %}pending{% endif %}">
+                            {% if inq.status == 'rejected' %}
+                                ❌ Abgelehnt
+                            {% elif inq.is_approved %}
+                                ✅ Freigegeben
+                            {% else %}
+                                ⏳ Wartet auf Freigabe
+                            {% endif %}
+                        </span>
+                        <span style="color: var(--text-tertiary); font-size: 0.75rem; margin-left: 0.5rem;">
+                            Eingereicht am {{ inq.created_at[:10] if inq.created_at else '' }}
+                        </span>
+                    </div>
+                    {% if is_admin %}
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                        Von: <strong>{{ inq.teacher_name }}</strong>
+                    </span>
                     {% endif %}
                 </div>
 
-                {% if not n.is_read %}
-                <button onclick="markInboxRead({{ n.id }})" class="btn-mark-read" title="Als gelesen markieren"
-                        style="background: transparent; border: none; color: var(--text-tertiary); font-size: 1.1rem; cursor: pointer; padding: 0.2rem; transition: color var(--transition); flex-shrink: 0;">
-                    ✔️
-                </button>
+                <div class="inquiry-details" style="padding: 0.75rem; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border-light); font-size: 0.85rem; color: var(--text-secondary);">
+                    <div style="margin-bottom: 0.4rem;"><strong>Termin:</strong> {{ inq.date }} ({{ inq.period }}. Stunde)</div>
+                    <div style="margin-bottom: 0.4rem;"><strong>Kurs/Angebot:</strong> {{ inq.offer_label }}</div>
+                    {% if inq.notes %}
+                    <div style="border-top: 1px solid var(--border-light); margin-top: 0.4rem; padding-top: 0.4rem;">
+                        <strong>Anfrage-Nachricht:</strong> <span style="color: var(--text-primary);">{{ inq.notes }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if inq.admin_reply %}
+                <div class="inquiry-reply" style="padding: 0.75rem; background: rgba(34, 197, 94, 0.08); border-radius: var(--radius); border: 1.5px dashed rgba(34, 197, 94, 0.3); font-size: 0.9rem; color: var(--text-primary);">
+                    <strong style="color: #166534; display: block; margin-bottom: 0.2rem;">💬 Antwort von Administrator:</strong>
+                    <span style="font-style: italic;">"{{ inq.admin_reply }}"</span>
+                    {% if inq.is_approved and inq.status != 'rejected' %}
+                    <p style="margin: 0.5rem 0 0; font-weight: 600; color: #166534; font-size: 0.82rem;">🚸 Du kannst die Kinder schicken!</p>
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
+        {% else %}
+        <div class="no-bookings" style="text-align: center; padding: 3rem 1.5rem; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1.5px solid var(--glass-border); border-radius: var(--radius-lg);">
+            <div class="no-bookings-icon" style="font-size: 3rem; margin-bottom: 1rem;">✉️</div>
+            <h3 style="margin: 0; color: var(--text-primary);">Keine Anfragen</h3>
+            <p style="margin: 0.5rem 0 0; color: var(--text-secondary);">Hier erscheinen eingereichte Nachrichten-Anfragen und deren Status.</p>
+        </div>
+        {% endif %}
     </div>
-    {% else %}
-    <div class="no-bookings" style="text-align: center; padding: 3rem 1.5rem; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1.5px solid var(--glass-border); border-radius: var(--radius-lg); margin-top: 1rem;">
-        <div class="no-bookings-icon" style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-        <h3 style="margin: 0; color: var(--text-primary);">Dein Posteingang ist leer</h3>
-        <p style="margin: 0.5rem 0 0; color: var(--text-secondary);">Hier erscheinen Benachrichtigungen zu Deinen Buchungsanfragen.</p>
-    </div>
-    {% endif %}
 </div>
 
 <script>
+function switchInboxTab(tabId, buttonEl) {
+    // Deactivate all tabs & panels
+    document.querySelectorAll('.posteingang-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content-panel').forEach(p => p.classList.remove('active'));
+    
+    // Activate clicked tab & target panel
+    buttonEl.classList.add('active');
+    const panel = document.getElementById('tab-' + tabId);
+    if (panel) panel.classList.add('active');
+}
+
 function markInboxRead(notificationId) {
     fetch(`/api/notifications/${notificationId}/mark_read`, {
         method: 'POST',
@@ -110,7 +271,6 @@ function markInboxRead(notificationId) {
                 const btn = card.querySelector('.btn-mark-read');
                 if (btn) btn.remove();
             }
-            // Update the top notification bell if present
             if (typeof updateUnreadCount === 'function') {
                 updateUnreadCount();
             }
@@ -144,8 +304,7 @@ function markAllInboxRead() {
             if (typeof updateUnreadCount === 'function') {
                 updateUnreadCount();
             }
-            // Optionally hide the mark all read button if no unread remain
-            const headerBtn = document.querySelector('.page-header button');
+            const headerBtn = document.getElementById('mark-all-read-btn');
             if (headerBtn) headerBtn.remove();
         }
     })
