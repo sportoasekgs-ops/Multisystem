@@ -31,7 +31,7 @@
                 <span class="card-text">Datum:</span>
                 <input type="date" id="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()" class="date-input-inline" style="padding: 0.25rem 0.5rem; font-size: 0.82rem;">
             </form>
-            <a href="{{ url_for('calendar_view', year=selected_date.year, month=selected_date.month) }}" class="calendar-btn" title="Kalenderansicht öffnen" style="font-size: 0.9rem;">
+            <a href="{{ url_for('calendar_view', year=selected_date.year, month=selected_date.month, room=current_room.id if current_room else None) }}" class="calendar-btn" title="Kalenderansicht öffnen" style="font-size: 0.9rem;">
                 🗓️
             </a>
         </div>

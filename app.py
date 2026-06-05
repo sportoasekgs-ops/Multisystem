@@ -2253,10 +2253,19 @@ def calendar_view(year=None, month=None):
     """Monats-/Jahreskalenderansicht mit Buchungsübersicht"""
     import calendar
 
-    from models import get_blocked_slots_for_week, get_bookings_for_week
+    from models import Room, get_blocked_slots_for_week, get_bookings_for_week
 
     # Aktuelles Datum
     today = datetime.now(get_berlin_tz()).date()
+
+    # Raum-Filter
+    all_rooms = Room.query.filter_by(is_active=True).order_by(Room.sort_order, Room.name).all()
+    room_param = request.args.get("room", type=int)
+    current_room = None
+    if room_param:
+        current_room = Room.query.get(room_param)
+    if not current_room and all_rooms:
+        current_room = all_rooms[0]
 
     # Standard: aktueller Monat
     if year is None:
@@ -2302,11 +2311,14 @@ def calendar_view(year=None, month=None):
     # Buchungen und blockierte Slots für den gesamten Monat holen
     from models import BlockedSlot, Booking
 
-    month_bookings = Booking.query.filter(
+    booking_q = Booking.query.filter(
         Booking.date >= first_day.strftime("%Y-%m-%d"),
         Booking.date <= last_day.strftime("%Y-%m-%d"),
         Booking.status != 'no_show',
-    ).all()
+    )
+    if current_room:
+        booking_q = booking_q.filter(Booking.room_id == current_room.id)
+    month_bookings = booking_q.all()
 
     if is_demo_mode():
         from demo_mode import get_demo_bookings_for_week
@@ -2409,6 +2421,8 @@ def calendar_view(year=None, month=None):
         next_year=next_year,
         next_month=next_month,
         user_role=session.get("user_role"),
+        all_rooms=all_rooms,
+        current_room=current_room,
     )
 
 

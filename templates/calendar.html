@@ -10,26 +10,41 @@
     </div>
     
     <div class="calendar-nav">
-        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Zurück zur Wochenansicht</a>
+        <a href="{{ url_for('dashboard', room=current_room.id if current_room else None) }}" class="btn btn-secondary">← Zurück zur Wochenansicht</a>
     </div>
-    
-    <div class="calendar-container">
+
+    {% if all_rooms and all_rooms|length > 1 %}
+    <div style="display:flex; background:{% if current_room %}{{ current_room.color or 'var(--primary)' }}{% else %}var(--primary){% endif %}; border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 10px 12px 0; gap: 4px; margin-bottom: 0;">
+        {% for room in all_rooms %}
+        <a href="{{ url_for('calendar_view', year=year, month=month, room=room.id) }}"
+           style="text-decoration:none; padding: 7px 16px; border-radius: 8px 8px 0 0; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s;
+                  background: {% if current_room and room.id == current_room.id %}var(--bg-primary, #fff){% else %}rgba(0,0,0,0.15){% endif %};
+                  border-top: 3px solid {% if current_room and room.id == current_room.id %}{{ room.color or 'var(--primary)' }}{% else %}transparent{% endif %};
+                  color: {% if current_room and room.id == current_room.id %}var(--text-primary){% else %}rgba(255,255,255,0.9){% endif %};">
+            <span>{{ room.icon }}</span>
+            <span>{{ room.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="calendar-container" style="{% if all_rooms and all_rooms|length > 1 %}border-radius: 0 0 var(--radius-lg) var(--radius-lg);{% endif %}">
         <div class="month-navigation">
-            <a href="{{ url_for('calendar_view', year=prev_year, month=prev_month) }}" class="nav-btn" title="Vorheriger Monat">
+            <a href="{{ url_for('calendar_view', year=prev_year, month=prev_month, room=current_room.id if current_room else None) }}" class="nav-btn" title="Vorheriger Monat">
                 ◀
             </a>
             <div class="month-year-display">
                 <span class="month-name">{{ month_name }}</span>
                 <span class="year">{{ year }}</span>
             </div>
-            <a href="{{ url_for('calendar_view', year=next_year, month=next_month) }}" class="nav-btn" title="Nächster Monat">
+            <a href="{{ url_for('calendar_view', year=next_year, month=next_month, room=current_room.id if current_room else None) }}" class="nav-btn" title="Nächster Monat">
                 ▶
             </a>
         </div>
         
         <div class="year-quick-nav">
             {% for m in range(1, 13) %}
-            <a href="{{ url_for('calendar_view', year=year, month=m) }}" 
+            <a href="{{ url_for('calendar_view', year=year, month=m, room=current_room.id if current_room else None) }}" 
                class="month-quick-btn {% if m == month %}active{% endif %}">
                 {{ ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'][m-1] }}
             </a>
@@ -53,7 +68,7 @@
                 {% if day is none %}
                 <div class="calendar-day empty"></div>
                 {% else %}
-                <a href="{{ url_for('dashboard', date=day.date) }}" 
+                <a href="{{ url_for('dashboard', date=day.date, room=current_room.id if current_room else None) }}" 
                    class="calendar-day 
                           {% if day.is_weekend %}weekend{% endif %}
                           {% if day.is_today %}today{% endif %}
@@ -65,7 +80,7 @@
                     {% elif day.status == 'partial_blocked' %}
                     <span class="day-indicator partial" title="{{ day.blocked_reason }}">⚠️</span>
                     {% elif day.booking_count > 0 %}
-                    <span class="day-indicator bookings">{{ day.booking_count }}</span>
+                    <span class="day-indicator bookings" style="background:{% if current_room and current_room.color %}{{ current_room.color }}{% else %}var(--primary){% endif %}">{{ day.booking_count }}</span>
                     {% endif %}
                 </a>
                 {% endif %}
@@ -102,7 +117,7 @@
         <h3>Jahresübersicht</h3>
         <div class="year-buttons">
             {% for y in range(year - 1, year + 3) %}
-            <a href="{{ url_for('calendar_view', year=y, month=1) }}" 
+            <a href="{{ url_for('calendar_view', year=y, month=1, room=current_room.id if current_room else None) }}" 
                class="year-btn {% if y == year %}active{% endif %}">
                 {{ y }}
             </a>
