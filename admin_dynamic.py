@@ -983,3 +983,296 @@ def rooms_delete(room_id):
     else:
         flash(f'Raum „{name}" konnte nicht gelöscht werden. (Prüfen Sie, ob noch Buchungen darauf laufen).', 'error')
     return redirect(url_for('admin_dyn.rooms'))
+
+
+# ─── Raumspezifischer Stundenplan (Room-specific Schedule) ────────────────────────
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/schedule', methods=['GET'])
+def room_schedule(room_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    from models import Room, RoomPeriod, RoomCourse, Course
+    room = Room.query.get_or_404(room_id)
+    
+    # Alle aktiven Kurse für die Zuweisung laden
+    from models import Course
+    courses = Course.query.filter_by(is_active=True).order_by(Course.name).all()
+    
+    # Stunden und Pausen des Raums holen
+    if room.use_custom_schedule:
+        periods = RoomPeriod.query.filter_by(room_id=room_id).order_by(RoomPeriod.sort_order, RoomPeriod.period_number).all()
+        # Custom Courses laden und organisieren
+        custom_courses_list = RoomCourse.query.filter_by(room_id=room_id).all()
+        # Organisieren als {weekday: {period_number: course_id}}
+        room_courses = {wd: {} for wd in ("Mon", "Tue", "Wed", "Thu", "Fri")}
+        for rc in custom_courses_list:
+            room_courses.setdefault(rc.weekday, {})[rc.period_number] = rc.course_id
+    else:
+        periods = []
+        room_courses = {}
+        
+    return render_template('admin_room_schedule.html',
+                           room=room,
+                           periods=periods,
+                           room_courses=room_courses,
+                           courses=courses,
+                           csrf_token=session.get('csrf_token'))
+
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/schedule/toggle', methods=['POST'])
+def room_schedule_toggle(room_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    from models import Room, RoomPeriod, RoomCourse, copy_global_schedule_to_room, copy_global_courses_to_room
+    room = Room.query.get_or_404(room_id)
+    
+    use_custom = request.form.get('use_custom_schedule') == '1'
+    
+    try:
+        if use_custom:
+            room.use_custom_schedule = True
+            copy_global_schedule_to_room(room_id)
+            copy_global_courses_to_room(room_id)
+            db.session.commit()
+            flash('Raumspezifischer Stundenplan wurde aktiviert und der globale Plan kopiert.', 'success')
+        else:
+            room.use_custom_schedule = False
+            RoomPeriod.query.filter_by(room_id=room_id).delete()
+            RoomCourse.query.filter_by(room_id=room_id).delete()
+            db.session.commit()
+            flash('Raumspezifischer Stundenplan wurde deaktiviert. Der Raum nutzt wieder den globalen Plan.', 'success')
+        _after_periods_changed()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Umschalten des Stundenplans: {e}', 'error')
+        
+    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/schedule/copy_global', methods=['POST'])
+def room_schedule_copy_global(room_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    from models import Room, copy_global_schedule_to_room, copy_global_courses_to_room
+    room = Room.query.get_or_404(room_id)
+    if not room.use_custom_schedule:
+        flash('Der raumspezifische Stundenplan ist nicht aktiv.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    try:
+        copy_global_schedule_to_room(room_id)
+        copy_global_courses_to_room(room_id)
+        db.session.commit()
+        flash('Der globale Stundenplan wurde erfolgreich in den Raum kopiert (alle bisherigen Raum-Einstellungen wurden überschrieben).', 'success')
+        _after_periods_changed()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Kopieren des globalen Stundenplans: {e}', 'error')
+        
+    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/add', methods=['POST'])
+def room_schedule_period_add(room_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    from models import Room, RoomPeriod
+    room = Room.query.get_or_404(room_id)
+    if not room.use_custom_schedule:
+        flash('Der raumspezifische Stundenplan ist nicht aktiv.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    try:
+        number = int(request.form.get('number', 0))
+        name = request.form.get('name', '').strip()
+        start = request.form.get('start', '').strip()
+        end = request.form.get('end', '').strip()
+        kind = request.form.get('kind', 'lesson')
+        after_lesson_val = request.form.get('after_lesson')
+        after_lesson = int(after_lesson_val) if (kind == 'break' and after_lesson_val) else None
+        sort_order = int(request.form.get('sort_order', 0))
+        
+        if number <= 0:
+            flash('Ungültige Periodennummer.', 'error')
+            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            
+        if not name or not start or not end:
+            flash('Bitte füllen Sie Name, Startzeit und Endzeit aus.', 'error')
+            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            
+        # Prüfen auf Duplikate
+        if RoomPeriod.query.filter_by(room_id=room_id, period_number=number).first():
+            flash(f'Eine Periode mit der Nummer {number} existiert bereits für diesen Raum.', 'error')
+            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            
+        rp = RoomPeriod(
+            room_id=room_id,
+            period_number=number,
+            name=name,
+            start_time=start,
+            end_time=end,
+            sort_order=sort_order,
+            is_active=True,
+            period_kind=kind,
+            after_lesson=after_lesson
+        )
+        db.session.add(rp)
+        db.session.commit()
+        flash(f'Periode „{name}" hinzugefügt.', 'success')
+        _after_periods_changed()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Hinzufügen der Periode: {e}', 'error')
+        
+    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/<int:period_id>/edit', methods=['POST'])
+def room_schedule_period_edit(room_id, period_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    from models import Room, RoomPeriod
+    room = Room.query.get_or_404(room_id)
+    rp = RoomPeriod.query.filter_by(id=period_id, room_id=room_id).first_or_404()
+    
+    try:
+        number = int(request.form.get('number', 0))
+        name = request.form.get('name', '').strip()
+        start = request.form.get('start', '').strip()
+        end = request.form.get('end', '').strip()
+        kind = request.form.get('kind', 'lesson')
+        after_lesson_val = request.form.get('after_lesson')
+        after_lesson = int(after_lesson_val) if (kind == 'break' and after_lesson_val) else None
+        sort_order = int(request.form.get('sort_order', 0))
+        is_active = request.form.get('is_active') == '1'
+        
+        if number <= 0:
+            flash('Ungültige Periodennummer.', 'error')
+            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            
+        if not name or not start or not end:
+            flash('Bitte füllen Sie Name, Startzeit und Endzeit aus.', 'error')
+            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            
+        # Prüfen auf Duplikate bei anderer ID
+        dup = RoomPeriod.query.filter_by(room_id=room_id, period_number=number).first()
+        if dup and dup.id != period_id:
+            flash(f'Eine Periode mit der Nummer {number} existiert bereits.', 'error')
+            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            
+        rp.period_number = number
+        rp.name = name
+        rp.start_time = start
+        rp.end_time = end
+        rp.period_kind = kind
+        rp.after_lesson = after_lesson
+        rp.sort_order = sort_order
+        rp.is_active = is_active
+        
+        db.session.commit()
+        flash(f'Periode „{name}" aktualisiert.', 'success')
+        _after_periods_changed()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Aktualisieren der Periode: {e}', 'error')
+        
+    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/<int:period_id>/delete', methods=['POST'])
+def room_schedule_period_delete(room_id, period_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    from models import Room, RoomPeriod
+    room = Room.query.get_or_404(room_id)
+    rp = RoomPeriod.query.filter_by(id=period_id, room_id=room_id).first_or_404()
+    
+    try:
+        name = rp.name
+        db.session.delete(rp)
+        db.session.commit()
+        flash(f'Periode „{name}" gelöscht.', 'success')
+        _after_periods_changed()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Löschen der Periode: {e}', 'error')
+        
+    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+
+
+@admin_dyn_bp.route('/rooms/<int:room_id>/schedule/courses/save', methods=['POST'])
+def room_schedule_courses_save(room_id):
+    if not _admin_required():
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
+    if not _validate_csrf(request.form.get('csrf_token', '')):
+        flash('Ungültiges Sicherheits-Token.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    from models import Room, RoomCourse, RoomPeriod
+    room = Room.query.get_or_404(room_id)
+    if not room.use_custom_schedule:
+        flash('Der raumspezifische Stundenplan ist nicht aktiv.', 'error')
+        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        
+    try:
+        # Alle bestehenden Kurszuordnungen für diesen Raum löschen
+        RoomCourse.query.filter_by(room_id=room_id).delete()
+        
+        # Alle custom Stunden holen (nur lesson-Periods, breaks brauchen keine Zuweisungen)
+        periods = RoomPeriod.query.filter_by(room_id=room_id, period_kind='lesson', is_active=True).all()
+        weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+        
+        for p in periods:
+            for wd in weekdays:
+                # Feldname im Formular: course_{weekday}_{period_number}
+                form_key = f"course_{wd}_{p.period_number}"
+                val = request.form.get(form_key, '').strip()
+                if val:
+                    try:
+                        course_id = int(val)
+                        rc = RoomCourse(
+                            room_id=room_id,
+                            course_id=course_id,
+                            weekday=wd,
+                            period_number=p.period_number
+                        )
+                        db.session.add(rc)
+                    except ValueError:
+                        pass
+        db.session.commit()
+        flash('Kurs-Zuordnungen für diesen Raum erfolgreich gespeichert.', 'success')
+        _after_periods_changed()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Speichern der Kurs-Zuordnungen: {e}', 'error')
+        
+    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+

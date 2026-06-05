@@ -277,6 +277,7 @@ class Room(db.Model):
     max_students = db.Column(db.Integer, nullable=True)  # NULL = globale Einstellung
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
+    use_custom_schedule = db.Column(db.Boolean, default=False)  # Eigener Stundenplan
 
     def to_dict(self):
         return {
@@ -288,7 +289,73 @@ class Room(db.Model):
             "max_students": self.max_students,
             "sort_order": self.sort_order,
             "is_active": self.is_active,
+            "use_custom_schedule": self.use_custom_schedule,
         }
+
+
+class RoomPeriod(db.Model):
+    """Raumspezifische Stunde/Pause – nur gefüllt wenn Room.use_custom_schedule=True"""
+
+    __tablename__ = "room_periods"
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(
+        db.Integer,
+        db.ForeignKey("rooms.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    period_number = db.Column(db.Integer, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    start_time = db.Column(db.String(5), nullable=False)
+    end_time = db.Column(db.String(5), nullable=False)
+    sort_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    period_kind = db.Column(db.String(20), nullable=False, default="lesson")
+    after_lesson = db.Column(db.Integer, nullable=True)
+
+    room = db.relationship(
+        "Room",
+        backref=db.backref("custom_periods", cascade="all, delete-orphan", lazy="dynamic"),
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("room_id", "period_number", name="uq_room_period"),
+    )
+
+
+class RoomCourse(db.Model):
+    """Raumspezifische Kurs-Zuordnung (feste Angebote pro Wochentag+Stunde)"""
+
+    __tablename__ = "room_courses"
+
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(
+        db.Integer,
+        db.ForeignKey("rooms.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    course_id = db.Column(
+        db.Integer,
+        db.ForeignKey("courses.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    weekday = db.Column(db.String(3), nullable=False)
+    period_number = db.Column(db.Integer, nullable=False)
+
+    room = db.relationship(
+        "Room",
+        backref=db.backref("custom_courses", cascade="all, delete-orphan", lazy="dynamic"),
+    )
+    course = db.relationship("Course")
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "room_id", "weekday", "period_number", name="uq_room_course_slot"
+        ),
+    )
+
 
 
 class PasswordResetToken(db.Model):
@@ -1198,3 +1265,37 @@ def delete_room(room_id):
         db.session.rollback()
         print(f"Fehler beim Löschen des Raums: {e}")
         return False
+
+
+def copy_global_schedule_to_room(room_id):
+    """Kopiert den globalen Stundenplan in die raumspezifische Tabelle."""
+    RoomPeriod.query.filter_by(room_id=room_id).delete()
+    for p in Period.query.filter_by(is_active=True).order_by(Period.sort_order, Period.number).all():
+        rp = RoomPeriod(
+            room_id=room_id,
+            period_number=p.number,
+            name=p.name,
+            start_time=p.start_time,
+            end_time=p.end_time,
+            sort_order=p.sort_order,
+            is_active=True,
+            period_kind=p.period_kind or "lesson",
+            after_lesson=p.after_lesson,
+        )
+        db.session.add(rp)
+    db.session.flush()
+
+
+def copy_global_courses_to_room(room_id):
+    """Kopiert die globalen festen Kurs-Zuordnungen in die raumspezifische Tabelle."""
+    RoomCourse.query.filter_by(room_id=room_id).delete()
+    for c in Course.query.filter_by(course_type="fixed", is_active=True).all():
+        if c.weekday and c.period_number is not None:
+            rc = RoomCourse(
+                room_id=room_id,
+                course_id=c.id,
+                weekday=c.weekday,
+                period_number=c.period_number,
+            )
+            db.session.add(rc)
+    db.session.flush()

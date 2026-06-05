@@ -418,7 +418,18 @@ if not _BOOTSTRAP_MODE:
             from models import Room, Booking, BlockedSlot
             inspector = db.inspect(db.engine)
             
-            # 1. Standardraum "Kleine Insel" erzeugen, falls kein Raum existiert
+            # 1. use_custom_schedule in rooms (First, to avoid query crash on Room.query.first())
+            if db.engine.dialect.has_table(db.engine.connect(), 'rooms'):
+                cols = [c['name'] for c in inspector.get_columns('rooms')]
+                if 'use_custom_schedule' not in cols:
+                    print("[MIGRATION] Füge Spalte 'use_custom_schedule' zu 'rooms' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("ALTER TABLE rooms ADD COLUMN use_custom_schedule BOOLEAN DEFAULT FALSE"))
+                        conn.commit()
+                    print("[MIGRATION] use_custom_schedule zu rooms hinzugefügt.")
+
+            # 2. Standardraum "Kleine Insel" erzeugen, falls kein Raum existiert
             if db.engine.dialect.has_table(db.engine.connect(), 'rooms'):
                 default_room = Room.query.first()
                 if not default_room:
@@ -435,7 +446,7 @@ if not _BOOTSTRAP_MODE:
                     db.session.commit()
                     print(f"[MIGRATION] Standard-Raum 'Kleine Insel' mit ID {default_room.id} erstellt.")
             
-            # 2. room_id in bookings
+            # 3. room_id in bookings
             if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
                 cols = [c['name'] for c in inspector.get_columns('bookings')]
                 if 'room_id' not in cols:
@@ -452,7 +463,7 @@ if not _BOOTSTRAP_MODE:
                         conn.commit()
                     print("[MIGRATION] room_id zu bookings hinzugefügt und auf 1 gesetzt.")
 
-            # 3. room_id in blocked_slots
+            # 4. room_id in blocked_slots
             if db.engine.dialect.has_table(db.engine.connect(), 'blocked_slots'):
                 cols = [c['name'] for c in inspector.get_columns('blocked_slots')]
                 if 'room_id' not in cols:
@@ -777,8 +788,8 @@ def _resolve_admin_theme():
     """Gespeichertes Seiten-Design aus der Datenbank (systemweit)."""
     from system_config import get_config
 
-    theme = get_config("admin_theme", "classic")
-    return theme if theme in ADMIN_THEME_IDS else "classic"
+    theme = get_config("admin_theme", "slotra-reloaded")
+    return theme if theme in ADMIN_THEME_IDS else "slotra-reloaded"
 
 
 @app.context_processor
@@ -827,7 +838,7 @@ def admin_required(f):
 
 
 # Hilfsfunktion: Gibt Informationen über eine Stunde zurück
-def get_period_info(weekday, period, fixed_offers=None):
+def get_period_info(weekday, period, fixed_offers=None, room_id=None):
     """
     Gibt Informationen über eine Stunde zurück (fest/frei, Bezeichnung)
     weekday: z.B. "Mon", "Tue", ...
@@ -835,12 +846,12 @@ def get_period_info(weekday, period, fixed_offers=None):
     """
     from models import get_custom_slot_name
 
-    if is_break_period(period):
-        pinfo = _get_period_dict(period)
+    if is_break_period(period, room_id=room_id):
+        pinfo = _get_period_dict(period, room_id=room_id)
         return {"type": "pause", "label": pinfo.get("name", "Große Pause")}
 
     if fixed_offers is None:
-        fixed_offers = get_fixed_offers()
+        fixed_offers = get_fixed_offers(room_id=room_id)
     if weekday in fixed_offers and period in fixed_offers[weekday]:
         custom_label = get_custom_slot_name(weekday, period)
         label = custom_label if custom_label else fixed_offers[weekday][period]
@@ -850,7 +861,7 @@ def get_period_info(weekday, period, fixed_offers=None):
 
 
 # Hilfsfunktion: Prüft, ob ein Datum in der Vergangenheit liegt
-def is_past_date(check_date, period=None):
+def is_past_date(check_date, period=None, room_id=None):
     """
     Prüft, ob ein Datum (und optional eine Stunde) in der Vergangenheit liegt
     """
@@ -859,7 +870,7 @@ def is_past_date(check_date, period=None):
 
     if period is not None:
         # Prüfe mit spezifischer Stunde
-        period_start_time = _get_period_dict(period)["start"]
+        period_start_time = _get_period_dict(period, room_id=room_id)["start"]
         hour, minute = map(int, period_start_time.split(":"))
         period_datetime = berlin_tz.localize(
             datetime.combine(check_date, datetime.min.time()).replace(
@@ -874,7 +885,7 @@ def is_past_date(check_date, period=None):
 
 
 # Hilfsfunktion: Prüft, ob eine Buchung zeitlich möglich ist
-def check_booking_time(booking_date, period):
+def check_booking_time(booking_date, period, room_id=None):
     """
     Prüft, ob die Buchung mindestens 60 Minuten in der Zukunft liegt
     Gibt (True, None) zurück wenn OK, sonst (False, Fehlermeldung)
@@ -883,7 +894,7 @@ def check_booking_time(booking_date, period):
     now = datetime.now(berlin_tz)
 
     # Erstelle Datetime-Objekt für den Stundenbeginn
-    period_start_time = _get_period_dict(period)["start"]
+    period_start_time = _get_period_dict(period, room_id=room_id)["start"]
     hour, minute = map(int, period_start_time.split(":"))
 
     # Kombiniere Datum und Zeit
@@ -1609,9 +1620,9 @@ def dashboard():
     # Erstelle Stundenplan für den Tag
     from models import Booking, get_blocked_slot, is_holiday_blocked_reason, is_slot_blocked
 
-    period_times = get_period_times()
-    period_keys = get_ordered_period_numbers()
-    fixed_offers = get_fixed_offers()
+    period_times = get_period_times(room_id=room_id)
+    period_keys = get_ordered_period_numbers(room_id=room_id)
+    fixed_offers = get_fixed_offers(room_id=room_id)
     max_students = current_room.max_students if (current_room and current_room.max_students) else get_max_students()
 
     student_counts_today = {}
@@ -1625,7 +1636,7 @@ def dashboard():
 
     schedule = []
     for period in period_keys:
-        period_info = get_period_info(weekday, period, fixed_offers=fixed_offers)
+        period_info = get_period_info(weekday, period, fixed_offers=fixed_offers, room_id=room_id)
         student_count = student_counts_today.get(period, 0)
         available = max_students - student_count
 
@@ -1634,13 +1645,13 @@ def dashboard():
         is_blocked = blocked_slot is not None
 
         # Prüfe, ob Termin in der Vergangenheit liegt
-        is_past = is_past_date(selected_date, period)
+        is_past = is_past_date(selected_date, period, room_id=room_id)
 
         # Prüfe, ob es ein Wochenende ist
         is_weekend = selected_date.weekday() in [5, 6]
 
         # Prüfe, ob Buchung zeitlich möglich ist
-        can_book, time_message = check_booking_time(selected_date, period)
+        can_book, time_message = check_booking_time(selected_date, period, room_id=room_id)
 
         # can_book muss False sein für vergangene Termine oder Wochenenden
         if is_past:
@@ -1656,7 +1667,7 @@ def dashboard():
         schedule.append(
             {
                 "period": period,
-                "period_label": format_period_label(period),
+                "period_label": format_period_label(period, room_id=room_id),
                 "time": f"{pt['start']} - {pt['end']}",
                 "type": period_info["type"],
                 "label": period_info["label"],
@@ -1771,7 +1782,7 @@ def dashboard():
 
         day_schedule = []
         for period in period_keys:
-            info = get_period_info(wd, period, fixed_offers=fixed_offers)
+            info = get_period_info(wd, period, fixed_offers=fixed_offers, room_id=room_id)
             key = f"{day_date_str}_{period}"
             period_bookings = bookings_by_date_period.get(key, [])
             blocked_slot = blocked_by_date_period.get(key)
@@ -1787,13 +1798,13 @@ def dashboard():
                 available = max_students - total_students
 
             # Prüfe, ob Termin in der Vergangenheit liegt
-            is_past = is_past_date(day_date, period)
+            is_past = is_past_date(day_date, period, room_id=room_id)
 
             # Prüfe, ob es ein Wochenende ist
             is_weekend = day_date.weekday() in [5, 6]
 
             # Prüfe, ob Buchung für diesen Slot möglich ist
-            can_book, _ = check_booking_time(day_date, period)
+            can_book, _ = check_booking_time(day_date, period, room_id=room_id)
             can_book = (
                 can_book
                 and available > 0
@@ -1807,7 +1818,7 @@ def dashboard():
             day_schedule.append(
                 {
                     "period": period,
-                    "period_label": format_period_label(period),
+                    "period_label": format_period_label(period, room_id=room_id),
                     "time": f"{pt.get('start', '?')} - {pt.get('end', '?')}",
                     "type": info["type"],
                     "label": info["label"],
@@ -2354,13 +2365,13 @@ def book(date_str, period):
         flash("Ungültiges Datum.", "error")
         return redirect(url_for("dashboard", room=room_id))
 
-    period_times = get_period_times()
+    period_times = get_period_times(room_id=room_id)
     if period not in period_times:
         flash("Ungültiges Zeitfenster.", "error")
         return redirect(url_for("dashboard", room=room_id))
 
     # Prüfe, ob Termin in der Vergangenheit liegt
-    if is_past_date(booking_date, period):
+    if is_past_date(booking_date, period, room_id=room_id):
         flash(
             "Dieser Termin liegt in der Vergangenheit und kann nicht gebucht werden.",
             "error",
@@ -2374,11 +2385,12 @@ def book(date_str, period):
 
     # Ermittle Wochentag und Stundeninfo
     weekday = booking_date.strftime("%a")
-    period_info = get_period_info(weekday, period)
+    period_info = get_period_info(weekday, period, room_id=room_id)
 
     # Prüfe verfügbare Plätze
     current_students = count_students_for_period(date_str, period, room_id=room_id)
-    available_spots = get_max_students() - current_students
+    max_students = current_room.max_students if (current_room and current_room.max_students) else get_max_students()
+    available_spots = max_students - current_students
 
     if not request_mode and available_spots <= 0:
         flash("Diese Stunde ist bereits voll belegt.", "error")
@@ -2410,7 +2422,7 @@ def book(date_str, period):
         return redirect(url_for("dashboard", date=date_str, room=room_id))
 
     # Prüfe Zeitfenster
-    can_book, time_message = check_booking_time(booking_date, period)
+    can_book, time_message = check_booking_time(booking_date, period, room_id=room_id)
     if not request_mode and not can_book:
         flash(time_message or "Buchung nicht möglich.", "error")
         return redirect(url_for("dashboard", date=date_str, room=room_id))
@@ -2429,13 +2441,13 @@ def book(date_str, period):
                     date_str=date_str,
                     period=period,
                     period_info=period_info,
-                    period_time=_get_period_dict(period),
+                    period_time=_get_period_dict(period, room_id=room_id),
                     available_spots=available_spots,
                     free_modules=get_free_courses(),
                     user_name=user_display_name,
                     user_email="",
                     school_classes=get_school_classes_list(),
-                    max_students=get_max_students(),
+                    max_students=max_students,
                     request_mode=request_mode,
                 )
             
@@ -2478,20 +2490,20 @@ def book(date_str, period):
                 date_str=date_str,
                 period=period,
                 period_info=period_info,
-                period_time=_get_period_dict(period),
+                period_time=_get_period_dict(period, room_id=room_id),
                 available_spots=available_spots,
                 free_modules=get_free_courses(),
                 user_name=user_display_name,
                 user_email="",
                 school_classes=get_school_classes_list(),
-                max_students=get_max_students(),
+                max_students=max_students,
                 request_mode=request_mode,
             )
 
         # Hole Anzahl der Schüler
         num_students = int(request.form.get("num_students", 1))
 
-        _max_s = get_max_students()
+        _max_s = max_students
         if num_students < 1 or num_students > _max_s:
             flash(f"Bitte wählen Sie zwischen 1 und {_max_s} Schülern.", "error")
             return render_template(
@@ -2499,7 +2511,7 @@ def book(date_str, period):
                 date_str=date_str,
                 period=period,
                 period_info=period_info,
-                period_time=_get_period_dict(period),
+                period_time=_get_period_dict(period, room_id=room_id),
                 available_spots=available_spots,
                 free_modules=get_free_courses(),
                 user_name=user_display_name,
@@ -2528,13 +2540,13 @@ def book(date_str, period):
                 date_str=date_str,
                 period=period,
                 period_info=period_info,
-                period_time=_get_period_dict(period),
+                period_time=_get_period_dict(period, room_id=room_id),
                 available_spots=available_spots,
                 free_modules=get_free_courses(),
                 user_name=user_display_name,
                 user_email=display_user_email if "display_user_email" in dir() else "",
                 school_classes=get_school_classes_list(),
-                max_students=get_max_students(),
+                max_students=max_students,
                 room=current_room,
                 request_mode=request_mode,
                 **extra,
@@ -2542,7 +2554,7 @@ def book(date_str, period):
 
         if whole_class:
             # Ganze Klasse buchen: Slot wird vollständig belegt
-            _max = get_max_students()
+            _max = max_students
             if not request_mode and _max > available_spots:
                 flash(
                     f"Klassenbuchung nicht möglich – nur noch {available_spots} Plätze frei. Bitte einzelne Schüler*innen eintragen.",
@@ -2590,11 +2602,13 @@ def book(date_str, period):
                     date_str=date_str,
                     period=period,
                     period_info=period_info,
-                    period_time=_get_period_dict(period),
+                    period_time=_get_period_dict(period, room_id=room_id),
                     available_spots=available_spots,
                     free_modules=get_free_courses(),
                     user_name=user_display_name,
                     school_classes=get_school_classes_list(),
+                    max_students=max_students,
+                    room=current_room,
                     request_mode=request_mode,
                 )
             offer_label = selected_module
@@ -2767,20 +2781,20 @@ def book(date_str, period):
         date_str=date_str,
         period=period,
         period_info=period_info,
-        period_time=_get_period_dict(period),
+        period_time=_get_period_dict(period, room_id=room_id),
         available_spots=available_spots,
         free_modules=get_free_courses(),
         user_name=user_display_name,
         user_email=display_user_email,
         school_classes=get_school_classes_list(),
-        max_students=get_max_students(),
+        max_students=max_students,
         room=current_room,
         request_mode=request_mode,
     )
 
 
 # Hilfsfunktion: Prüft ob eine Buchung noch bearbeitet/gelöscht werden kann
-def can_modify_booking(booking_date_str, period):
+def can_modify_booking(booking_date_str, period, room_id=None):
     """
     Prüft ob eine Buchung noch bearbeitet/gelöscht werden kann.
     Änderungen sind bis 1 Stunde vor dem Termin möglich.
@@ -2799,7 +2813,7 @@ def can_modify_booking(booking_date_str, period):
 
         # Heute: Prüfe ob weniger als 1 Stunde bis zum Termin
         if booking_date == today:
-            period_start_str = _get_period_dict(period)["start"]
+            period_start_str = _get_period_dict(period, room_id=room_id)["start"]
             period_start_time = datetime.strptime(period_start_str, "%H:%M").time()
             period_start = datetime.combine(today, period_start_time)
             period_start = get_berlin_tz().localize(period_start)
@@ -2874,7 +2888,7 @@ def meine_buchungen():
 
         # Prüfe ob Buchung bearbeitet/gelöscht werden kann
         can_modify, modify_reason = can_modify_booking(
-            booking_dict["date"], booking_dict["period"]
+            booking_dict["date"], booking_dict["period"], room_id=booking_dict.get("room_id")
         )
 
         # Admin kann immer bearbeiten
@@ -2917,8 +2931,8 @@ def meine_buchungen():
                     booking_dict["weekday"], booking_dict["weekday"]
                 ),
                 "period": booking_dict["period"],
-                "period_label": format_period_label(booking_dict["period"]),
-                "period_time": f"{_get_period_dict(booking_dict['period'])['start']} - {_get_period_dict(booking_dict['period'])['end']}",
+                "period_label": format_period_label(booking_dict["period"], room_id=booking_dict.get("room_id")),
+                "period_time": f"{_get_period_dict(booking_dict['period'], room_id=booking_dict.get('room_id'))['start']} - {_get_period_dict(booking_dict['period'], room_id=booking_dict.get('room_id'))['end']}",
                 "teacher_name": booking_dict.get("teacher_name", "N/A"),
                 "teacher_class": booking_dict.get("teacher_class", "N/A"),
                 "offer_label": booking_dict["offer_label"],
@@ -3002,7 +3016,7 @@ def edit_my_booking(booking_id):
     # Prüfe ob Bearbeitung noch möglich ist (außer Admin)
     if not is_admin:
         can_modify, modify_reason = can_modify_booking(
-            booking["date"], booking["period"]
+            booking["date"], booking["period"], room_id=booking.get("room_id")
         )
         if not can_modify:
             flash(
@@ -3200,7 +3214,7 @@ def delete_my_booking(booking_id):
     # Prüfe ob Löschen noch möglich ist (außer Admin)
     if not is_admin:
         can_modify, modify_reason = can_modify_booking(
-            booking["date"], booking["period"]
+            booking["date"], booking["period"], room_id=booking.get("room_id")
         )
         if not can_modify:
             if is_ajax:
@@ -4679,10 +4693,7 @@ def admin_cms():
         "font_size_table": get_config("font_size_table", "100"),
         "font_size_widgets": get_config("font_size_widgets", "100"),
         "iserv_client_id": get_config("iserv_client_id", ""),
-        "font_size_base": get_config("font_size_base", "100"),
-        "font_size_headings": get_config("font_size_headings", "100"),
-        "font_size_table": get_config("font_size_table", "100"),
-        "font_size_widgets": get_config("font_size_widgets", "100"),
+        "admin_theme": get_config("admin_theme", "slotra-reloaded"),
     }
     # DB-URL für Anzeige (maskiert)
     from local_config import get_database_url as _get_db_url
@@ -4812,11 +4823,13 @@ def admin_cms_save():
                     flash("Favicon: Nur PNG, JPG, SVG oder WebP erlaubt.", "error")
 
         primary_color = request.form.get("primary_color", "#E91E63").strip()
+        admin_theme = request.form.get("admin_theme", "slotra-reloaded").strip()
         _scs(
             {
                 "logo_filename": logo_filename,
                 "favicon_filename": favicon_filename,
                 "primary_color": primary_color,
+                "admin_theme": admin_theme,
             },
             category="branding",
         )

@@ -302,11 +302,6 @@
                         </div>
                         {% endif %}
 
-                        <div class="nav-tools">
-                        {% if session.user_role == 'admin' %}
-                        {% include 'partials/admin_theme_picker.html' %}
-                        {% endif %}
-
                         <div class="user-info">
                             <span>{{ session.user_name or session.user_email }}</span>
                             <span class="{% if session.user_role == 'admin' %}admin{% else %}teacher{% endif %}">
@@ -318,7 +313,6 @@
                         </div>
 
                         <a href="{{ url_for('logout') }}" class="logout-link">Logout</a>
-                        </div>
                     </div>
 
 

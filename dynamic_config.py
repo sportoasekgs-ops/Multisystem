@@ -28,8 +28,8 @@ def invalidate_periods_cache():
         from flask import g, has_request_context
 
         if has_request_context():
-            for attr in ("_periods_cache", "_fixed_offers_cache"):
-                if hasattr(g, attr):
+            for attr in list(vars(g)):
+                if attr.startswith("_periods_cache") or attr.startswith("_fixed_offers_cache") or attr.startswith("_room_periods_"):
                     delattr(g, attr)
     except Exception:
         pass
@@ -48,6 +48,22 @@ def _period_entry(p):
         "kind": kind,
         "is_break": kind == "break",
         "after_lesson": after_lesson,
+    }
+
+
+def _room_period_entry(rp):
+    """RoomPeriod → dict (gleiche Struktur wie _period_entry)."""
+    kind = rp.period_kind or "lesson"
+    name = rp.name
+    if kind == "break" and rp.after_lesson:
+        name = f"{rp.name} (nach {rp.after_lesson}. Stunde)"
+    return {
+        "start": rp.start_time,
+        "end": rp.end_time,
+        "name": name,
+        "kind": kind,
+        "is_break": kind == "break",
+        "after_lesson": rp.after_lesson,
     }
 
 
@@ -124,8 +140,52 @@ def _query_active_periods_cached():
     )
 
 
-def get_period_times():
-    """Alle aktiven Zeitfenster (Unterricht + große Pausen), sortiert."""
+def _get_room_periods_cached(room_id):
+    """Raumspezifische Stunden laden (mit Request-Cache)."""
+    try:
+        from flask import g, has_request_context
+        if has_request_context():
+            cache_key = f"_room_periods_{room_id}"
+            if hasattr(g, cache_key):
+                return getattr(g, cache_key)
+            from models import Room, RoomPeriod
+            room = Room.query.get(room_id)
+            if room and room.use_custom_schedule:
+                result = (
+                    RoomPeriod.query.filter_by(room_id=room_id, is_active=True)
+                    .order_by(RoomPeriod.sort_order, RoomPeriod.period_number)
+                    .all()
+                )
+                if result:
+                    setattr(g, cache_key, result)
+                    return result
+            return None  # None = use global fallback
+    except Exception:
+        pass
+    # Outside request context: query directly
+    from models import Room, RoomPeriod
+    try:
+        room = Room.query.get(room_id)
+        if room and room.use_custom_schedule:
+            result = (
+                RoomPeriod.query.filter_by(room_id=room_id, is_active=True)
+                .order_by(RoomPeriod.sort_order, RoomPeriod.period_number)
+                .all()
+            )
+            return result if result else None
+    except Exception:
+        pass
+    return None
+
+
+def get_period_times(room_id=None):
+    """Alle aktiven Zeitfenster (Unterricht + große Pausen), sortiert.
+    Bei room_id: raumspezifisch, falls Custom-Schedule aktiv."""
+    if room_id:
+        room_periods = _get_room_periods_cached(room_id)
+        if room_periods is not None:
+            return {rp.period_number: _room_period_entry(rp) for rp in room_periods}
+    # Global fallback
     from system_config import is_setup_complete
 
     try:
@@ -139,8 +199,13 @@ def get_period_times():
         return _DEFAULT_PERIOD_TIMES
 
 
-def get_ordered_period_numbers():
+def get_ordered_period_numbers(room_id=None):
     """Interne Perioden-Nummern in Anzeigereihenfolge (sort_order), nicht nach Nummer."""
+    if room_id:
+        room_periods = _get_room_periods_cached(room_id)
+        if room_periods is not None:
+            return [rp.period_number for rp in room_periods]
+    # Global fallback
     from system_config import is_setup_complete
 
     try:
@@ -154,12 +219,16 @@ def get_ordered_period_numbers():
         return list(_DEFAULT_PERIOD_TIMES.keys())
 
 
-def is_break_period(number):
-    data = get_period_times().get(number, {})
+def is_break_period(number, room_id=None):
+    data = get_period_times(room_id=room_id).get(number, {})
     return data.get("is_break", False)
 
 
-def get_period(number):
+def get_period(number, room_id=None):
+    if room_id:
+        room_data = get_period_times(room_id=room_id).get(number)
+        if room_data:
+            return room_data
     from models import Period
 
     try:
@@ -180,17 +249,31 @@ def get_period(number):
     }
 
 
-def format_period_label(number, include_time=False):
+def format_period_label(number, include_time=False, room_id=None):
     """Kurzes Anzeige-Label (Name der Stunde/Pause, optional mit Uhrzeit)."""
-    p = get_period(number)
+    p = get_period(number, room_id=room_id)
     name = p.get("name") or f"{number}. Stunde"
     if include_time and p.get("start") and p.get("end"):
         return f"{name} ({p['start']}–{p['end']})"
     return name
 
 
-def get_fixed_offers():
-    """Feste Angebote aus DB. Leeres Dict wenn keine Kurse – KEIN Fallback auf Defaults."""
+def get_fixed_offers(room_id=None):
+    """Feste Angebote aus DB. Bei room_id: raumspezifisch."""
+    if room_id:
+        from models import Room, RoomCourse
+        try:
+            room = Room.query.get(room_id)
+            if room and room.use_custom_schedule:
+                result = {wd: {} for wd in ("Mon", "Tue", "Wed", "Thu", "Fri")}
+                for rc in RoomCourse.query.filter_by(room_id=room_id).join(RoomCourse.course).all():
+                    if rc.course and rc.weekday and rc.course.is_active:
+                        result.setdefault(rc.weekday, {})[rc.period_number] = rc.course.name
+                return result
+        except Exception:
+            pass
+
+    # Global fallback (original code)
     try:
         from flask import g, has_request_context
 
