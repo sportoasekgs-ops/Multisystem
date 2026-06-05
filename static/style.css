@@ -136,9 +136,10 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 2.5rem;
+    box-sizing: border-box;
 }
 
 /* Top Navigation - Clean Solid Navbar */
@@ -5391,7 +5392,7 @@ footer {
     --week-plan-max-width: 900px;
     --dashboard-layout-max-width: 1550px;
     gap: 1.5rem;
-    max-width: min(var(--dashboard-layout-max-width, 1550px), 100%);
+    max-width: 100%;
     margin: 0 auto;
     align-items: start;
     padding: 0 1rem;

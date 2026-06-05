@@ -223,6 +223,24 @@
                     {% endif %}
                 </div>
                 {% endif %}
+
+                {% if is_admin and not inq.is_approved and inq.status != 'rejected' %}
+                <div class="admin-reply-action" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-light); display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">🛠️ Admin-Schnellantwort (Direkt bearbeiten):</div>
+                    
+                    <form method="POST" action="{{ url_for('approve_exclusive', booking_id=inq.id) }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="text" name="admin_reply" placeholder="Freigabe-Nachricht (z.B. Ja, geht in Ordnung. Kinder schicken...)" style="flex-grow: 1; min-width: 200px; padding: 0.45rem 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 0.85rem; background: var(--bg-input); color: var(--text-primary);">
+                        <button type="submit" class="btn" style="padding: 0.45rem 1rem; font-size: 0.82rem; white-space: nowrap; font-weight: 700; background: #22c55e; border: 1.5px solid #22c55e; border-radius: var(--radius); color: white; cursor: pointer;">✅ Freigeben</button>
+                    </form>
+
+                    <form method="POST" action="{{ url_for('reject_exclusive', booking_id=inq.id) }}" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="text" name="reason" placeholder="Ablehnungsgrund (optional)..." style="flex-grow: 1; min-width: 200px; padding: 0.45rem 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 0.85rem; background: var(--bg-input); color: var(--text-primary);">
+                        <button type="submit" class="btn" style="padding: 0.45rem 1rem; font-size: 0.82rem; white-space: nowrap; font-weight: 700; background: #ef4444; border: 1.5px solid #ef4444; border-radius: var(--radius); color: white; cursor: pointer;">❌ Ablehnen</button>
+                    </form>
+                </div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>

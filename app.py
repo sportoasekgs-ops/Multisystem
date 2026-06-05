@@ -3601,7 +3601,7 @@ def approve_exclusive(booking_id):
             "Anfrage wurde erfolgreich genehmigt.",
             "success",
         )
-    return redirect(url_for("admin"))
+    return redirect(request.referrer or url_for("admin"))
 
 
 # Route: Exklusive Buchung ablehnen
@@ -3711,7 +3711,7 @@ def reject_exclusive(booking_id):
             ), 500
         flash("Fehler beim Ablehnen der Buchung.", "error")
 
-    return redirect(url_for("admin"))
+    return redirect(request.referrer or url_for("admin"))
 
 
 # Route: Buchung erstellen (nur Admin)
