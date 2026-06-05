@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Posteingang – {{ school_name or 'Buchungssystem' }}{% endblock %}
+
+{% block content %}
+<div class="inbox-page" style="max-width: 800px; margin: 0 auto; padding: 1rem 1rem 3rem;">
+    <div class="page-header" style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h2 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-heading); font-weight: 800; color: var(--text-primary);">
+                <span class="page-icon">📥</span> Posteingang
+            </h2>
+            <p class="subtitle" style="margin: 0.25rem 0 0; color: var(--text-secondary); font-size: 0.9rem;">
+                Hier finden Sie Benachrichtigungen und Antworten zu Ihren Buchungen und Anfragen.
+            </p>
+        </div>
+        {% if notifications %}
+        <button onclick="markAllInboxRead()" class="btn btn-edit" style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.5rem 1rem; border-radius: var(--radius); font-weight: 600; font-size: 0.85rem;">
+            <span>✔️</span> Alle als gelesen markieren
+        </button>
+        {% endif %}
+    </div>
+
+    {% if notifications %}
+    <div class="notifications-list" style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for n in notifications %}
+        <div class="notification-card {% if not n.is_read %}unread{% endif %}" id="notif-{{ n.id }}"
+             style="background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1.5px solid {% if not n.is_read %}var(--primary){% else %}var(--glass-border){% endif %}; border-radius: var(--radius-lg); padding: 1.25rem; transition: all var(--transition); position: relative; box-shadow: {% if not n.is_read %}0 0 10px rgba(var(--primary-rgb), 0.1){% else %}var(--shadow-sm){% endif %};">
+            
+            {% if not n.is_read %}
+            <span class="unread-dot" style="position: absolute; top: 1.25rem; left: 0.5rem; width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 6px var(--primary);"></span>
+            {% endif %}
+
+            <div style="display: flex; align-items: flex-start; gap: 1rem; padding-left: {% if not n.is_read %}0.75rem{% else %}0{% endif %};">
+                <div class="notification-icon" style="font-size: 1.5rem; line-height: 1;">
+                    {% if 'genehmigt' in n.message or 'freigegeben' in n.message or '✅' in n.message %}
+                        ✅
+                    {% elif 'abgelehnt' in n.message or '❌' in n.message or 'storniert' in n.message %}
+                        ❌
+                    {% elif 'gelöscht' in n.message or 'storniert' in n.message %}
+                        🗑️
+                    {% else %}
+                        ✉️
+                    {% endif %}
+                </div>
+                
+                <div style="flex-grow: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                        <p class="notification-message" style="margin: 0; color: var(--text-primary); font-weight: 500; font-size: 0.925rem; line-height: 1.4;">
+                            {{ n.message }}
+                        </p>
+                        <span class="notification-time" style="color: var(--text-tertiary); font-size: 0.75rem; white-space: nowrap;">
+                            {{ n.created_at }}
+                        </span>
+                    </div>
+
+                    {% if n.booking %}
+                    <div class="notification-booking-details" 
+                         style="margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border-light); font-size: 0.8rem; color: var(--text-secondary); display: flex; flex-wrap: wrap; gap: 1rem;">
+                        <div><strong>Termin:</strong> {{ n.booking.date }} ({{ n.booking.period }}. Stunde)</div>
+                        <div><strong>Kurs/Angebot:</strong> {{ n.booking.offer_label }}</div>
+                        {% if n.booking.admin_reply %}
+                        <div style="width: 100%; border-top: 1px solid var(--border-light); margin-top: 0.4rem; padding-top: 0.4rem;">
+                            <strong style="color: var(--primary);">Antwort:</strong> <span style="color: var(--text-primary);">{{ n.booking.admin_reply }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if not n.is_read %}
+                <button onclick="markInboxRead({{ n.id }})" class="btn-mark-read" title="Als gelesen markieren"
+                        style="background: transparent; border: none; color: var(--text-tertiary); font-size: 1.1rem; cursor: pointer; padding: 0.2rem; transition: color var(--transition); flex-shrink: 0;">
+                    ✔️
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-bookings" style="text-align: center; padding: 3rem 1.5rem; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1.5px solid var(--glass-border); border-radius: var(--radius-lg); margin-top: 1rem;">
+        <div class="no-bookings-icon" style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+        <h3 style="margin: 0; color: var(--text-primary);">Dein Posteingang ist leer</h3>
+        <p style="margin: 0.5rem 0 0; color: var(--text-secondary);">Hier erscheinen Benachrichtigungen zu Deinen Buchungsanfragen.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function markInboxRead(notificationId) {
+    fetch(`/api/notifications/${notificationId}/mark_read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ csrf_token: '{{ csrf_token }}' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.getElementById(`notif-${notificationId}`);
+            if (card) {
+                card.classList.remove('unread');
+                card.style.borderColor = 'var(--glass-border)';
+                card.style.boxShadow = 'var(--shadow-sm)';
+                
+                const dot = card.querySelector('.unread-dot');
+                if (dot) dot.remove();
+                
+                const btn = card.querySelector('.btn-mark-read');
+                if (btn) btn.remove();
+            }
+            // Update the top notification bell if present
+            if (typeof updateUnreadCount === 'function') {
+                updateUnreadCount();
+            }
+        }
+    })
+    .catch(err => console.error("Error marking read:", err));
+}
+
+function markAllInboxRead() {
+    fetch('/api/notifications/mark_all_read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ csrf_token: '{{ csrf_token }}' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelectorAll('.notification-card.unread').forEach(card => {
+                card.classList.remove('unread');
+                card.style.borderColor = 'var(--glass-border)';
+                card.style.boxShadow = 'var(--shadow-sm)';
+                
+                const dot = card.querySelector('.unread-dot');
+                if (dot) dot.remove();
+                
+                const btn = card.querySelector('.btn-mark-read');
+                if (btn) btn.remove();
+            });
+            if (typeof updateUnreadCount === 'function') {
+                updateUnreadCount();
+            }
+            // Optionally hide the mark all read button if no unread remain
+            const headerBtn = document.querySelector('.page-header button');
+            if (headerBtn) headerBtn.remove();
+        }
+    })
+    .catch(err => console.error("Error marking all read:", err));
+}
+</script>
+{% endblock %}

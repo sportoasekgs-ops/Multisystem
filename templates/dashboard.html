@@ -496,10 +496,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="approval-actions">
-                                        <form method="POST" action="{{ url_for('approve_exclusive', booking_id=pending.id) }}" style="display:inline;">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                                            <button type="submit" class="btn-approve" title="Genehmigen">✓</button>
-                                        </form>
+                                        <button type="button" class="btn-approve" title="Genehmigen" onclick="approveRequest({{ pending.id }}, '{{ pending.teacher_name }}', '{{ pending.date_formatted }}')">✓</button>
                                         <button type="button" class="btn-reject" title="Ablehnen" onclick="openRejectDialog({{ pending.id }}, '{{ pending.teacher_name }}', '{{ pending.date_formatted }}')">✕</button>
                                     </div>
                                 </div>
@@ -830,13 +827,34 @@
                                     </span>
                                 </div>
 
-                                {% if slot.can_book %}
-                                <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None) }}"
-                                   class="book-btn"
-                                   data-book-url="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None) }}">
-                                    📝 Buchen
-                                </a>
-                                {% endif %}
+                                 {% if slot.can_book %}
+                                 <div style="display: flex; gap: 0.25rem; margin-top: 0.35rem; width: 100%;">
+                                     <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None) }}"
+                                        class="book-btn"
+                                        data-book-url="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None) }}"
+                                        style="flex: 1; text-align: center; justify-content: center;">
+                                         📝 Buchen
+                                     </a>
+                                     <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None, request_mode=1) }}"
+                                        class="book-btn request-btn"
+                                        style="flex: 1; text-align: center; justify-content: center; background: transparent; border: 1.5px solid var(--primary); color: var(--primary); font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;"
+                                        onmouseover="this.style.backgroundColor='var(--primary)'; this.style.color='white';"
+                                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary)';">
+                                         ✉️ Anfrage
+                                     </a>
+                                 </div>
+                                 {% elif not slot.is_past and not slot.is_weekend and not slot.blocked and slot.type != 'pause' %}
+                                 <div style="display: flex; margin-top: 0.35rem; width: 100%;">
+                                     <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None, request_mode=1) }}"
+                                        class="book-btn request-btn"
+                                        style="flex: 1; text-align: center; justify-content: center; background: transparent; border: 1.5px solid var(--primary); color: var(--primary); font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;"
+                                        onmouseover="this.style.backgroundColor='var(--primary)'; this.style.color='white';"
+                                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary)';">
+                                         ✉️ Slot anfragen
+                                     </a>
+                                 </div>
+                                 {% endif %}
+
                                 {% if user_role == 'admin' and not slot.is_past %}
                                 <button type="button" class="slot-block-mini" title="Sperren"
                                         onclick="openBlockModal('{{ day.date }}', {{ p_num }}, '{{ day.name }} {{ day.date_formatted }}')">
@@ -1336,6 +1354,77 @@ Tagesübersicht:
                 card.style.cursor = "pointer";
             });
         
+        // Funktion zum Genehmigen einer Buchungsanfrage/Exklusivbuchung (per AJAX)
+        window.approveRequest = function(bookingId, teacherName, dateStr) {
+            const reply = prompt("Antwort/Nachricht an " + teacherName + " senden (optional):");
+            if (reply === null) return; // Abgebrochen
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/approve_exclusive/' + bookingId;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = '{{ csrf_token }}';
+            form.appendChild(csrfInput);
+            
+            const replyInput = document.createElement('input');
+            replyInput.type = 'hidden';
+            replyInput.name = 'admin_reply';
+            replyInput.value = reply;
+            form.appendChild(replyInput);
+            
+            document.body.appendChild(form);
+            
+            const formData = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => { throw new Error(data.message || 'Fehler beim Genehmigen.') });
+                }
+                return response.json();
+            })
+            .then(data => {
+                form.remove();
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // Finde das Approval-Item und entferne es mit Animation
+                    const approvalItem = document.querySelector(`.approval-item button[onclick*="(${bookingId}"]`).closest('.approval-item');
+                    if (approvalItem) {
+                        approvalItem.classList.add('fade-out');
+                        setTimeout(() => {
+                            approvalItem.remove();
+                            // Update badge
+                            const badge = document.querySelector('.pending-exclusive-widget .widget-badge');
+                            if (badge) {
+                                let count = parseInt(badge.textContent) - 1;
+                                badge.textContent = count;
+                                if (count <= 0) {
+                                    location.reload(); // Reload to show empty state if last request
+                                }
+                            }
+                        }, 300);
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    showToast(data.message || 'Fehler beim Genehmigen.', 'error');
+                }
+            })
+            .catch(error => {
+                form.remove();
+                showToast(error.message, 'error');
+            });
+        };
+
         // Funktion zum Ablehnen einer Exklusivbuchung mit Begründung (per AJAX)
         window.openRejectDialog = function(bookingId, teacherName, dateStr) {
             const reason = prompt("Grund für die Ablehnung der Exklusiv-Buchung von " + teacherName + " am " + dateStr + ":");

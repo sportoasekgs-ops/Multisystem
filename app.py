@@ -401,6 +401,18 @@ if not _BOOTSTRAP_MODE:
 
         db.create_all()
 
+        # --- Auto-Seeding: Lehrer Test-Benutzer ---
+        try:
+            from models import User, create_user
+            lehrer_user = User.query.filter_by(username="lehrer").first()
+            if not lehrer_user:
+                print("[SEEDING] Erstelle Test-Lehrer-Benutzer 'lehrer'...")
+                create_user("lehrer", "lehrer", "teacher", "lehrer@schule.local")
+                print("[SEEDING] Test-Lehrer-Benutzer 'lehrer' erfolgreich erstellt.")
+        except Exception as e:
+            print(f"[SEEDING] Fehler beim Erstellen des Test-Lehrers: {e}")
+
+
         # --- Multi-Room Migration ---
         try:
             from models import Room, Booking, BlockedSlot
@@ -500,6 +512,53 @@ if not _BOOTSTRAP_MODE:
                         conn.commit()
         except Exception as e:
             print(f"[MIGRATION] Fehler bei der Auto-Migration: {e}")
+
+        # --- Auto-Migrator: Booking status Spalte hinzufügen ---
+        try:
+            inspector = db.inspect(db.engine)
+            if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
+                booking_columns = [col['name'] for col in inspector.get_columns('bookings')]
+                if 'status' not in booking_columns:
+                    print("[MIGRATION] Füge Spalte 'status' zu 'bookings' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("ALTER TABLE bookings ADD COLUMN status VARCHAR(20) DEFAULT 'booked'"))
+                        conn.commit()
+                        conn.execute(text("UPDATE bookings SET status = 'booked' WHERE status IS NULL"))
+                        conn.commit()
+                    print("[MIGRATION] Spalte 'status' erfolgreich hinzugefügt und initialisiert.")
+        except Exception as e:
+            print(f"[MIGRATION] Fehler bei der Booking status Migration: {e}")
+
+        # --- Auto-Migrator: Booking admin_reply Spalte hinzufügen ---
+        try:
+            inspector = db.inspect(db.engine)
+            if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
+                booking_columns = [col['name'] for col in inspector.get_columns('bookings')]
+                if 'admin_reply' not in booking_columns:
+                    print("[MIGRATION] Füge Spalte 'admin_reply' zu 'bookings' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("ALTER TABLE bookings ADD COLUMN admin_reply TEXT"))
+                        conn.commit()
+                    print("[MIGRATION] Spalte 'admin_reply' erfolgreich hinzugefügt.")
+        except Exception as e:
+            print(f"[MIGRATION] Fehler bei der Booking admin_reply Migration: {e}")
+
+        # --- Auto-Migrator: Notification recipient_user_id Spalte hinzufügen ---
+        try:
+            inspector = db.inspect(db.engine)
+            if db.engine.dialect.has_table(db.engine.connect(), 'notifications'):
+                notification_columns = [col['name'] for col in inspector.get_columns('notifications')]
+                if 'recipient_user_id' not in notification_columns:
+                    print("[MIGRATION] Füge Spalte 'recipient_user_id' zu 'notifications' hinzu...")
+                    with db.engine.connect() as conn:
+                        from sqlalchemy import text
+                        conn.execute(text("ALTER TABLE notifications ADD COLUMN recipient_user_id INTEGER REFERENCES users(id)"))
+                        conn.commit()
+                    print("[MIGRATION] Spalte 'recipient_user_id' erfolgreich hinzugefügt.")
+        except Exception as e:
+            print(f"[MIGRATION] Fehler bei der Notification recipient_user_id Migration: {e}")
         # --------------------------------------------------------------------------------
 
         # Für bestehende Installationen (vor Setup-Wizard-Feature):
@@ -1538,7 +1597,7 @@ def dashboard():
     max_students = current_room.max_students if (current_room and current_room.max_students) else get_max_students()
 
     student_counts_today = {}
-    for booking in Booking.query.filter_by(date=selected_date_str, room_id=room_id).all():
+    for booking in Booking.query.filter_by(date=selected_date_str, room_id=room_id, is_approved=True).filter(Booking.status != 'no_show').all():
         students = (
             json.loads(booking.students_json) if booking.students_json else []
         )
@@ -1654,8 +1713,6 @@ def dashboard():
     for booking in week_bookings:
         booking_dict = dict(booking)
         key = f"{booking_dict['date']}_{booking_dict['period']}"
-        if key not in bookings_by_date_period:
-            bookings_by_date_period[key] = []
 
         students = (
             json.loads(booking_dict["students_json"])
@@ -1673,14 +1730,17 @@ def dashboard():
             "is_approved": booking_dict.get("is_approved", True),
             "notes": (booking_dict.get("notes") or "").strip() or None,
         }
-        bookings_by_date_period[key].append(booking_info)
 
-        # Speichere exklusive genehmigte Buchungen separat
-        if booking_dict.get("is_exclusive") and booking_dict.get("is_approved"):
-            exclusive_by_date_period[key] = booking_info
+        if booking_dict.get("is_approved"):
+            if key not in bookings_by_date_period:
+                bookings_by_date_period[key] = []
+            bookings_by_date_period[key].append(booking_info)
 
-        # Speichere ausstehende exklusive Buchungen (noch nicht genehmigt)
-        if booking_dict.get("is_exclusive") and not booking_dict.get("is_approved"):
+            # Speichere exklusive genehmigte Buchungen separat
+            if booking_dict.get("is_exclusive"):
+                exclusive_by_date_period[key] = booking_info
+        else:
+            # Speichere ausstehende Buchungen oder allgemeine Anfragen (noch nicht genehmigt)
             pending_exclusive_by_date_period[key] = booking_info
 
     week_overview = []
@@ -1827,7 +1887,7 @@ def dashboard():
         # Eigene Buchungen ab heute
         my_bookings_query = (
             Booking.query.filter(
-                Booking.teacher_id == user_id, Booking.date >= today_str
+                Booking.teacher_id == user_id, Booking.date >= today_str, Booking.status != 'no_show'
             )
             .order_by(Booking.date, Booking.period)
             .limit(5)
@@ -2132,6 +2192,7 @@ def calendar_view(year=None, month=None):
     month_bookings = Booking.query.filter(
         Booking.date >= first_day.strftime("%Y-%m-%d"),
         Booking.date <= last_day.strftime("%Y-%m-%d"),
+        Booking.status != 'no_show',
     ).all()
 
     if is_demo_mode():
@@ -2249,6 +2310,9 @@ def book(date_str, period):
         flash("Im Demo-Modus können keine Buchungen erstellt werden.", "error")
         return redirect(url_for("dashboard"))
 
+    # Request-Modus prüfen
+    request_mode = request.args.get("request_mode") == "1" or request.form.get("request_mode") == "1"
+
     # Hole gewählten Raum
     from models import get_room_by_id, get_default_room
     room_id = request.args.get("room", type=int) or request.form.get("room", type=int)
@@ -2298,7 +2362,7 @@ def book(date_str, period):
     current_students = count_students_for_period(date_str, period, room_id=room_id)
     available_spots = get_max_students() - current_students
 
-    if available_spots <= 0:
+    if not request_mode and available_spots <= 0:
         flash("Diese Stunde ist bereits voll belegt.", "error")
         return redirect(url_for("dashboard", date=date_str, room=room_id))
 
@@ -2319,8 +2383,8 @@ def book(date_str, period):
 
     exclusive_booking = Booking.query.filter_by(
         date=date_str, period=period, is_exclusive=True, is_approved=True, room_id=room_id
-    ).first()
-    if exclusive_booking:
+    ).filter(Booking.status != 'no_show').first()
+    if not request_mode and exclusive_booking:
         flash(
             "Dieser Slot ist für ein Einzelangebot reserviert und kann nicht gebucht werden.",
             "error",
@@ -2329,7 +2393,7 @@ def book(date_str, period):
 
     # Prüfe Zeitfenster
     can_book, time_message = check_booking_time(booking_date, period)
-    if not can_book:
+    if not request_mode and not can_book:
         flash(time_message or "Buchung nicht möglich.", "error")
         return redirect(url_for("dashboard", date=date_str, room=room_id))
 
@@ -2352,6 +2416,7 @@ def book(date_str, period):
                 user_email="",
                 school_classes=get_school_classes_list(),
                 max_students=get_max_students(),
+                request_mode=request_mode,
             )
 
         # Hole Anzahl der Schüler
@@ -2372,10 +2437,11 @@ def book(date_str, period):
                 user_email="",
                 school_classes=get_school_classes_list(),
                 max_students=_max_s,
+                request_mode=request_mode,
             )
 
         # Prüfe erneut verfügbare Plätze
-        if num_students > available_spots:
+        if not request_mode and num_students > available_spots:
             flash(
                 f"Nicht genug Plätze verfügbar. Nur noch {available_spots} Plätze frei.",
                 "error",
@@ -2401,13 +2467,14 @@ def book(date_str, period):
                 school_classes=get_school_classes_list(),
                 max_students=get_max_students(),
                 room=current_room,
+                request_mode=request_mode,
                 **extra,
             )
 
         if whole_class:
             # Ganze Klasse buchen: Slot wird vollständig belegt
             _max = get_max_students()
-            if _max > available_spots:
+            if not request_mode and _max > available_spots:
                 flash(
                     f"Klassenbuchung nicht möglich – nur noch {available_spots} Plätze frei. Bitte einzelne Schüler*innen eintragen.",
                     "error",
@@ -2459,6 +2526,7 @@ def book(date_str, period):
                     free_modules=get_free_courses(),
                     user_name=user_display_name,
                     school_classes=get_school_classes_list(),
+                    request_mode=request_mode,
                 )
             offer_label = selected_module
         else:
@@ -2483,6 +2551,7 @@ def book(date_str, period):
             teacher_class=teacher_class,
             notes=notes if notes else None,
             is_exclusive=is_exclusive,
+            is_approved=False if request_mode else (not is_exclusive),
             room_id=room_id,
         )
 
@@ -2499,10 +2568,14 @@ def book(date_str, period):
                 "teacher_class": teacher_class,
                 "students_json": json.dumps(students, ensure_ascii=False),
                 "is_exclusive": is_exclusive,
+                "is_approved": False if request_mode else (not is_exclusive),
             }
 
             # Erstelle Notification in der Datenbank
-            if is_exclusive:
+            if request_mode:
+                notification_message = f"✉️ ANFRAGE: {teacher_name} möchte für {offer_label} am {date_str} (Stunde {period}) buchen: {notes}"
+                notification_type = "booking_request"
+            elif is_exclusive:
                 notification_message = f"🔒 EXKLUSIVE Buchung (Freigabe nötig): {teacher_name} möchte 1 Schüler exklusiv für {offer_label} am {date_str} (Stunde {period}) anmelden."
                 notification_type = "exclusive_booking_pending"
             else:
@@ -2522,6 +2595,7 @@ def book(date_str, period):
                     "offer_label": offer_label,
                     "students_count": len(students),
                     "is_exclusive": is_exclusive,
+                    "is_request": request_mode,
                 },
             )
 
@@ -2534,7 +2608,7 @@ def book(date_str, period):
                 if user_data:
                     user_email = user_data.get("email", "")
 
-            def _send_emails_background(bd, send_confirm, u_email, exclusive):
+            def _send_emails_background(bd, send_confirm, u_email, exclusive, is_req):
                 # Admin-Benachrichtigung
                 try:
                     send_booking_notification(bd)
@@ -2543,7 +2617,11 @@ def book(date_str, period):
                 # Lehrer-Bestätigung
                 if send_confirm and u_email:
                     try:
-                        if exclusive:
+                        if is_req:
+                            # Send request pending email
+                            from email_service import send_exclusive_pending_email
+                            send_exclusive_pending_email(u_email, bd)
+                        elif exclusive:
                             from email_service import send_exclusive_pending_email
 
                             send_exclusive_pending_email(u_email, bd)
@@ -2560,6 +2638,7 @@ def book(date_str, period):
                 send_email_confirmation,
                 user_email,
                 is_exclusive,
+                request_mode,
             )
 
             # Broadcast an SSE-Clients
@@ -2581,7 +2660,12 @@ def book(date_str, period):
                     }
                 )
 
-            if is_exclusive:
+            if request_mode:
+                flash(
+                    "Buchungsanfrage erfolgreich gesendet! Der Administrator wurde benachrichtigt.",
+                    "info",
+                )
+            elif is_exclusive:
                 flash(
                     f"Exklusive Buchung eingereicht! Die Buchung wartet auf Freigabe durch den Admin. Sie werden per E-Mail benachrichtigt.",
                     "info",
@@ -2621,6 +2705,7 @@ def book(date_str, period):
         school_classes=get_school_classes_list(),
         max_students=get_max_students(),
         room=current_room,
+        request_mode=request_mode,
     )
 
 
@@ -2775,11 +2860,33 @@ def meine_buchungen():
                 "notes": (booking_dict.get("notes") or "").strip() or None,
                 "is_exclusive": booking_dict.get("is_exclusive", False),
                 "is_approved": booking_dict.get("is_approved", True),
+                "status": booking_dict.get("status", "booked"),
+                "admin_reply": (booking_dict.get("admin_reply") or "").strip() or None,
             }
         )
 
     return render_template(
         "meine_buchungen.html", bookings=bookings_display, is_admin=is_admin
+    )
+
+
+# Route: Posteingang
+@app.route("/posteingang")
+@login_required
+def posteingang():
+    """Zeigt alle Benachrichtigungen im persönlichen Posteingang"""
+    from models import get_recent_notifications
+
+    user_id = session["user_id"]
+    is_admin = session.get("user_role") == "admin"
+
+    if is_admin:
+        notifications = get_recent_notifications(recipient_role="admin", limit=50)
+    else:
+        notifications = get_recent_notifications(recipient_user_id=user_id, limit=50)
+
+    return render_template(
+        "posteingang.html", notifications=notifications, is_admin=is_admin
     )
 
 
@@ -3039,6 +3146,65 @@ def delete_my_booking(booking_id):
     return redirect(url_for("meine_buchungen"))
 
 
+@app.route("/meine-buchungen/toggle-no-show/<int:booking_id>", methods=["POST"])
+@login_required
+def toggle_booking_no_show(booking_id):
+    """Schaltet den No-Show-Status einer Buchung um (booked / no_show)"""
+    from models import Booking
+
+    # CSRF-Token Validierung
+    csrf_token = request.form.get("csrf_token", "")
+    is_ajax = (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.headers.get("Accept") == "application/json"
+    )
+
+    if not validate_csrf_token(csrf_token):
+        if is_ajax:
+            return jsonify({"success": False, "message": "Ungültiges Sicherheits-Token."}), 400
+        flash("Ungültiges Sicherheits-Token. Bitte versuchen Sie es erneut.", "error")
+        return redirect(url_for("meine_buchungen"))
+
+    user_id = session["user_id"]
+    is_admin = session.get("user_role") == "admin"
+
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        if is_ajax:
+            return jsonify({"success": False, "message": "Buchung nicht gefunden."}), 404
+        flash("Buchung nicht gefunden.", "error")
+        return redirect(url_for("meine_buchungen"))
+
+    # Prüfe Berechtigung: Eigene Buchung oder Admin
+    if booking.teacher_id != user_id and not is_admin:
+        if is_ajax:
+            return jsonify({"success": False, "message": "Sie können nur Ihre eigenen Buchungen ändern."}), 403
+        flash("Sie können nur Ihre eigenen Buchungen ändern.", "error")
+        return redirect(url_for("meine_buchungen"))
+
+    # Toggle status
+    if booking.status == "no_show":
+        booking.status = "booked"
+        message = "Buchungs-Status erfolgreich auf 'gebucht' zurückgesetzt."
+    else:
+        booking.status = "no_show"
+        message = "Buchung wurde als No-Show markiert. Kapazität wurde freigegeben."
+
+    try:
+        db.session.commit()
+        if is_ajax:
+            return jsonify({"success": True, "message": message, "status": booking.status})
+        flash(message, "success")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Fehler beim Umschalten des No-Show-Status: {e}")
+        if is_ajax:
+            return jsonify({"success": False, "message": "Fehler beim Aktualisieren der Datenbank."}), 500
+        flash("Fehler beim Aktualisieren des Buchungsstatus.", "error")
+
+    return redirect(url_for("meine_buchungen"))
+
+
 # Route: Admin-Bereich
 @app.route("/admin", methods=["GET", "POST"])
 @admin_required
@@ -3156,9 +3322,9 @@ def admin():
 @app.route("/admin/approve_exclusive/<int:booking_id>", methods=["POST"])
 @admin_required
 def approve_exclusive(booking_id):
-    """Genehmigt eine exklusive Buchung und entfernt alle anderen Buchungen für denselben Slot"""
+    """Genehmigt eine Buchungsanfrage/exklusive Buchung"""
     from database import db
-    from models import Booking, approve_exclusive_booking, get_booking_by_id
+    from models import Booking, get_booking_by_id, create_notification
 
     csrf_token = request.form.get("csrf_token", "")
     is_ajax = (
@@ -3174,7 +3340,10 @@ def approve_exclusive(booking_id):
         flash("Ungültiges Sicherheits-Token.", "error")
         return redirect(url_for("admin"))
 
-    booking = get_booking_by_id(booking_id)
+    # Hole optionales Feedback aus dem Formular
+    admin_reply = request.form.get("admin_reply", "").strip() or request.form.get("reply", "").strip()
+
+    booking = Booking.query.get(booking_id)
     if not booking:
         if is_ajax:
             return jsonify(
@@ -3183,117 +3352,116 @@ def approve_exclusive(booking_id):
         flash("Buchung nicht gefunden.", "error")
         return redirect(url_for("admin"))
 
-    booking_dict = dict(booking)
-    date_str = booking_dict["date"]
-    period = booking_dict["period"]
-    teacher_email = booking_dict.get("teacher_email")
-    teacher_name = booking_dict.get("teacher_name", "Lehrkraft")
-    students = (
-        json.loads(booking_dict["students_json"])
-        if booking_dict.get("students_json")
-        else []
-    )
+    date_str = booking.date
+    period = booking.period
+    teacher_email = booking.teacher.email if booking.teacher else None
+    teacher_name = booking.teacher_name or "Lehrkraft"
+    students = json.loads(booking.students_json) if booking.students_json else []
     student_name = students[0]["name"] if students else "Schüler/in"
 
-    # Finde alle anderen Buchungen für denselben Slot (nicht-exklusiv oder andere IDs)
-    conflicting_bookings = Booking.query.filter(
-        Booking.date == date_str, Booking.period == period, Booking.id != booking_id
-    ).all()
-
-    # Sammle Daten für E-Mail-Benachrichtigungen VOR dem Löschen
+    removed_count = 0
     affected_teachers = []
-    for conflict in conflicting_bookings:
-        conflict_students = (
-            json.loads(conflict.students_json) if conflict.students_json else []
-        )
-        affected_teachers.append(
-            {
-                "email": conflict.teacher_email,
-                "name": conflict.teacher_name or "Lehrkraft",
-                "booking_info": {
-                    "date": conflict.date,
-                    "period": conflict.period,
-                    "offer_label": conflict.offer_label,
-                    "students": conflict_students,
-                },
-            }
-        )
 
-    # Genehmige exklusive Buchung
-    success = approve_exclusive_booking(booking_id)
+    # Falls exklusiv, lösche konfliktierende Buchungen
+    if booking.is_exclusive:
+        conflicting_bookings = Booking.query.filter(
+            Booking.date == date_str, Booking.period == period, Booking.id != booking_id, Booking.status != 'no_show'
+        ).all()
 
-    if success:
-        # Lösche alle konfliktierenden Buchungen
-        removed_count = 0
+        for conflict in conflicting_bookings:
+            conflict_students = (
+                json.loads(conflict.students_json) if conflict.students_json else []
+            )
+            affected_teachers.append(
+                {
+                    "email": conflict.teacher_email,
+                    "name": conflict.teacher_name or "Lehrkraft",
+                    "booking_info": {
+                        "date": conflict.date,
+                        "period": conflict.period,
+                        "offer_label": conflict.offer_label,
+                        "students": conflict_students,
+                    },
+                }
+            )
+
         for conflict in conflicting_bookings:
             db.session.delete(conflict)
             removed_count += 1
 
-        if removed_count > 0:
-            db.session.commit()
-            print(
-                f"[EXCLUSIVE] {removed_count} konfliktierende Buchungen für {date_str} Stunde {period} entfernt"
-            )
+    # Genehmige die Buchung und speichere die admin_reply
+    booking.is_approved = True
+    if admin_reply:
+        booking.admin_reply = admin_reply
+    db.session.commit()
 
-        # Sende E-Mails im Hintergrund (verhindert Timeout)
-        def _send_approval_emails(t_email, t_name, s_name, d_str, per, affected):
-            if t_email:
+    # System-Benachrichtigung für die Lehrkraft erzeugen
+    create_notification(
+        booking_id=booking.id,
+        message=f"✅ Deine Buchung für {booking.offer_label} am {booking.date} ({booking.period}. Stunde) wurde genehmigt.{' Antwort: ' + admin_reply if admin_reply else ''}",
+        notification_type="booking_approved",
+        recipient_role="teacher",
+        recipient_user_id=booking.teacher_id,
+        metadata={
+            "date": booking.date,
+            "period": booking.period,
+            "offer_label": booking.offer_label,
+            "admin_reply": admin_reply,
+        }
+    )
+
+    # Sende E-Mails im Hintergrund
+    def _send_approval_emails(t_email, t_name, s_name, d_str, per, affected):
+        if t_email:
+            try:
+                from email_service import send_exclusive_approved_email
+
+                send_exclusive_approved_email(
+                    teacher_email=t_email,
+                    teacher_name=t_name,
+                    student_name=s_name,
+                    date_str=d_str,
+                    period=per,
+                )
+            except Exception as e:
+                print(f"[EMAIL] Genehmigungs-E-Mail fehlgeschlagen: {e}")
+        from email_service import send_booking_removed_due_to_exclusive
+
+        for affected_teacher in affected:
+            if affected_teacher["email"]:
                 try:
-                    from email_service import send_exclusive_approved_email
-
-                    send_exclusive_approved_email(
-                        teacher_email=t_email,
-                        teacher_name=t_name,
-                        student_name=s_name,
-                        date_str=d_str,
-                        period=per,
+                    send_booking_removed_due_to_exclusive(
+                        teacher_email=affected_teacher["email"],
+                        teacher_name=affected_teacher["name"],
+                        booking_info=affected_teacher["booking_info"],
+                        exclusive_info={"teacher": t_name, "student": s_name},
                     )
                 except Exception as e:
-                    print(f"[EMAIL] Genehmigungs-E-Mail fehlgeschlagen: {e}")
-            from email_service import send_booking_removed_due_to_exclusive
+                    print(f"[EMAIL] Stornierungs-E-Mail fehlgeschlagen: {e}")
 
-            for affected_teacher in affected:
-                if affected_teacher["email"]:
-                    try:
-                        send_booking_removed_due_to_exclusive(
-                            teacher_email=affected_teacher["email"],
-                            teacher_name=affected_teacher["name"],
-                            booking_info=affected_teacher["booking_info"],
-                            exclusive_info={"teacher": t_name, "student": s_name},
-                        )
-                    except Exception as e:
-                        print(f"[EMAIL] Stornierungs-E-Mail fehlgeschlagen: {e}")
+    start_background_task(
+        _send_approval_emails,
+        teacher_email,
+        teacher_name,
+        student_name,
+        date_str,
+        period,
+        affected_teachers,
+    )
 
-        start_background_task(
-            _send_approval_emails,
-            teacher_email,
-            teacher_name,
-            student_name,
-            date_str,
-            period,
-            affected_teachers,
+    if is_ajax:
+        return jsonify({"success": True, "message": "Anfrage erfolgreich genehmigt."})
+
+    if removed_count > 0:
+        flash(
+            f"Anfrage genehmigt. {removed_count} andere Buchung(en) wurden storniert und die Lehrkräfte benachrichtigt.",
+            "success",
         )
-
-        if is_ajax:
-            return jsonify({"success": True, "message": "Exklusive Buchung genehmigt."})
-
-        if removed_count > 0:
-            flash(
-                f"Exklusive Buchung genehmigt. {removed_count} andere Buchung(en) wurden storniert und die Lehrkräfte benachrichtigt.",
-                "success",
-            )
-        else:
-            flash(
-                "Exklusive Buchung wurde genehmigt. Der Slot ist jetzt vollständig reserviert.",
-                "success",
-            )
     else:
-        if is_ajax:
-            return jsonify(
-                {"success": False, "message": "Fehler beim Genehmigen."}
-            ), 500
-        flash("Fehler beim Genehmigen der Buchung.", "error")
-
+        flash(
+            "Anfrage wurde erfolgreich genehmigt.",
+            "success",
+        )
     return redirect(url_for("admin"))
 
 
@@ -3301,8 +3469,9 @@ def approve_exclusive(booking_id):
 @app.route("/admin/reject_exclusive/<int:booking_id>", methods=["POST"])
 @admin_required
 def reject_exclusive(booking_id):
-    """Lehnt eine exklusive Buchung ab (löscht sie)"""
-    from models import get_booking_by_id, reject_exclusive_booking
+    """Lehnt eine Buchung/Anfrage ab"""
+    from database import db
+    from models import Booking, create_notification
 
     csrf_token = request.form.get("csrf_token", "")
     is_ajax = (
@@ -3321,32 +3490,46 @@ def reject_exclusive(booking_id):
     # Hole Ablehnungsgrund aus dem Formular
     rejection_reason = request.form.get("reason", "").strip()
 
-    # Hole Buchungsdetails für E-Mail vor dem Löschen
-    booking = get_booking_by_id(booking_id)
-    teacher_email = None
-    teacher_name = None
-    student_name = None
-    date_str = None
-    period = None
+    booking = Booking.query.get(booking_id)
+    if not booking:
+        if is_ajax:
+            return jsonify(
+                {"success": False, "message": "Buchung nicht gefunden."}
+            ), 404
+        flash("Buchung nicht gefunden.", "error")
+        return redirect(url_for("admin"))
 
-    if booking:
-        booking_dict = dict(booking)
-        teacher_email = booking_dict.get("teacher_email")
-        teacher_name = booking_dict.get("teacher_name", "Lehrkraft")
-        students = (
-            json.loads(booking_dict["students_json"])
-            if booking_dict.get("students_json")
-            else []
+    teacher_email = booking.teacher.email if booking.teacher else None
+    teacher_name = booking.teacher_name or "Lehrkraft"
+    students = json.loads(booking.students_json) if booking.students_json else []
+    student_name = students[0]["name"] if students else "Schüler/in"
+    date_str = booking.date
+    period = booking.period
+
+    try:
+        # Status auf 'rejected' setzen statt löschen
+        booking.status = "rejected"
+        booking.is_approved = False
+        booking.admin_reply = rejection_reason
+        db.session.commit()
+
+        # System-Benachrichtigung für die Lehrkraft erzeugen
+        create_notification(
+            booking_id=booking.id,
+            message=f"❌ Deine Buchung für {booking.offer_label} am {booking.date} ({booking.period}. Stunde) wurde abgelehnt.{' Begründung: ' + rejection_reason if rejection_reason else ''}",
+            notification_type="booking_rejected",
+            recipient_role="teacher",
+            recipient_user_id=booking.teacher_id,
+            metadata={
+                "date": booking.date,
+                "period": booking.period,
+                "offer_label": booking.offer_label,
+                "rejection_reason": rejection_reason,
+            }
         )
-        student_name = students[0]["name"] if students else "Schüler/in"
-        date_str = booking_dict["date"]
-        period = booking_dict["period"]
 
-    success = reject_exclusive_booking(booking_id)
-    if success:
-        # Sende Ablehnungs-E-Mail im Hintergrund (verhindert Timeout)
+        # Sende Ablehnungs-E-Mail im Hintergrund
         if teacher_email:
-
             def _send_rejection(t_email, t_name, s_name, d_str, per, reason):
                 try:
                     from email_service import send_exclusive_rejected_email
@@ -3374,13 +3557,15 @@ def reject_exclusive(booking_id):
 
         if is_ajax:
             return jsonify(
-                {"success": True, "message": "Exklusive Buchung erfolgreich abgelehnt."}
+                {"success": True, "message": "Anfrage erfolgreich abgelehnt und Nachricht gespeichert."}
             )
         flash(
-            "Exklusive Buchung wurde abgelehnt und gelöscht. Die Lehrkraft wurde benachrichtigt.",
+            "Anfrage wurde abgelehnt und Nachricht gespeichert. Die Lehrkraft wurde benachrichtigt.",
             "success",
         )
-    else:
+    except Exception as e:
+        db.session.rollback()
+        print(f"Fehler beim Ablehnen der Buchung: {e}")
         if is_ajax:
             return jsonify(
                 {"success": False, "message": "Fehler beim Ablehnen der Buchung."}
@@ -4235,26 +4420,34 @@ def admin_bulk_block():
 
 
 @app.route("/api/notifications/recent", methods=["GET"])
-@admin_required
+@login_required
 def api_get_recent_notifications():
     """Holt die neuesten Benachrichtigungen"""
     limit = request.args.get("limit", 10, type=int)
     limit = min(limit, 50)
+    is_admin = session.get("user_role") == "admin"
 
-    notifications = get_recent_notifications(recipient_role="admin", limit=limit)
+    if is_admin:
+        notifications = get_recent_notifications(recipient_role="admin", limit=limit)
+    else:
+        notifications = get_recent_notifications(recipient_user_id=session["user_id"], limit=limit)
     return jsonify({"success": True, "notifications": notifications})
 
 
 @app.route("/api/notifications/unread_count", methods=["GET"])
-@admin_required
+@login_required
 def api_get_unread_count():
     """Holt die Anzahl der ungelesenen Benachrichtigungen"""
-    count = get_unread_notification_count(recipient_role="admin")
+    is_admin = session.get("user_role") == "admin"
+    if is_admin:
+        count = get_unread_notification_count(recipient_role="admin")
+    else:
+        count = get_unread_notification_count(recipient_user_id=session["user_id"])
     return jsonify({"success": True, "count": count})
 
 
 @app.route("/api/notifications/<int:notification_id>/mark_read", methods=["POST"])
-@admin_required
+@login_required
 def api_mark_notification_read(notification_id):
     """Markiert eine Benachrichtigung als gelesen"""
     csrf_token = request.json.get("csrf_token", "") if request.json else ""
@@ -4266,14 +4459,18 @@ def api_mark_notification_read(notification_id):
 
 
 @app.route("/api/notifications/mark_all_read", methods=["POST"])
-@admin_required
+@login_required
 def api_mark_all_notifications_read():
     """Markiert alle Benachrichtigungen als gelesen"""
     csrf_token = request.json.get("csrf_token", "") if request.json else ""
     if not validate_csrf_token(csrf_token):
         return jsonify({"success": False, "error": "Invalid CSRF token"}), 403
 
-    success = mark_all_notifications_as_read(recipient_role="admin")
+    is_admin = session.get("user_role") == "admin"
+    if is_admin:
+        success = mark_all_notifications_as_read(recipient_role="admin")
+    else:
+        success = mark_all_notifications_as_read(recipient_user_id=session["user_id"])
     return jsonify({"success": success})
 
 

@@ -169,12 +169,9 @@
                     {% endif %}
                 </div>
                 <div class="pending-actions">
-                    <form method="POST" action="{{ url_for('approve_exclusive', booking_id=booking.id) }}" style="display: inline;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <button type="submit" class="btn-approve" title="Genehmigen">
-                            ✅ Genehmigen
-                        </button>
-                    </form>
+                    <button type="button" class="btn-approve" title="Genehmigen" onclick="approveRequest({{ booking.id }}, '{{ booking.teacher_name }}', '{{ booking.date }}')">
+                        ✅ Genehmigen
+                    </button>
                     <button type="button" class="btn-reject" title="Ablehnen" onclick="openRejectModal({{ booking.id }}, '{{ booking.teacher_name }}', '{{ booking.date }}')">
                         ❌ Ablehnen
                     </button>
@@ -308,6 +305,30 @@
 </div>
 
 <script>
+function approveRequest(bookingId, teacherName, date) {
+    const reply = prompt("Antwort/Nachricht an " + teacherName + " senden (optional):");
+    if (reply === null) return; // Abgebrochen
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/approve_exclusive/' + bookingId;
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrf_token';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    const replyInput = document.createElement('input');
+    replyInput.type = 'hidden';
+    replyInput.name = 'admin_reply';
+    replyInput.value = reply;
+    form.appendChild(replyInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
 function openRejectModal(bookingId, teacherName, date) {
     document.getElementById('rejectForm').action = '/admin/reject_exclusive/' + bookingId;
     document.getElementById('rejectInfo').innerHTML = 'Buchung von <strong>' + teacherName + '</strong> am <strong>' + date + '</strong> ablehnen?';

@@ -65,9 +65,25 @@
                 <div class="booking-exclusive-status">
                     {% if booking.is_approved %}
                     <span class="badge-status approved">🔒 Einzelbuchung (genehmigt)</span>
-                    {% else %}
+                    {% elif booking.status != 'rejected' %}
                     <span class="badge-status pending">⏳ Einzelbuchung (wartet auf Freigabe)</span>
                     {% endif %}
+                </div>
+                {% elif not booking.is_approved and booking.status != 'rejected' %}
+                <div class="booking-exclusive-status">
+                    <span class="badge-status pending">⏳ Buchungsanfrage (wartet auf Freigabe)</span>
+                </div>
+                {% endif %}
+
+                {% if booking.status == 'rejected' %}
+                <div class="booking-exclusive-status" style="margin-top: 8px;">
+                    <span class="badge-status pending" style="background-color: #ef4444; color: white;">❌ Anfrage abgelehnt</span>
+                </div>
+                {% endif %}
+
+                {% if booking.status == 'no_show' %}
+                <div class="booking-no-show-status" style="margin-top: 8px;">
+                    <span class="badge-status pending" style="background-color: #ef4444; color: white;">⚠️ Als No-Show markiert (Plätze freigegeben)</span>
                 </div>
                 {% endif %}
 
@@ -75,8 +91,18 @@
                 <div class="booking-notes">
                     <span class="notes-icon">📝</span>
                     <div class="notes-body">
-                        <span class="notes-label">Notiz zur Einzelbuchung</span>
+                        <span class="notes-label">{% if booking.is_exclusive %}Notiz zur Einzelbuchung{% else %}Nachricht zur Anfrage{% endif %}</span>
                         <span class="notes-text">{{ booking.notes }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if booking.admin_reply %}
+                <div class="booking-notes" style="border-left-color: var(--primary); background: rgba(var(--primary-rgb), 0.05); margin-top: 8px;">
+                    <span class="notes-icon">💬</span>
+                    <div class="notes-body">
+                        <span class="notes-label" style="color: var(--primary); font-weight: 700;">Antwort vom Administrator</span>
+                        <span class="notes-text" style="color: var(--text-primary);">{{ booking.admin_reply }}</span>
                     </div>
                 </div>
                 {% endif %}
@@ -87,6 +113,12 @@
             </div>
             
             <div class="booking-actions">
+                <form method="POST" action="{{ url_for('toggle_booking_no_show', booking_id=booking.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn {% if booking.status == 'no_show' %}btn-edit{% else %}btn-warning{% endif %}">
+                        <span class="btn-icon">⏱️</span> {% if booking.status == 'no_show' %}Als gebucht markieren{% else %}No-Show{% endif %}
+                    </button>
+                </form>
                 {% if booking.can_modify %}
                 <a href="{{ url_for('edit_my_booking', booking_id=booking.id) }}" class="btn btn-edit">
                     <span class="btn-icon">✏️</span> Bearbeiten

@@ -58,8 +58,10 @@ class Booking(db.Model):
     offer_label = db.Column(db.String(100), nullable=False)
     calendar_event_id = db.Column(db.String(200), nullable=True)
     notes = db.Column(db.Text, nullable=True)
+    admin_reply = db.Column(db.Text, nullable=True)
     is_exclusive = db.Column(db.Boolean, default=False, nullable=False)
     is_approved = db.Column(db.Boolean, default=True, nullable=False)
+    status = db.Column(db.String(20), default="booked", nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     room_id = db.Column(db.Integer, db.ForeignKey("rooms.id"), nullable=True)
 
@@ -85,8 +87,10 @@ class Booking(db.Model):
             "offer_label": self.offer_label,
             "calendar_event_id": self.calendar_event_id,
             "notes": self.notes,
+            "admin_reply": self.admin_reply,
             "is_exclusive": self.is_exclusive,
             "is_approved": self.is_approved,
+            "status": self.status,
             "room_id": self.room_id,
             "created_at": self.created_at.isoformat()
             if isinstance(self.created_at, datetime)
@@ -317,6 +321,7 @@ class Notification(db.Model):
         index=True,
     )
     recipient_role = db.Column(db.String(20), nullable=False, default="admin")
+    recipient_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     notification_type = db.Column(db.String(50), nullable=False, default="new_booking")
     message = db.Column(db.String(500), nullable=False)
     is_read = db.Column(db.Boolean, default=False, nullable=False, index=True)
@@ -341,6 +346,7 @@ class Notification(db.Model):
             "id": self.id,
             "booking_id": self.booking_id,
             "recipient_role": self.recipient_role,
+            "recipient_user_id": self.recipient_user_id,
             "notification_type": self.notification_type,
             "message": self.message,
             "is_read": self.is_read,
@@ -473,12 +479,17 @@ def create_booking(
     teacher_class=None,
     calendar_event_id=None,
     notes=None,
+    admin_reply=None,
     is_exclusive=False,
+    is_approved=None,
     room_id=None,
+    status="booked",
 ):
     """Erstellt eine neue Buchung in der Datenbank"""
     try:
         students_json = json.dumps(students, ensure_ascii=False)
+        if is_approved is None:
+            is_approved = not is_exclusive
         booking = Booking(
             date=date,
             weekday=weekday,
@@ -491,9 +502,11 @@ def create_booking(
             offer_label=offer_label,
             calendar_event_id=calendar_event_id,
             notes=notes,
+            admin_reply=admin_reply,
             is_exclusive=is_exclusive,
-            is_approved=not is_exclusive,
+            is_approved=is_approved,
             room_id=room_id,
+            status=status,
             created_at=datetime.now(),
         )
         db.session.add(booking)
@@ -506,8 +519,8 @@ def create_booking(
 
 
 def get_bookings_for_date_period(date, period, room_id=None):
-    """Gibt alle Buchungen für ein bestimmtes Datum und Stunde zurück"""
-    query = Booking.query.filter_by(date=date, period=period)
+    """Gibt alle approved Buchungen für ein bestimmtes Datum und Stunde zurück"""
+    query = Booking.query.filter_by(date=date, period=period, is_approved=True).filter(Booking.status != 'no_show')
     if room_id is not None:
         query = query.filter_by(room_id=room_id)
     bookings = query.order_by(Booking.created_at).all()
@@ -572,13 +585,13 @@ def get_all_bookings():
 
 def get_bookings_by_date(date):
     """Gibt alle Buchungen für ein bestimmtes Datum zurück"""
-    bookings = Booking.query.filter_by(date=date).order_by(Booking.period).all()
+    bookings = Booking.query.filter_by(date=date).filter(Booking.status != 'no_show').order_by(Booking.period).all()
     return [b.to_dict() for b in bookings]
 
 
 def get_bookings_for_week(start_date, end_date, room_id=None):
     """Gibt alle Buchungen für eine Woche zurück"""
-    query = Booking.query.filter(Booking.date >= start_date, Booking.date <= end_date)
+    query = Booking.query.filter(Booking.date >= start_date, Booking.date <= end_date).filter(Booking.status != 'no_show')
     if room_id is not None:
         query = query.filter_by(room_id=room_id)
     bookings = query.order_by(Booking.date, Booking.period).all()
@@ -595,7 +608,7 @@ def get_exclusive_booking_for_date_period(date, period, room_id=None):
     """Prüft ob eine genehmigte exklusive Buchung für diesen Slot existiert"""
     query = Booking.query.filter_by(
         date=date, period=period, is_exclusive=True, is_approved=True
-    )
+    ).filter(Booking.status != 'no_show')
     if room_id is not None:
         query = query.filter_by(room_id=room_id)
     booking = query.first()
@@ -603,9 +616,11 @@ def get_exclusive_booking_for_date_period(date, period, room_id=None):
 
 
 def get_pending_exclusive_bookings():
-    """Gibt alle exklusiven Buchungen zurück, die noch auf Freigabe warten"""
+    """Gibt alle exklusiven Buchungen und Anfragen zurück, die noch auf Freigabe warten"""
     bookings = (
-        Booking.query.filter_by(is_exclusive=True, is_approved=False)
+        Booking.query.filter_by(is_approved=False)
+        .filter(Booking.status != 'no_show')
+        .filter(Booking.status != 'rejected')
         .order_by(Booking.date, Booking.period)
         .all()
     )
@@ -967,6 +982,7 @@ def create_notification(
     message,
     notification_type="new_booking",
     recipient_role="admin",
+    recipient_user_id=None,
     metadata=None,
 ):
     """Erstellt eine neue Benachrichtigung"""
@@ -975,6 +991,7 @@ def create_notification(
         notification = Notification(
             booking_id=booking_id,
             recipient_role=recipient_role,
+            recipient_user_id=recipient_user_id,
             notification_type=notification_type,
             message=message,
             metadata_json=metadata_json,
@@ -990,24 +1007,25 @@ def create_notification(
         return None
 
 
-def get_unread_notifications(recipient_role="admin"):
+def get_unread_notifications(recipient_role="admin", recipient_user_id=None):
     """Gibt alle ungelesenen Benachrichtigungen zurück"""
-    notifications = (
-        Notification.query.filter_by(recipient_role=recipient_role, is_read=False)
-        .order_by(Notification.created_at.desc())
-        .all()
-    )
+    if recipient_user_id is not None:
+        notifications = Notification.query.filter_by(recipient_user_id=recipient_user_id, is_read=False)
+    else:
+        notifications = Notification.query.filter_by(recipient_role=recipient_role, is_read=False)
+    
+    notifications = notifications.order_by(Notification.created_at.desc()).all()
     return [n.to_dict() for n in notifications]
 
 
-def get_recent_notifications(recipient_role="admin", limit=10):
+def get_recent_notifications(recipient_role="admin", recipient_user_id=None, limit=10):
     """Gibt die neuesten Benachrichtigungen zurück (gelesen und ungelesen)"""
-    notifications = (
-        Notification.query.filter_by(recipient_role=recipient_role)
-        .order_by(Notification.created_at.desc())
-        .limit(limit)
-        .all()
-    )
+    if recipient_user_id is not None:
+        notifications = Notification.query.filter_by(recipient_user_id=recipient_user_id)
+    else:
+        notifications = Notification.query.filter_by(recipient_role=recipient_role)
+    
+    notifications = notifications.order_by(Notification.created_at.desc()).limit(limit).all()
     return [n.to_dict() for n in notifications]
 
 
@@ -1027,12 +1045,17 @@ def mark_notification_as_read(notification_id):
         return False
 
 
-def mark_all_notifications_as_read(recipient_role="admin"):
+def mark_all_notifications_as_read(recipient_role="admin", recipient_user_id=None):
     """Markiert alle Benachrichtigungen als gelesen"""
     try:
-        notifications = Notification.query.filter_by(
-            recipient_role=recipient_role, is_read=False
-        ).all()
+        if recipient_user_id is not None:
+            notifications = Notification.query.filter_by(
+                recipient_user_id=recipient_user_id, is_read=False
+            ).all()
+        else:
+            notifications = Notification.query.filter_by(
+                recipient_role=recipient_role, is_read=False
+            ).all()
         for notification in notifications:
             notification.is_read = True
             notification.read_at = datetime.now()
@@ -1070,8 +1093,12 @@ class PeriodTemplate(db.Model):
         }
 
 
-def get_unread_notification_count(recipient_role="admin"):
+def get_unread_notification_count(recipient_role="admin", recipient_user_id=None):
     """Gibt die Anzahl der ungelesenen Benachrichtigungen zurück"""
+    if recipient_user_id is not None:
+        return Notification.query.filter_by(
+            recipient_user_id=recipient_user_id, is_read=False
+        ).count()
     return Notification.query.filter_by(
         recipient_role=recipient_role, is_read=False
     ).count()

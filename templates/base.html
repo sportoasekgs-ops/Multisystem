@@ -237,7 +237,7 @@
     <div class="bg-glow-orb orb-1"></div>
     <div class="bg-glow-orb orb-2"></div>
 
-    {% if session.user_id and session.user_role == 'admin' %}
+    {% if session.user_id %}
     <div class="notification-container" style="position: fixed; top: 15px; right: 15px; z-index: 999999;">
         <button class="notification-bell" onclick="toggleNotifications()" style="background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); font-size: 1.45rem; cursor: pointer; padding: 10px; border-radius: var(--radius-lg); box-shadow: var(--shadow-glow); display: flex; align-items: center; justify-content: center; line-height: 1; transition: all var(--transition-fast);">🔔
             <span id="notificationBadge" class="notification-badge" style="display:none; position: absolute; top: -3px; right: -3px; background: #EF4444; color: white; border-radius: 12px; padding: 2px 6px; font-size: 0.75rem; font-weight: bold; min-width: 18px; text-align: center; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);">0</span>
@@ -272,6 +272,7 @@
                     <div class="nav-links-wrapper" id="navLinksWrapper">
                         <a href="{{ url_for('dashboard') }}" class="nav-link-dashboard">🏠 Dashboard</a>
                         <a href="{{ url_for('meine_buchungen') }}" class="nav-link-my-bookings">📅 Meine Buchungen</a>
+                        <a href="{{ url_for('posteingang') }}" class="nav-link-inbox">📥 Posteingang</a>
 
                         {% if session.user_role == 'admin' %}
                         <div class="admin-menu-dropdown-wrapper">
