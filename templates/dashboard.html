@@ -1,5 +1,30 @@
 {% extends "base.html" %} {% block title %}Dashboard – {{ school_name or 'Buchungssystem' }}{% endblock %}
 {% block content %}
+<style>
+:root {
+    --room-color: {{ current_room.color if current_room and current_room.color else 'var(--primary)' }};
+}
+.book-btn {
+    background: var(--room-color) !important;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--room-color) 40%, transparent) !important;
+}
+.book-btn:hover {
+    background: color-mix(in srgb, var(--room-color) 82%, black) !important;
+    box-shadow: 0 4px 10px color-mix(in srgb, var(--room-color) 45%, transparent) !important;
+}
+.request-btn {
+    border-color: var(--room-color) !important;
+    color: var(--room-color) !important;
+    background: transparent !important;
+}
+.request-btn:hover {
+    background: var(--room-color) !important;
+    color: white !important;
+}
+.booked-indicator {
+    color: var(--room-color) !important;
+}
+</style>
 <div class="dashboard">
 
     {% if demo_mode %}
@@ -845,9 +870,7 @@
                                      </a>
                                      <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None, request_mode=1) }}"
                                         class="book-btn request-btn"
-                                        style="flex: 1; text-align: center; justify-content: center; background: transparent; border: 1.5px solid var(--primary); color: var(--primary); font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;"
-                                        onmouseover="this.style.backgroundColor='var(--primary)'; this.style.color='white';"
-                                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary)';">
+                                        style="flex: 1; text-align: center; justify-content: center; font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;">
                                          ✉️ Anfrage
                                      </a>
                                  </div>
@@ -855,9 +878,7 @@
                                  <div style="display: flex; margin-top: 0.35rem; width: 100%;">
                                      <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None, request_mode=1) }}"
                                         class="book-btn request-btn"
-                                        style="flex: 1; text-align: center; justify-content: center; background: transparent; border: 1.5px solid var(--primary); color: var(--primary); font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;"
-                                        onmouseover="this.style.backgroundColor='var(--primary)'; this.style.color='white';"
-                                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--primary)';">
+                                        style="flex: 1; text-align: center; justify-content: center; font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;">
                                          ✉️ Slot anfragen
                                      </a>
                                  </div>
