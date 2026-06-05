@@ -800,7 +800,7 @@ def get_period_info(weekday, period, fixed_offers=None, room_id=None):
     weekday: z.B. "Mon", "Tue", ...
     period: interne Slot-Nummer (Unterricht oder große Pause)
     """
-    from models import get_custom_slot_name
+    from models import get_custom_slot_name, Room
 
     if is_break_period(period, room_id=room_id):
         pinfo = _get_period_dict(period, room_id=room_id)
@@ -809,7 +809,11 @@ def get_period_info(weekday, period, fixed_offers=None, room_id=None):
     if fixed_offers is None:
         fixed_offers = get_fixed_offers(room_id=room_id)
     if weekday in fixed_offers and period in fixed_offers[weekday]:
-        custom_label = get_custom_slot_name(weekday, period)
+        room = Room.query.get(room_id) if room_id else None
+        if room and room.use_custom_schedule:
+            custom_label = None
+        else:
+            custom_label = get_custom_slot_name(weekday, period)
         label = custom_label if custom_label else fixed_offers[weekday][period]
         return {"type": "fest", "label": label}
     else:
@@ -2399,7 +2403,7 @@ def book(date_str, period):
                     period_info=period_info,
                     period_time=_get_period_dict(period, room_id=room_id),
                     available_spots=available_spots,
-                    free_modules=get_free_courses(),
+                    free_modules=get_free_courses(room_id=room_id),
                     user_name=user_display_name,
                     user_email="",
                     school_classes=get_school_classes_list(),
@@ -2551,7 +2555,7 @@ def book(date_str, period):
         # Hole Modul-Wahl (nur bei freien Stunden)
         if period_info["type"] == "frei":
             selected_module = request.form.get("module", "")
-            if selected_module not in get_free_courses():
+            if selected_module not in get_free_courses(room_id=room_id):
                 flash("Bitte wählen Sie ein Modul.", "error")
                 return render_template(
                     "book.html",
@@ -2560,7 +2564,7 @@ def book(date_str, period):
                     period_info=period_info,
                     period_time=_get_period_dict(period, room_id=room_id),
                     available_spots=available_spots,
-                    free_modules=get_free_courses(),
+                    free_modules=get_free_courses(room_id=room_id),
                     user_name=user_display_name,
                     school_classes=get_school_classes_list(),
                     max_students=max_students,
@@ -2739,7 +2743,7 @@ def book(date_str, period):
         period_info=period_info,
         period_time=_get_period_dict(period, room_id=room_id),
         available_spots=available_spots,
-        free_modules=get_free_courses(),
+        free_modules=get_free_courses(room_id=room_id),
         user_name=user_display_name,
         user_email=display_user_email,
         school_classes=get_school_classes_list(),
@@ -2997,8 +3001,11 @@ def edit_my_booking(booking_id):
     )
 
     # Berechne verfügbare Plätze (ohne die aktuelle Buchung)
-    current_students = count_students_for_period(booking["date"], booking["period"])
-    available_spots = get_max_students() - (current_students - len(students))
+    current_students = count_students_for_period(booking["date"], booking["period"], room_id=booking.get("room_id"))
+    from models import Room
+    room_obj = Room.query.get(booking.get("room_id")) if booking.get("room_id") else None
+    room_max_students = room_obj.max_students if (room_obj and room_obj.max_students) else get_max_students()
+    available_spots = room_max_students - (current_students - len(students))
 
     # Datum formatieren
     try:
@@ -3069,7 +3076,7 @@ def edit_my_booking(booking_id):
         # Hole Modul-Wahl (nur bei freien Stunden)
         if booking["offer_type"] == "frei":
             selected_module = request.form.get("module", "")
-            if selected_module not in get_free_courses():
+            if selected_module not in get_free_courses(room_id=booking.get("room_id")):
                 flash("Bitte wählen Sie ein Modul.", "error")
                 return redirect(url_for("edit_my_booking", booking_id=booking_id))
             offer_label = selected_module
@@ -3111,8 +3118,8 @@ def edit_my_booking(booking_id):
     return render_template(
         "edit_my_booking.html",
         booking=booking_display,
-        period_times=get_period_times(),
-        free_modules=get_free_courses(),
+        period_times=get_period_times(room_id=booking.get("room_id")),
+        free_modules=get_free_courses(room_id=booking.get("room_id")),
         school_classes=get_school_classes_list(),
         max_students=available_spots,
         available_spots=available_spots - len(students),
