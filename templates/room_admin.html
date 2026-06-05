@@ -192,7 +192,9 @@
     <div class="ra-quick-links">
         <a href="{{ url_for('admin_dyn.periods', room_id=room.id) }}" class="ra-quick-link">⏱️ Stundenplan</a>
         <a href="{{ url_for('admin_dyn.courses', room_id=room.id) }}" class="ra-quick-link">📚 Kurse & Angebote</a>
+        {% if session.get('user_role') == 'admin' %}
         <a href="{{ url_for('admin_bulk_block') }}" class="ra-quick-link">🔒 Ferien-Sperrung</a>
+        {% endif %}
         <a href="{{ url_for('dashboard') }}" class="ra-quick-link">🏠 Zum Dashboard</a>
     </div>
 

@@ -68,6 +68,25 @@ def _admin_required():
     return user and user['role'] == 'admin'
 
 
+def _room_manage_allowed(room_id):
+    """True für globale Admins ODER Raum-Admins des angegebenen Raums.
+    Raum-Admins dürfen ausschließlich ihren eigenen Raum verwalten – der
+    globale Bereich (room_id 0/None) bleibt globalen Admins vorbehalten."""
+    from models import get_user_by_id, is_room_admin
+    if 'user_id' not in session:
+        return False
+    user = get_user_by_id(session['user_id'])
+    if not user:
+        return False
+    if user['role'] == 'admin':
+        return True
+    try:
+        rid = int(room_id)
+    except (TypeError, ValueError):
+        return False
+    return rid > 0 and is_room_admin(session['user_id'], rid)
+
+
 def _validate_csrf(token):
     return token == session.get('csrf_token')
 
@@ -201,13 +220,18 @@ def _insert_break_after_lesson(after_lesson_n, start_time, end_time, name='Groß
 
 @admin_dyn_bp.route('/periods')
 def periods():
-    if not _admin_required():
+    room_id = request.args.get('room_id', default=0, type=int)
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
-    from models import Period, PeriodTemplate, Room, RoomPeriod
+    from models import Period, PeriodTemplate, Room, RoomPeriod, get_user_by_id, get_rooms_for_room_admin
     
-    room_id = request.args.get('room_id', default=0, type=int)
-    rooms = Room.query.order_by(Room.sort_order, Room.name).all()
+    _u = get_user_by_id(session['user_id'])
+    is_global_admin = bool(_u and _u['role'] == 'admin')
+    if is_global_admin:
+        rooms = Room.query.order_by(Room.sort_order, Room.name).all()
+    else:
+        rooms = get_rooms_for_room_admin(session['user_id'])
     
     if room_id > 0:
         room = Room.query.get_or_404(room_id)
@@ -242,6 +266,7 @@ def periods():
         lesson_count=lesson_count,
         break_after_lessons=break_after_lessons,
         next_period_number=next_num,
+        is_global_admin=is_global_admin,
     )
 
 
@@ -609,13 +634,18 @@ def _apply_period_template(periods_data, name):
 
 @admin_dyn_bp.route('/courses')
 def courses():
-    if not _admin_required():
+    room_id = request.args.get('room_id', default=0, type=int)
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
-    from models import Course, Period, Room, RoomPeriod, RoomCourse
+    from models import Course, Period, Room, RoomPeriod, RoomCourse, get_user_by_id, get_rooms_for_room_admin
     
-    room_id = request.args.get('room_id', default=0, type=int)
-    rooms = Room.query.order_by(Room.sort_order, Room.name).all()
+    _u = get_user_by_id(session['user_id'])
+    is_global_admin = bool(_u and _u['role'] == 'admin')
+    if is_global_admin:
+        rooms = Room.query.order_by(Room.sort_order, Room.name).all()
+    else:
+        rooms = get_rooms_for_room_admin(session['user_id'])
     
     weekdays = [('Mon', 'Montag'), ('Tue', 'Dienstag'), ('Wed', 'Mittwoch'), ('Thu', 'Donnerstag'), ('Fri', 'Freitag')]
     
@@ -653,16 +683,17 @@ def courses():
         global_periods=all_periods,
         room_courses=room_courses,
         weekdays=weekdays,
+        is_global_admin=is_global_admin,
         csrf_token=session.get('csrf_token')
     )
 
 
 @admin_dyn_bp.route('/courses/add', methods=['POST'])
 def courses_add():
-    if not _admin_required():
+    room_id = request.form.get('room_id', default=0, type=int)
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
-    room_id = request.form.get('room_id', default=0, type=int)
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
         return redirect(url_for('admin_dyn.courses', room_id=room_id))
@@ -715,16 +746,16 @@ def courses_add():
 
 @admin_dyn_bp.route('/courses/<int:course_id>/edit', methods=['POST'])
 def courses_edit(course_id):
-    if not _admin_required():
+    from models import Course
+    c = Course.query.get_or_404(course_id)
+    room_id = c.room_id or 0
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
-    room_id = request.form.get('room_id', default=0, type=int)
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
         return redirect(url_for('admin_dyn.courses', room_id=room_id))
 
-    from models import Course
-    c = Course.query.get_or_404(course_id)
     try:
         c.name = request.form.get('name', c.name).strip()
         c.course_type = request.form.get('course_type', c.course_type)
@@ -747,13 +778,12 @@ def courses_edit(course_id):
 
 @admin_dyn_bp.route('/courses/<int:course_id>/delete', methods=['POST'])
 def courses_delete(course_id):
-    if not _admin_required():
-        flash('Zugriff verweigert.', 'error')
-        return redirect(url_for('dashboard'))
-    
     from models import Course
     c = Course.query.get_or_404(course_id)
     room_id = c.room_id or 0
+    if not _room_manage_allowed(room_id):
+        flash('Zugriff verweigert.', 'error')
+        return redirect(url_for('dashboard'))
     
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
@@ -1072,7 +1102,7 @@ def room_schedule(room_id):
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/toggle', methods=['POST'])
 def room_schedule_toggle(room_id):
-    if not _admin_required():
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
@@ -1107,7 +1137,7 @@ def room_schedule_toggle(room_id):
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/load-builtin', methods=['POST'])
 def room_schedule_load_builtin(room_id):
-    if not _admin_required():
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
@@ -1153,7 +1183,7 @@ def room_schedule_load_builtin(room_id):
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/copy_global', methods=['POST'])
 def room_schedule_copy_global(room_id):
-    if not _admin_required():
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
@@ -1181,7 +1211,7 @@ def room_schedule_copy_global(room_id):
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/add', methods=['POST'])
 def room_schedule_period_add(room_id):
-    if not _admin_required():
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
@@ -1241,7 +1271,7 @@ def room_schedule_period_add(room_id):
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/<int:period_id>/edit', methods=['POST'])
 def room_schedule_period_edit(room_id, period_id):
-    if not _admin_required():
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
@@ -1298,7 +1328,7 @@ def room_schedule_period_edit(room_id, period_id):
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/<int:period_id>/delete', methods=['POST'])
 def room_schedule_period_delete(room_id, period_id):
-    if not _admin_required():
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
@@ -1324,20 +1354,29 @@ def room_schedule_period_delete(room_id, period_id):
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/courses/save', methods=['POST'])
 def room_schedule_courses_save(room_id):
-    if not _admin_required():
+    if not _room_manage_allowed(room_id):
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
         return redirect(url_for('admin_dyn.courses', room_id=room_id))
         
-    from models import Room, RoomCourse, RoomPeriod
+    from models import Room, RoomCourse, RoomPeriod, Course
+    from sqlalchemy import or_
     room = Room.query.get_or_404(room_id)
     if not room.use_custom_schedule:
         flash('Der raumspezifische Stundenplan ist nicht aktiv.', 'error')
         return redirect(url_for('admin_dyn.courses', room_id=room_id))
         
     try:
+        # Erlaubte Kurs-IDs: nur Kurse dieses Raums oder globale Kurse –
+        # verhindert das Zuweisen fremder Raum-Kurse über manipulierte IDs.
+        allowed_course_ids = {
+            c.id for c in Course.query.filter(
+                or_(Course.room_id == room_id, Course.room_id.is_(None))
+            ).all()
+        }
+
         # Alle bestehenden Kurszuordnungen für diesen Raum löschen
         RoomCourse.query.filter_by(room_id=room_id).delete()
         
@@ -1353,15 +1392,17 @@ def room_schedule_courses_save(room_id):
                 if val:
                     try:
                         course_id = int(val)
-                        rc = RoomCourse(
-                            room_id=room_id,
-                            course_id=course_id,
-                            weekday=wd,
-                            period_number=p.period_number
-                        )
-                        db.session.add(rc)
                     except ValueError:
-                        pass
+                        continue
+                    if course_id not in allowed_course_ids:
+                        continue
+                    rc = RoomCourse(
+                        room_id=room_id,
+                        course_id=course_id,
+                        weekday=wd,
+                        period_number=p.period_number
+                    )
+                    db.session.add(rc)
         db.session.commit()
         flash('Kurs-Zuordnungen für diesen Raum erfolgreich gespeichert.', 'success')
         _after_periods_changed()

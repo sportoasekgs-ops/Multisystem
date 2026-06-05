@@ -190,16 +190,21 @@
 <div class="periods-page">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
         <div>
+            {% if is_global_admin %}
             <a href="{{ url_for('admin') }}" style="text-decoration:none;color:var(--text-secondary);font-size:.9rem;">← Admin</a>
+            {% elif room_id > 0 %}
+            <a href="{{ url_for('room_admin_dashboard', room_id=room_id) }}" style="text-decoration:none;color:var(--text-secondary);font-size:.9rem;">← Zurück</a>
+            {% endif %}
             <h2 style="margin:.25rem 0 0;">⏱️ Stunden verwalten</h2>
             <p style="color:var(--text-secondary);margin:.25rem 0 0;">Unterrichtszeiten und große Pausen für den Wochenplan</p>
         </div>
-        <a href="{{ url_for('admin_dyn.courses') }}" class="btn btn-secondary">📚 Kurse</a>
+        <a href="{{ url_for('admin_dyn.courses', room_id=room_id) }}" class="btn btn-secondary">📚 Kurse</a>
     </div>
 
     <!-- Browser-style Room Tabs Area -->
     {% if rooms and rooms|length > 0 %}
     <div class="room-browser-tabs" style="display: flex; background: rgba(0,0,0,0.04); padding: 8px 8px 0; gap: 4px; border-radius: 10px 10px 0 0; border-bottom: 1px solid var(--border-light); margin-bottom: 1.5rem;">
+        {% if is_global_admin %}
         <a href="{{ url_for('admin_dyn.periods', room_id=0) }}" 
            class="room-browser-tab {% if room_id == 0 %}active{% endif %}"
            style="text-decoration: none; padding: 8px 16px; border-radius: 8px 8px 0 0; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; transition: all var(--transition-fast); 
@@ -209,6 +214,7 @@
             <span>🌍</span>
             <span>Globaler Standard</span>
         </a>
+        {% endif %}
         {% for r in rooms %}
         <a href="{{ url_for('admin_dyn.periods', room_id=r.id) }}" 
            class="room-browser-tab {% if room_id == r.id %}active{% endif %}"

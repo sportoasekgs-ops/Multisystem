@@ -1,1 +1,2 @@
 - [Multi-worker Gunicorn pitfalls](multi-worker-gunicorn.md) — auto-migration DuplicateColumn races are benign first-boot noise; per-row counters (login lockout, quotas) MUST use atomic SQL UPDATE...RETURNING, not Python read-modify-write.
+- [Room-admin authorization](room-admin-authorization.md) — room-scoped routes use _room_manage_allowed(room_id); derive room_id from persisted entity for edit/delete, validate forgeable form IDs, keep global ops admin-only + hide via is_global_admin.
