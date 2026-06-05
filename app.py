@@ -413,195 +413,136 @@ if not _BOOTSTRAP_MODE:
             print(f"[SEEDING] Fehler beim Erstellen des Test-Lehrers: {e}")
 
 
-        # --- Multi-Room Migration ---
+        # --- Auto-Migration Suite ---
         try:
-            from models import Room, Booking, BlockedSlot
-            inspector = db.inspect(db.engine)
+            from models import Room, Booking, BlockedSlot, Course, Period, Notification
+            from sqlalchemy import text
             
-            # 1. use_custom_schedule in rooms (First, to avoid query crash on Room.query.first())
-            if db.engine.dialect.has_table(db.engine.connect(), 'rooms'):
-                cols = [c['name'] for c in inspector.get_columns('rooms')]
-                if 'use_custom_schedule' not in cols:
-                    print("[MIGRATION] Füge Spalte 'use_custom_schedule' zu 'rooms' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+            inspector = db.inspect(db.engine)
+            with db.engine.connect() as conn:
+                # 1. use_custom_schedule in rooms
+                if db.engine.dialect.has_table(conn, 'rooms'):
+                    cols = [c['name'] for c in inspector.get_columns('rooms')]
+                    if 'use_custom_schedule' not in cols:
+                        print("[MIGRATION] Füge Spalte 'use_custom_schedule' zu 'rooms' hinzu...")
                         conn.execute(text("ALTER TABLE rooms ADD COLUMN use_custom_schedule BOOLEAN DEFAULT FALSE"))
                         conn.commit()
-                    print("[MIGRATION] use_custom_schedule zu rooms hinzugefügt.")
+                        print("[MIGRATION] use_custom_schedule zu rooms hinzugefügt.")
 
-            # 2. Standardraum "Kleine Insel" erzeugen, falls kein Raum existiert
-            if db.engine.dialect.has_table(db.engine.connect(), 'rooms'):
-                default_room = Room.query.first()
-                if not default_room:
-                    print("[MIGRATION] Erstelle Standard-Raum 'Kleine Insel'...")
-                    default_room = Room(
-                        name="Kleine Insel",
-                        description="Standardraum",
-                        color="#6366f1",
-                        icon="🏫",
-                        is_active=True,
-                        sort_order=0
-                    )
-                    db.session.add(default_room)
-                    db.session.commit()
-                    print(f"[MIGRATION] Standard-Raum 'Kleine Insel' mit ID {default_room.id} erstellt.")
-            
-            # 3. room_id in bookings
-            if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
-                cols = [c['name'] for c in inspector.get_columns('bookings')]
-                if 'room_id' not in cols:
-                    print("[MIGRATION] Füge Spalte 'room_id' zu 'bookings' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+                # 2. Standardraum "Kleine Insel" erzeugen
+                if db.engine.dialect.has_table(conn, 'rooms'):
+                    try:
+                        default_room = Room.query.first()
+                        if not default_room:
+                            print("[MIGRATION] Erstelle Standard-Raum 'Kleine Insel'...")
+                            default_room = Room(
+                                name="Kleine Insel",
+                                description="Standardraum",
+                                color="#6366f1",
+                                icon="🏫",
+                                is_active=True,
+                                sort_order=0
+                            )
+                            db.session.add(default_room)
+                            db.session.commit()
+                            print(f"[MIGRATION] Standard-Raum 'Kleine Insel' mit ID {default_room.id} erstellt.")
+                    except Exception as inner_e:
+                        db.session.rollback()
+                        print(f"[MIGRATION] Fehler beim Prüfen/Erstellen des Standard-Raums: {inner_e}")
+
+                # 3. room_id in bookings
+                if db.engine.dialect.has_table(conn, 'bookings'):
+                    cols = [c['name'] for c in inspector.get_columns('bookings')]
+                    if 'room_id' not in cols:
+                        print("[MIGRATION] Füge Spalte 'room_id' zu 'bookings' hinzu...")
                         conn.execute(text("ALTER TABLE bookings ADD COLUMN room_id INTEGER REFERENCES rooms(id)"))
                         conn.commit()
-                    
-                    # Belege mit Default-Raum (ID 1)
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
                         conn.execute(text("UPDATE bookings SET room_id = 1 WHERE room_id IS NULL"))
                         conn.commit()
-                    print("[MIGRATION] room_id zu bookings hinzugefügt und auf 1 gesetzt.")
+                        print("[MIGRATION] room_id zu bookings hinzugefügt und auf 1 gesetzt.")
 
-            # 4. room_id in blocked_slots
-            if db.engine.dialect.has_table(db.engine.connect(), 'blocked_slots'):
-                cols = [c['name'] for c in inspector.get_columns('blocked_slots')]
-                if 'room_id' not in cols:
-                    print("[MIGRATION] Füge Spalte 'room_id' zu 'blocked_slots' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+                # 4. room_id in blocked_slots
+                if db.engine.dialect.has_table(conn, 'blocked_slots'):
+                    cols = [c['name'] for c in inspector.get_columns('blocked_slots')]
+                    if 'room_id' not in cols:
+                        print("[MIGRATION] Füge Spalte 'room_id' zu 'blocked_slots' hinzu...")
                         conn.execute(text("ALTER TABLE blocked_slots ADD COLUMN room_id INTEGER REFERENCES rooms(id)"))
                         conn.commit()
-                    
-                    # Belege mit Default-Raum (ID 1)
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
                         conn.execute(text("UPDATE blocked_slots SET room_id = 1 WHERE room_id IS NULL"))
                         conn.commit()
-                    print("[MIGRATION] room_id zu blocked_slots hinzugefügt und auf 1 gesetzt.")
-        except Exception as e:
-            print(f"[MIGRATION] Fehler bei der Multi-Room-Migration: {e}")
+                        print("[MIGRATION] room_id zu blocked_slots hinzugefügt und auf 1 gesetzt.")
 
-        # --- Auto-Migrator: Fehlende Spalten hinzufügen (z.B. für blocked_slots.icon) ---
-        try:
-            inspector = db.inspect(db.engine)
-            if db.engine.dialect.has_table(db.engine.connect(), 'blocked_slots'):
-                columns = [col['name'] for col in inspector.get_columns('blocked_slots')]
-                if 'icon' not in columns:
-                    print("[MIGRATION] Füge fehlende Spalte 'icon' zu 'blocked_slots' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
-                        # SQLite und Postgres unterstützen ADD COLUMN
+                # 5. icon in blocked_slots
+                if db.engine.dialect.has_table(conn, 'blocked_slots'):
+                    cols = [col['name'] for col in inspector.get_columns('blocked_slots')]
+                    if 'icon' not in cols:
+                        print("[MIGRATION] Füge Spalte 'icon' zu 'blocked_slots' hinzu...")
                         conn.execute(text("ALTER TABLE blocked_slots ADD COLUMN icon VARCHAR(10) DEFAULT '🔧'"))
                         conn.commit()
-                    print("[MIGRATION] Spalte erfolgreich hinzugefügt.")
-            if db.engine.dialect.has_table(db.engine.connect(), "periods"):
-                period_columns = [
-                    col["name"] for col in inspector.get_columns("periods")
-                ]
-                if "period_kind" not in period_columns:
-                    print("[MIGRATION] Füge Spalte 'period_kind' zu 'periods' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+                        print("[MIGRATION] Spalte 'icon' zu 'blocked_slots' hinzugefügt.")
 
-                        conn.execute(
-                            text(
-                                "ALTER TABLE periods ADD COLUMN period_kind VARCHAR(20) DEFAULT 'lesson'"
-                            )
-                        )
+                # 6. period_kind and after_lesson in periods
+                if db.engine.dialect.has_table(conn, 'periods'):
+                    cols = [col['name'] for col in inspector.get_columns('periods')]
+                    if 'period_kind' not in cols:
+                        print("[MIGRATION] Füge Spalte 'period_kind' zu 'periods' hinzu...")
+                        conn.execute(text("ALTER TABLE periods ADD COLUMN period_kind VARCHAR(20) DEFAULT 'lesson'"))
                         conn.commit()
-                if "after_lesson" not in period_columns:
-                    print("[MIGRATION] Füge Spalte 'after_lesson' zu 'periods' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
-
-                        conn.execute(
-                            text(
-                                "ALTER TABLE periods ADD COLUMN after_lesson INTEGER"
-                            )
-                        )
+                    if 'after_lesson' not in cols:
+                        print("[MIGRATION] Füge Spalte 'after_lesson' zu 'periods' hinzu...")
+                        conn.execute(text("ALTER TABLE periods ADD COLUMN after_lesson INTEGER"))
                         conn.commit()
-        except Exception as e:
-            print(f"[MIGRATION] Fehler bei der Auto-Migration: {e}")
 
-        # --- Auto-Migrator: Booking status Spalte hinzufügen ---
-        try:
-            inspector = db.inspect(db.engine)
-            if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
-                booking_columns = [col['name'] for col in inspector.get_columns('bookings')]
-                if 'status' not in booking_columns:
-                    print("[MIGRATION] Füge Spalte 'status' zu 'bookings' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+                # 7. status in bookings
+                if db.engine.dialect.has_table(conn, 'bookings'):
+                    cols = [col['name'] for col in inspector.get_columns('bookings')]
+                    if 'status' not in cols:
+                        print("[MIGRATION] Füge Spalte 'status' zu 'bookings' hinzu...")
                         conn.execute(text("ALTER TABLE bookings ADD COLUMN status VARCHAR(20) DEFAULT 'booked'"))
                         conn.commit()
                         conn.execute(text("UPDATE bookings SET status = 'booked' WHERE status IS NULL"))
                         conn.commit()
-                    print("[MIGRATION] Spalte 'status' erfolgreich hinzugefügt und initialisiert.")
-        except Exception as e:
-            print(f"[MIGRATION] Fehler bei der Booking status Migration: {e}")
+                        print("[MIGRATION] Spalte 'status' zu 'bookings' hinzugefügt.")
 
-        # --- Auto-Migrator: Booking admin_reply Spalte hinzufügen ---
-        try:
-            inspector = db.inspect(db.engine)
-            if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
-                booking_columns = [col['name'] for col in inspector.get_columns('bookings')]
-                if 'admin_reply' not in booking_columns:
-                    print("[MIGRATION] Füge Spalte 'admin_reply' zu 'bookings' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+                # 8. admin_reply in bookings
+                if db.engine.dialect.has_table(conn, 'bookings'):
+                    cols = [col['name'] for col in inspector.get_columns('bookings')]
+                    if 'admin_reply' not in cols:
+                        print("[MIGRATION] Füge Spalte 'admin_reply' zu 'bookings' hinzu...")
                         conn.execute(text("ALTER TABLE bookings ADD COLUMN admin_reply TEXT"))
                         conn.commit()
-                    print("[MIGRATION] Spalte 'admin_reply' erfolgreich hinzugefügt.")
-        except Exception as e:
-            print(f"[MIGRATION] Fehler bei der Booking admin_reply Migration: {e}")
 
-        # --- Auto-Migrator: Notification recipient_user_id Spalte hinzufügen ---
-        try:
-            inspector = db.inspect(db.engine)
-            if db.engine.dialect.has_table(db.engine.connect(), 'notifications'):
-                notification_columns = [col['name'] for col in inspector.get_columns('notifications')]
-                if 'recipient_user_id' not in notification_columns:
-                    print("[MIGRATION] Füge Spalte 'recipient_user_id' zu 'notifications' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+                # 9. recipient_user_id in notifications
+                if db.engine.dialect.has_table(conn, 'notifications'):
+                    cols = [col['name'] for col in inspector.get_columns('notifications')]
+                    if 'recipient_user_id' not in cols:
+                        print("[MIGRATION] Füge Spalte 'recipient_user_id' zu 'notifications' hinzu...")
                         conn.execute(text("ALTER TABLE notifications ADD COLUMN recipient_user_id INTEGER REFERENCES users(id)"))
                         conn.commit()
-                    print("[MIGRATION] Spalte 'recipient_user_id' erfolgreich hinzugefügt.")
-        except Exception as e:
-            print(f"[MIGRATION] Fehler bei der Notification recipient_user_id Migration: {e}")
 
-        # --- Auto-Migrator: Course room_id Spalte hinzufügen ---
-        try:
-            inspector = db.inspect(db.engine)
-            if db.engine.dialect.has_table(db.engine.connect(), 'courses'):
-                course_columns = [col['name'] for col in inspector.get_columns('courses')]
-                if 'room_id' not in course_columns:
-                    print("[MIGRATION] Füge Spalte 'room_id' zu 'courses' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+                # 10. room_id in courses
+                if db.engine.dialect.has_table(conn, 'courses'):
+                    cols = [col['name'] for col in inspector.get_columns('courses')]
+                    if 'room_id' not in cols:
+                        print("[MIGRATION] Füge Spalte 'room_id' zu 'courses' hinzu...")
                         conn.execute(text("ALTER TABLE courses ADD COLUMN room_id INTEGER REFERENCES rooms(id)"))
                         conn.commit()
-                    print("[MIGRATION] Spalte 'room_id' erfolgreich zu 'courses' hinzugefügt.")
-        except Exception as e:
-            print(f"[MIGRATION] Fehler bei der Course room_id Migration: {e}")
+                        print("[MIGRATION] Spalte 'room_id' zu 'courses' hinzugefügt.")
 
-        # --- Auto-Migrator: Booking is_request Spalte hinzufügen ---
-        try:
-            inspector = db.inspect(db.engine)
-            if db.engine.dialect.has_table(db.engine.connect(), 'bookings'):
-                booking_columns = [col['name'] for col in inspector.get_columns('bookings')]
-                if 'is_request' not in booking_columns:
-                    print("[MIGRATION] Füge Spalte 'is_request' zu 'bookings' hinzu...")
-                    with db.engine.connect() as conn:
-                        from sqlalchemy import text
+                # 11. is_request in bookings
+                if db.engine.dialect.has_table(conn, 'bookings'):
+                    cols = [col['name'] for col in inspector.get_columns('bookings')]
+                    if 'is_request' not in cols:
+                        print("[MIGRATION] Füge Spalte 'is_request' zu 'bookings' hinzu...")
                         conn.execute(text("ALTER TABLE bookings ADD COLUMN is_request BOOLEAN DEFAULT FALSE"))
                         conn.commit()
                         conn.execute(text("UPDATE bookings SET is_request = FALSE WHERE is_request IS NULL"))
                         conn.commit()
-                    print("[MIGRATION] Spalte 'is_request' erfolgreich hinzugefügt.")
+                        print("[MIGRATION] Spalte 'is_request' zu 'bookings' hinzugefügt.")
+
         except Exception as e:
-            print(f"[MIGRATION] Fehler bei der Booking is_request Migration: {e}")
+            db.session.rollback()
+            print(f"[MIGRATION] Fehler bei der Auto-Migration: {e}")
         # --------------------------------------------------------------------------------
 
         # Für bestehende Installationen (vor Setup-Wizard-Feature):
