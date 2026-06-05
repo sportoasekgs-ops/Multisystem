@@ -3,29 +3,68 @@
 <style>
 :root {
     --room-color: {{ current_room.color if current_room and current_room.color else 'var(--primary)' }};
+    --room-color-light: color-mix(in srgb, var(--room-color) 12%, transparent);
+    --room-color-border-light: color-mix(in srgb, var(--room-color) 30%, transparent);
+    --room-color-hover: color-mix(in srgb, var(--room-color) 82%, black);
 }
+
+/* Buchen Buttons */
 .book-btn {
     background: var(--room-color) !important;
     box-shadow: 0 2px 6px color-mix(in srgb, var(--room-color) 40%, transparent) !important;
 }
 .book-btn:hover {
-    background: color-mix(in srgb, var(--room-color) 82%, black) !important;
+    background: var(--room-color-hover) !important;
     box-shadow: 0 4px 10px color-mix(in srgb, var(--room-color) 45%, transparent) !important;
 }
-.request-btn {
-    border-color: var(--room-color) !important;
-    color: var(--room-color) !important;
+
+/* Anfrage Buttons (Request) */
+.book-btn.request-btn, .request-btn {
     background: transparent !important;
+    border: 1.5px solid var(--room-color) !important;
+    color: var(--room-color) !important;
 }
-.request-btn:hover {
+.book-btn.request-btn:hover, .request-btn:hover {
     background: var(--room-color) !important;
     color: white !important;
 }
+
+/* Flexibel / Freie Wahl Slots (.course-frei) */
+.course-frei {
+    border-color: var(--room-color) !important;
+    background: #ffffff !important;
+}
+.course-frei .course-tag {
+    background: var(--room-color-light) !important;
+    color: var(--room-color) !important;
+    border: 1px solid var(--room-color-border-light) !important;
+}
+
+/* Fest / Belegte Slots (.course-default) */
+.course-default {
+    border-color: var(--room-color) !important;
+}
+.course-default .course-tag {
+    background: var(--room-color) !important;
+    color: white !important;
+}
+
+/* Anfrage / Pending Hint */
+.pending-exclusive-hint {
+    background: var(--room-color-light) !important;
+    border-color: var(--room-color) !important;
+    color: var(--room-color) !important;
+}
+.pending-exclusive-hint .pending-text {
+    color: var(--room-color) !important;
+}
+
 .booked-indicator {
     color: var(--room-color) !important;
 }
 </style>
 <div class="dashboard">
+
 
     {% if demo_mode %}
     <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:.9rem 1.2rem;margin-bottom:0;display:flex;align-items:center;gap:.8rem;font-size:.88rem;">
@@ -864,13 +903,14 @@
                                  <div style="display: flex; gap: 0.25rem; margin-top: 0.35rem; width: 100%;">
                                      <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None) }}"
                                         class="book-btn"
-                                        data-book-url="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None) }}"
                                         style="flex: 1; text-align: center; justify-content: center;">
                                          📝 Buchen
                                      </a>
                                      <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None, request_mode=1) }}"
                                         class="book-btn request-btn"
-                                        style="flex: 1; text-align: center; justify-content: center; font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                        style="flex: 1; text-align: center; justify-content: center; background: transparent; border: 1.5px solid var(--room-color, var(--primary)); color: var(--room-color, var(--primary)); font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;"
+                                        onmouseover="this.style.backgroundColor='var(--room-color, var(--primary))'; this.style.color='white';"
+                                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--room-color, var(--primary))';">
                                          ✉️ Anfrage
                                      </a>
                                  </div>
@@ -878,7 +918,7 @@
                                  <div style="display: flex; margin-top: 0.35rem; width: 100%;">
                                      <a href="{{ url_for('book', date_str=day.date, period=p_num, room=current_room.id if current_room else None, request_mode=1) }}"
                                         class="book-btn request-btn"
-                                        style="flex: 1; text-align: center; justify-content: center; font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                         style="flex: 1; text-align: center; justify-content: center; font-size: 0.72rem; padding: 0.4rem 0.2rem; display: inline-flex; align-items: center; gap: 0.2rem;">
                                          ✉️ Slot anfragen
                                      </a>
                                  </div>
