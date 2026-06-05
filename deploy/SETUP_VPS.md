@@ -51,6 +51,45 @@ Das Skript erledigt alles automatisch:
 
 ---
 
+## Neue Schule hinzufügen (Multi-School)
+
+Eine weitere Schule auf demselben VPS anlegen – Datenbank, Subdomain-Instanz,
+nginx und HTTPS werden automatisch erzeugt:
+
+```bash
+ssh root@87.106.155.5
+bash /opt/buchungssystem/deploy/provision_school.sh "IGS Badenstedt"
+```
+
+Das Skript:
+- legt eine **eigene PostgreSQL-Datenbank** für die Schule an
+- erstellt eine **isolierte App-Instanz** (eigenes Verzeichnis unter `/srv/learngrid/<slug>`, eigener Port, eigener systemd-Service `learngrid@<slug>`)
+- richtet den **nginx-vhost** für `<slug>.learngrid.app` ein
+- holt das **HTTPS-Zertifikat** (Let's Encrypt)
+
+Beim ersten Lauf werden Basis-Domain, VPS-IP und Let's-Encrypt-E-Mail einmalig
+abgefragt und in `/etc/learngrid/provision.conf` gespeichert.
+
+**Einziger manueller Schritt:** Wenn das Skript dazu auffordert, bei IONOS einen
+**A-Record** anlegen (`<slug>` → VPS-IP). Das Skript wartet automatisch, bis der
+Eintrag aktiv ist, und holt dann das Zertifikat. Danach ist
+`https://<slug>.learngrid.app` aufrufbar und der Einrichtungs-Assistent führt
+durch den Rest.
+
+Optional lässt sich der Subdomain-Name (Slug) als 2. Parameter überschreiben:
+```bash
+bash deploy/provision_school.sh "IGS Badenstedt" igs-bs
+```
+
+Verwaltung einer Schul-Instanz:
+```bash
+systemctl status learngrid@igs-badenstedt
+journalctl -u learngrid@igs-badenstedt -f
+systemctl restart learngrid@igs-badenstedt
+```
+
+---
+
 ## Updates einspielen
 
 **Wenn Code per GitHub:**
