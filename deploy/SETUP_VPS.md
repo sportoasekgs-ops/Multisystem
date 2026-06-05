@@ -1,128 +1,94 @@
-# VPS Einrichtung – igsbadenstedt.learngrid.app
+# VPS Deployment – Buchungssystem
 
 **VPS:** 87.106.155.5 | Ubuntu 24.04  
-**Firewall:** Port 80, 443 ✅ offen
+**Domain:** igsbadenstedt.learngrid.app  
+**Ports:** 80, 443 offen
 
 ---
 
-## Schritt 1 – Als root auf dem VPS einloggen
+## Erstinstallation (einmalig)
+
+### Schritt 1 – Code auf den VPS übertragen
+
+**Option A: Über GitHub (empfohlen)**  
+Erst das Replit-Projekt mit GitHub verbinden (Replit → Version Control → Connect to GitHub), dann:
+```bash
+ssh root@87.106.155.5
+git clone https://github.com/DEIN_USER/DEIN_REPO /opt/buchungssystem
+```
+
+**Option B: Direkt per rsync (von deinem PC aus)**
+```bash
+rsync -avz --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
+  /pfad/zum/projekt/ root@87.106.155.5:/opt/buchungssystem/
+```
+
+**Option C: Zip herunterladen & hochladen**
+```bash
+# Zip auf VPS hochladen
+scp buchungssystem.zip root@87.106.155.5:/tmp/
+ssh root@87.106.155.5
+mkdir -p /opt/buchungssystem
+cd /opt/buchungssystem
+unzip /tmp/buchungssystem.zip
+```
+
+---
+
+### Schritt 2 – Installationsskript ausführen
 
 ```bash
 ssh root@87.106.155.5
+bash /opt/buchungssystem/deploy/install.sh
 ```
 
----
-
-## Schritt 2 – Pakete installieren
-
-```bash
-apt update && apt install -y nginx python3 python3-venv python3-pip git certbot python3-certbot-nginx
-```
-
----
-
-## Schritt 3 – App-Verzeichnis anlegen und Code holen
-
-```bash
-mkdir -p /opt/buchungssystem
-cd /opt/buchungssystem
-git clone <DEIN_REPO_URL> .
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-mkdir -p static/uploads logs
-chown -R www-data:www-data /opt/buchungssystem
-```
-
----
-
-## Schritt 4 – Umgebungsvariablen setzen
-
-```bash
-cat > /opt/buchungssystem/.env << 'EOF'
-DATABASE_URL=postgresql://learngrid_user:DEIN_PASSWORT@localhost:5432/learngrid
-SESSION_SECRET=HIER_LANGEN_ZUFAELLIGEN_STRING_EINFUEGEN
-EOF
-
-chmod 600 /opt/buchungssystem/.env
-```
-
-Session-Secret generieren (diesen Befehl ausführen und Ausgabe kopieren):
-```bash
-python3 -c "import secrets; print(secrets.token_hex(32))"
-```
-
----
-
-## Schritt 5 – Systemd-Service einrichten
-
-```bash
-cp /opt/buchungssystem/deploy/buchungssystem.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable buchungssystem
-systemctl start buchungssystem
-```
-
-Status prüfen (sollte "active (running)" zeigen):
-```bash
-systemctl status buchungssystem
-```
-
-Logs live verfolgen:
-```bash
-journalctl -u buchungssystem -f
-```
-
----
-
-## Schritt 6 – nginx konfigurieren (erstmal nur HTTP für Certbot)
-
-```bash
-cp /opt/buchungssystem/deploy/nginx.conf /etc/nginx/sites-available/buchungssystem
-ln -s /etc/nginx/sites-available/buchungssystem /etc/nginx/sites-enabled/
-rm -f /etc/nginx/sites-enabled/default
-nginx -t && systemctl reload nginx
-```
-
----
-
-## Schritt 7 – SSL-Zertifikat holen (Let's Encrypt)
-
-```bash
-certbot --nginx -d igsbadenstedt.learngrid.app
-```
-
-Certbot fragt nach einer E-Mail-Adresse und ergänzt die nginx-Konfiguration automatisch. Danach:
-
-```bash
-systemctl reload nginx
-```
-
----
-
-## Schritt 8 – Testen
-
-```bash
-# App läuft auf Port 5000?
-ss -tlnp | grep 5000
-
-# nginx hört auf 443?
-ss -tlnp | grep 443
-
-# HTTPS-Antwort testen
-curl -I https://igsbadenstedt.learngrid.app
-```
-
-Erwartete Antwort: `HTTP/2 200` oder `HTTP/1.1 302 FOUND`
+Das Skript erledigt alles automatisch:
+- Python-Pakete installieren (venv)
+- `.env` mit DATABASE_URL und SESSION_SECRET anlegen
+- Systemd-Service einrichten und starten
+- nginx konfigurieren
+- SSL-Zertifikat (Let's Encrypt) holen
 
 ---
 
 ## Updates einspielen
 
+**Wenn Code per GitHub:**
 ```bash
-cd /opt/buchungssystem
-git pull
-venv/bin/pip install -r requirements.txt
+ssh root@87.106.155.5
+bash /opt/buchungssystem/deploy/update.sh
+```
+
+**Wenn Code per rsync:**
+```bash
+# Erst Code übertragen
+rsync -avz --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
+  --exclude='.env' --exclude='buchungssystem_local.json' \
+  /pfad/zum/projekt/ root@87.106.155.5:/opt/buchungssystem/
+
+# Dann Service neustarten
+ssh root@87.106.155.5 "systemctl restart buchungssystem"
+```
+
+---
+
+## Nützliche Befehle auf dem VPS
+
+```bash
+# Live-Logs
+journalctl -u buchungssystem -f
+
+# Status
+systemctl status buchungssystem
+
+# Neustart
 systemctl restart buchungssystem
+
+# App läuft auf Port 5000?
+ss -tlnp | grep 5000
+
+# HTTPS testen
+curl -I https://igsbadenstedt.learngrid.app
 ```
 
 ---
@@ -131,8 +97,25 @@ systemctl restart buchungssystem
 
 | Problem | Lösung |
 |---|---|
-| `502 Bad Gateway` | App läuft nicht: `systemctl start buchungssystem` |
-| `curl: (7) Failed to connect` | nginx läuft nicht: `systemctl start nginx` |
-| Zertifikat-Fehler | `certbot renew` |
-| App startet nicht | `journalctl -u buchungssystem -n 50` prüfen |
-| DB-Verbindung schlägt fehl | PostgreSQL-User-Rechte prüfen: `psql -U postgres -c "\du"` |
+| `502 Bad Gateway` | `systemctl restart buchungssystem` |
+| App startet nicht | `journalctl -u buchungssystem -n 50` |
+| DB-Verbindung schlägt fehl | DATABASE_URL in `/opt/buchungssystem/.env` prüfen |
+| Zertifikat abgelaufen | `certbot renew && systemctl reload nginx` |
+| nginx-Fehler | `nginx -t` zum Testen |
+
+---
+
+## Dateistruktur auf dem VPS
+
+```
+/opt/buchungssystem/
+├── .env                        ← DATABASE_URL + SESSION_SECRET (geheim!)
+├── buchungssystem_local.json   ← wird vom Setup-Wizard erstellt
+├── venv/                       ← Python-Umgebung
+├── static/uploads/             ← Logos, Favicons
+└── deploy/
+    ├── install.sh              ← Erstinstallation
+    ├── update.sh               ← Updates
+    ├── buchungssystem.service  ← Systemd-Unit
+    └── nginx.conf              ← nginx-Konfiguration
+```
