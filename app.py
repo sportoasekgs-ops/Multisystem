@@ -4757,6 +4757,29 @@ def api_mark_all_notifications_read():
     return jsonify({"success": success})
 
 
+@app.route("/api/notifications/<int:notification_id>/delete", methods=["POST"])
+@login_required
+def api_delete_notification(notification_id):
+    """Löscht eine Benachrichtigung"""
+    csrf_token = request.json.get("csrf_token", "") if request.json else ""
+    if not validate_csrf_token(csrf_token):
+        return jsonify({"success": False, "error": "Invalid CSRF token"}), 403
+
+    is_admin = session.get("user_role") == "admin"
+    user_id = session.get("user_id")
+
+    notif = Notification.query.get(notification_id)
+    if not notif:
+        return jsonify({"success": False, "error": "Nicht gefunden"}), 404
+
+    if not is_admin and notif.recipient_user_id != user_id:
+        return jsonify({"success": False, "error": "Keine Berechtigung"}), 403
+
+    db.session.delete(notif)
+    db.session.commit()
+    return jsonify({"success": True})
+
+
 @app.route("/api/admin/theme", methods=["POST"])
 @admin_required
 def api_save_admin_theme():

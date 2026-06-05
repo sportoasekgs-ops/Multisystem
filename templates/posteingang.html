@@ -157,12 +157,19 @@
                         {% endif %}
                     </div>
 
-                    {% if not n.is_read %}
-                    <button onclick="markInboxRead({{ n.id }})" class="btn-mark-read" title="Als gelesen markieren"
-                            style="background: transparent; border: none; color: var(--text-tertiary); font-size: 1.1rem; cursor: pointer; padding: 0.2rem; transition: color var(--transition); flex-shrink: 0;">
-                        ✔️
-                    </button>
-                    {% endif %}
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0;">
+                        {% if not n.is_read %}
+                        <button onclick="markInboxRead({{ n.id }})" class="btn-mark-read" title="Als gelesen markieren"
+                                style="background: transparent; border: none; color: var(--text-tertiary); font-size: 1.1rem; cursor: pointer; padding: 0.2rem; transition: color var(--transition);">
+                            ✔️
+                        </button>
+                        {% endif %}
+                        <button onclick="deleteNotification({{ n.id }})" title="Benachrichtigung löschen"
+                                style="background: transparent; border: none; color: var(--text-tertiary); font-size: 1rem; cursor: pointer; padding: 0.2rem; transition: color var(--transition); line-height: 1;"
+                                onmouseover="this.style.color='#DC2626'" onmouseout="this.style.color='var(--text-tertiary)'">
+                            🗑️
+                        </button>
+                    </div>
                 </div>
             </div>
             {% endfor %}
@@ -295,6 +302,40 @@ function markInboxRead(notificationId) {
         }
     })
     .catch(err => console.error("Error marking read:", err));
+}
+
+function deleteNotification(notificationId) {
+    if (!confirm('Benachrichtigung wirklich löschen?')) return;
+    fetch(`/api/notifications/${notificationId}/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csrf_token: '{{ csrf_token }}' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.getElementById(`notif-${notificationId}`);
+            if (card) {
+                card.style.transition = 'opacity 0.25s, transform 0.25s';
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    card.remove();
+                    const list = document.querySelector('.notifications-list');
+                    if (list && list.querySelectorAll('.notification-card').length === 0) {
+                        list.innerHTML = `
+                            <div class="no-bookings" style="text-align: center; padding: 3rem 1.5rem; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border: 1.5px solid var(--glass-border); border-radius: var(--radius-lg); margin-top: 1rem;">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                                <h3 style="margin: 0; color: var(--text-primary);">Dein Posteingang ist leer</h3>
+                                <p style="margin: 0.5rem 0 0; color: var(--text-secondary);">Hier erscheinen Benachrichtigungen zu Deinen Buchungsanfragen.</p>
+                            </div>`;
+                    }
+                }, 260);
+            }
+            if (typeof updateUnreadCount === 'function') updateUnreadCount();
+        }
+    })
+    .catch(err => console.error("Error deleting notification:", err));
 }
 
 function markAllInboxRead() {
