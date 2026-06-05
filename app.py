@@ -654,6 +654,8 @@ def check_setup():
         "bootstrap_db",
         "forgot_password",
         "reset_password",
+        "serve_homepage",
+        "redirect_homepage",
     }
     if request.endpoint and (
         request.endpoint.startswith("setup.") or request.endpoint in _SETUP_BYPASS

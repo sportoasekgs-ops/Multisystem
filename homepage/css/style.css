@@ -8,7 +8,11 @@
     --card: #ffffff;
     --border: #e8e6ed;
     --radius: 16px;
+    --radius-lg: 20px;
+    --radius-xl: 26px;
     --shadow: 0 12px 40px rgba(26, 26, 46, 0.08);
+    --shadow-lg: 0 28px 70px rgba(26, 26, 46, 0.14);
+    --grid-line: rgba(26, 26, 46, 0.06);
     --font: "DM Sans", system-ui, -apple-system, sans-serif;
     --font-display: "Fraunces", Georgia, serif;
 }
@@ -23,6 +27,7 @@
 
 html {
     scroll-behavior: smooth;
+    scroll-padding-top: 84px;
 }
 
 body {
@@ -696,5 +701,275 @@ section {
 
     .hero {
         padding-top: 2.5rem;
+    }
+}
+
+/* ============================================================
+   GRID-KONZEPT – Stundenraster als visueller roter Faden
+   ============================================================ */
+
+/* Logo-Mark als Mini-Raster */
+.logo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+    width: 20px;
+    height: 20px;
+}
+.logo-grid i {
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 2px;
+}
+.logo-grid i.on {
+    background: #fff;
+}
+
+/* Hero-Trust-Leiste */
+.hero-trust {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-top: 1.75rem;
+    padding: 0;
+}
+.hero-trust li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Hero-Visual: Screenshot über dekorativem Buchungsraster */
+.hero-visual {
+    position: relative;
+}
+.booking-grid {
+    position: absolute;
+    inset: -28px -24px auto auto;
+    top: -34px;
+    right: -26px;
+    width: 62%;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    z-index: 0;
+    opacity: 0.9;
+}
+.booking-grid i {
+    aspect-ratio: 1 / 1;
+    border-radius: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+}
+.booking-grid i.on {
+    background: var(--brand-light);
+    border-color: rgba(233, 30, 99, 0.35);
+    animation: slotPulse 4.5s ease-in-out infinite;
+    animation-delay: calc(var(--d) * 0.18s);
+}
+@keyframes slotPulse {
+    0%, 100% { background: var(--card); border-color: var(--border); }
+    35%, 65% { background: var(--brand-light); border-color: rgba(233, 30, 99, 0.4); }
+}
+.hero-visual .hero-screenshot {
+    position: relative;
+    z-index: 1;
+}
+
+/* Section-Hintergrund: feines Raster (Stundenraster-Papier) */
+.alt-bg {
+    background:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+        #ffffff;
+    background-size: 44px 44px, 44px 44px, auto;
+}
+
+/* In 3 Schritten */
+.steps-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    counter-reset: step;
+    padding: 0;
+}
+.step-card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    overflow: hidden;
+}
+.step-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: var(--brand);
+}
+.step-slot {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--brand-dark);
+    background: var(--brand-light);
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    margin-bottom: 0.9rem;
+}
+.step-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+.step-card p {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+}
+
+/* Produkt-Showcase: ein großer Screenshot + Callouts */
+.product-showcase {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+}
+.product-screenshot {
+    margin: 0;
+}
+.product-callouts {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 0;
+}
+.product-callouts li {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+}
+.callout-dot {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    margin-top: 0.25rem;
+    border-radius: 4px;
+    background: var(--brand);
+    box-shadow: 0 0 0 4px var(--brand-light);
+}
+.product-callouts strong {
+    display: block;
+    margin-bottom: 0.15rem;
+    font-size: 0.98rem;
+}
+.product-callouts span {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+.callout-soon {
+    opacity: 0.72;
+}
+.callout-soon .callout-dot {
+    background: var(--text-muted);
+    box-shadow: 0 0 0 4px var(--border);
+}
+
+/* Problem-Karten: Slot-Akzent oben */
+.problem-card {
+    position: relative;
+    overflow: hidden;
+}
+.problem-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 4px;
+    background: var(--brand);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+}
+.problem-card:hover::before {
+    transform: scaleX(1);
+}
+
+/* FAQ-Akkordeon */
+.faq-container {
+    max-width: 800px;
+}
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.faq-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+.faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 1.1rem 1.35rem;
+    font-weight: 600;
+    font-size: 0.98rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+.faq-item summary::after {
+    content: "+";
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--brand-light);
+    color: var(--brand-dark);
+    display: grid;
+    place-items: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    transition: transform 0.2s ease;
+}
+.faq-item[open] summary::after {
+    content: "−";
+    transform: rotate(180deg);
+}
+.faq-item p {
+    padding: 0 1.35rem 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+/* Responsive – Grid-Konzept */
+@media (max-width: 900px) {
+    .steps-grid {
+        grid-template-columns: 1fr;
+    }
+    .product-showcase {
+        grid-template-columns: 1fr;
+        gap: 1.75rem;
+    }
+    .booking-grid {
+        display: none;
     }
 }

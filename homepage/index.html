@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="LernGrid – Zeitslots für Kurse, Beratungen und Termine buchen. Klarer Wochenplan, faire Kapazitäten, Ihr Markenauftritt.">
-    <title>LernGrid – Zeitslots buchen, klar und flexibel</title>
+        content="LearnGrid – das Schul-Buchungssystem im Stundenraster. Fachräume, Hallen und Sprechzeiten klar und fair über einen zentralen Wochenplan buchen. Mit IServ-Login.">
+    <title>LearnGrid – Buchen im Stundenraster</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -19,28 +19,34 @@
     <header class="site-header">
         <div class="container header-inner">
             <a href="#" class="logo">
-                <span class="logo-mark" aria-hidden="true">L</span>
-                LernGrid
+                <span class="logo-mark" aria-hidden="true">
+                    <span class="logo-grid">
+                        <i></i><i></i><i class="on"></i>
+                        <i></i><i class="on"></i><i></i>
+                        <i class="on"></i><i></i><i></i>
+                    </span>
+                </span>
+                LearnGrid
             </a>
             <nav class="nav-desktop" aria-label="Hauptnavigation">
+                <a href="#ablauf">Ablauf</a>
                 <a href="#vorteile">Vorteile</a>
                 <a href="#produkt">Produkt</a>
                 <a href="#team">Ihr Team</a>
-                <a href="#betrieb">Betreiber</a>
-                <a href="#design">Ihr Auftritt</a>
-                <a href="#kontakt">Kontakt</a>
+                <a href="#betrieb">Verwaltung</a>
+                <a href="#faq">FAQ</a>
             </nav>
             <a href="#kontakt" class="btn btn-primary">Demo anfragen</a>
             <button type="button" class="menu-toggle" id="menuToggle" aria-label="Menü öffnen"
                 aria-expanded="false">☰</button>
         </div>
         <nav class="nav-mobile container" id="navMobile" aria-label="Mobile Navigation">
+            <a href="#ablauf">Ablauf</a>
             <a href="#vorteile">Vorteile</a>
             <a href="#produkt">Produkt</a>
             <a href="#team">Ihr Team</a>
-            <a href="#betrieb">Betreiber</a>
-            <a href="#design">Ihr Auftritt</a>
-            <a href="#kontakt">Kontakt</a>
+            <a href="#betrieb">Verwaltung</a>
+            <a href="#faq">FAQ</a>
             <a href="#kontakt" class="btn btn-primary" style="margin-top:0.5rem;text-align:center;">Demo anfragen</a>
         </nav>
     </header>
@@ -48,66 +54,118 @@
     <main>
         <section class="hero">
             <div class="container hero-grid">
-                <div>
-                    <span class="hero-eyebrow">Für Schulen, Sportstätten &amp; Lehrmittel</span>
-                    <h1>Das moderne Schul-Buchungssystem – <em>einfach, digital, ohne Chaos.</em></h1>
+                <div class="hero-copy">
+                    <span class="hero-eyebrow">Für Schulen, Sportstätten &amp; Bildungsträger</span>
+                    <h1>Jede Stunde, jeder Raum – <em>klar im Raster gebucht.</em></h1>
                     <p class="hero-lead">
-                        LernGrid digitalisiert Ihren Schulalltag: Buchen Sie Fachräume, Computerräume, Klassenräume, Turnhallen (wie die Sportoase) oder Sprechzeiten über einen zentralen Wochenplan. Vollständig integriert mit <strong>IServ SSO</strong>.
+                        LearnGrid bringt den Schulalltag in ein digitales Stundenraster: Fachräume,
+                        Computerräume, Klassenräume, Turnhallen und Sprechzeiten buchen Sie über einen
+                        zentralen Wochenplan – ohne Doppelbuchungen, ohne Zettelwirtschaft. Anmeldung
+                        direkt über den vorhandenen <strong>IServ-Account</strong>.
                     </p>
                     <div class="hero-actions">
                         <a href="#kontakt" class="btn btn-primary">Jetzt Demo anfragen</a>
-                        <a href="#vorteile" class="btn btn-ghost">Mehr erfahren</a>
+                        <a href="#ablauf" class="btn btn-ghost">So funktioniert's</a>
                     </div>
+                    <ul class="hero-trust" aria-label="Eigenschaften">
+                        <li><span aria-hidden="true">🔒</span> DSGVO-konform</li>
+                        <li><span aria-hidden="true">🔑</span> IServ-Login</li>
+                        <li><span aria-hidden="true">🇩🇪</span> Made in Germany</li>
+                    </ul>
                 </div>
-                <figure class="hero-screenshot">
-                    <div class="browser-frame">
-                        <div class="browser-chrome" aria-hidden="true">
-                            <span class="browser-dot"></span>
-                            <span class="browser-dot"></span>
-                            <span class="browser-dot"></span>
-                        </div>
-                        <div class="browser-viewport">
-                            <img src="images/dashboard-wochenplan.png"
-                                alt="LernGrid Dashboard mit Wochenplan, Buchungs-Widgets und Slot-Übersicht"
-                                width="1200" height="750" loading="eager" decoding="async">
-                        </div>
+
+                <div class="hero-visual">
+                    <div class="booking-grid" aria-hidden="true">
+                        <i style="--d:0"></i><i class="on" style="--d:1"></i><i style="--d:2"></i><i style="--d:3"></i><i class="on" style="--d:4"></i>
+                        <i class="on" style="--d:5"></i><i style="--d:6"></i><i style="--d:7"></i><i class="on" style="--d:8"></i><i style="--d:9"></i>
+                        <i style="--d:10"></i><i class="on" style="--d:11"></i><i style="--d:12"></i><i style="--d:13"></i><i class="on" style="--d:14"></i>
+                        <i class="on" style="--d:15"></i><i style="--d:16"></i><i class="on" style="--d:17"></i><i style="--d:18"></i><i style="--d:19"></i>
                     </div>
-                    <figcaption class="hero-screenshot-caption">Echter Blick ins Dashboard – Wochenplan und „Meine Buchungen“ auf einen Screen.</figcaption>
-                </figure>
+                    <figure class="hero-screenshot">
+                        <div class="browser-frame">
+                            <div class="browser-chrome" aria-hidden="true">
+                                <span class="browser-dot"></span>
+                                <span class="browser-dot"></span>
+                                <span class="browser-dot"></span>
+                            </div>
+                            <div class="browser-viewport">
+                                <img src="images/dashboard-wochenplan.png"
+                                    alt="LearnGrid Einrichtungs-Assistent mit geführten Schritten zur Konfiguration"
+                                    width="1200" height="750" loading="eager" decoding="async">
+                            </div>
+                        </div>
+                        <figcaption class="hero-screenshot-caption">Echter Screenshot: der geführte Einrichtungs-Assistent – Ihre Schule in Minuten startklar.</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <section id="ablauf" class="alt-bg">
+            <div class="container">
+                <p class="section-label">In 3 Schritten</p>
+                <h2 class="section-title">Gebucht ist schneller als gefragt</h2>
+                <p class="section-intro">
+                    Kein Handbuch nötig: Wer den Wochenplan öffnet, hat in unter einer Minute reserviert.
+                </p>
+                <ol class="steps-grid">
+                    <li class="step-card">
+                        <span class="step-slot">1. Stunde</span>
+                        <h3>Stunde auswählen</h3>
+                        <p>Wochenplan öffnen, Tag und gewünschte Stunde anklicken. Freie, belegte und
+                            gesperrte Slots sind farblich sofort erkennbar.</p>
+                    </li>
+                    <li class="step-card">
+                        <span class="step-slot">2. Stunde</span>
+                        <h3>Raum oder Angebot buchen</h3>
+                        <p>Klasse oder Gruppe samt Schülerzahl angeben und bestätigen. Die Kapazität
+                            wird automatisch geprüft – Doppelbuchungen sind ausgeschlossen.</p>
+                    </li>
+                    <li class="step-card">
+                        <span class="step-slot">3. Stunde</span>
+                        <h3>Fertig &amp; informiert</h3>
+                        <p>Eine Bestätigung kommt per E-Mail, die Buchung erscheint unter „Meine
+                            Buchungen“ – jederzeit einsehbar, anpassbar und stornierbar.</p>
+                    </li>
+                </ol>
             </div>
         </section>
 
         <section id="vorteile">
             <div class="container">
-                <p class="section-label">Warum LernGrid?</p>
-                <h2 class="section-title">Schluss mit Excel-Chaos und Zettelwirtschaft im Schulalltag</h2>
+                <p class="section-label">Warum LearnGrid?</p>
+                <h2 class="section-title">Schluss mit Excel-Chaos und Zettelwirtschaft</h2>
                 <p class="section-intro">
-                    LernGrid ist die schlanke, DSGVO-konforme Lösung für Schulen und Bildungsträger zur unkomplizierten Buchung von Ressourcen, Räumen und Sprechzeiten.
+                    Die schlanke, DSGVO-konforme Lösung für Schulen und Bildungsträger – für die
+                    unkomplizierte Buchung von Räumen, Ressourcen und Sprechzeiten.
                 </p>
                 <div class="problem-grid">
                     <article class="problem-card">
                         <div class="icon" aria-hidden="true">💻</div>
                         <h3>Fach- &amp; Computerräume</h3>
-                        <p>Wer blockiert den Musikraum oder Informatikraum? Keine Doppelbuchungen mehr.</p>
-                        <p class="solution">→ Digitaler Belegungsplan mit Stundenraster-Logik</p>
+                        <p>Wer hat den Musik- oder Informatikraum? Mit dem Belegungsplan gibt es keine
+                            Doppelbuchungen mehr.</p>
+                        <p class="solution">→ Digitaler Belegungsplan im Stundenraster</p>
                     </article>
                     <article class="problem-card">
                         <div class="icon" aria-hidden="true">🏫</div>
                         <h3>Klassenräume &amp; Aula</h3>
-                        <p>Besondere Räume für Prüfungen, Vorträge oder Elternabende flexibel reservieren.</p>
-                        <p class="solution">→ Übersichtliche Raumbelegung für das gesamte Kollegium</p>
+                        <p>Besondere Räume für Prüfungen, Vorträge oder Elternabende flexibel
+                            reservieren – fürs ganze Kollegium sichtbar.</p>
+                        <p class="solution">→ Übersichtliche Raumbelegung für alle</p>
                     </article>
                     <article class="problem-card">
                         <div class="icon" aria-hidden="true">🏀</div>
                         <h3>Sporthallen &amp; Plätze</h3>
-                        <p>Ideal für die Sportoase: Koordinieren Sie Sportflächen für Klassen und externe Vereine.</p>
-                        <p class="solution">→ Exklusive Sperrzeiten und flexible Belegungskontrollen</p>
+                        <p>Sportflächen für Klassen und externe Vereine koordinieren – inklusive
+                            exklusiver Sperrzeiten.</p>
+                        <p class="solution">→ Faire Belegung, klare Sperrzeiten</p>
                     </article>
                     <article class="problem-card">
                         <div class="icon" aria-hidden="true">🔑</div>
                         <h3>IServ-Integration</h3>
-                        <p>Keine neuen Passwörter merken. Login einfach über den bestehenden IServ-Account.</p>
-                        <p class="solution">→ Nahtloser Single Sign-On (SSO) und Rollenübernahme</p>
+                        <p>Keine neuen Passwörter merken. Anmeldung einfach über den bestehenden
+                            IServ-Account der Schule.</p>
+                        <p class="solution">→ Vertrauter Login, keine Extra-Verwaltung</p>
                     </article>
                 </div>
             </div>
@@ -116,47 +174,57 @@
         <section id="produkt" class="alt-bg">
             <div class="container">
                 <p class="section-label">Produkt</p>
-                <h2 class="section-title">So arbeitet Ihr Kollegium mit LernGrid</h2>
+                <h2 class="section-title">In Minuten startklar – der Einrichtungs-Assistent</h2>
                 <p class="section-intro">
-                    Keine Platzhalter-Grafiken – echte Screenshots aus dem System: Wochenplan, Belegungsstatistiken und einfache Ressourcen-Buchungen.
+                    Kein Platzhalter – ein echter Screenshot aus dem System. Ein geführter Assistent
+                    bringt Ihre Schule Schritt für Schritt ans Laufen: Stammdaten, Design, E-Mail und
+                    IServ-Login. Eine vollständige Tour durch den Wochenplan folgt in Kürze.
                 </p>
-                <div class="screenshot-gallery">
-                    <figure class="screenshot-card screenshot-card--featured">
-                        <div class="screenshot-frame">
-                            <img src="images/dashboard-wochenplan.png"
-                                alt="Gesamtansicht: Dashboard mit Wochenplan und Seitenleiste"
-                                loading="lazy" decoding="async"
-                                style="object-position: 50% 42%;">
+                <div class="product-showcase">
+                    <figure class="product-screenshot">
+                        <div class="browser-frame">
+                            <div class="browser-chrome" aria-hidden="true">
+                                <span class="browser-dot"></span>
+                                <span class="browser-dot"></span>
+                                <span class="browser-dot"></span>
+                            </div>
+                            <div class="browser-viewport">
+                                <img src="images/dashboard-wochenplan.png"
+                                    alt="LearnGrid Einrichtungs-Assistent: geführte Schritte für Stammdaten, Design, E-Mail und IServ"
+                                    loading="lazy" decoding="async">
+                            </div>
                         </div>
-                        <figcaption>
-                            <strong>Stundenraster & Belegungsplan</strong>
-                            <span>Unterrichtsstunden, freie und feste Raumnutzungen auf einen glance.</span>
-                        </figcaption>
                     </figure>
-                    <figure class="screenshot-card">
-                        <div class="screenshot-frame screenshot-frame--tall">
-                            <img src="images/dashboard-wochenplan.png"
-                                alt="Seitenleiste mit offenen Anfragen und eigenen Buchungen"
-                                loading="lazy" decoding="async"
-                                style="object-position: 8% 38%;">
-                        </div>
-                        <figcaption>
-                            <strong>Meine Buchungen</strong>
-                            <span>Eigene Reservierungen und ausstehende Exklusiv-Genehmigungen.</span>
-                        </figcaption>
-                    </figure>
-                    <figure class="screenshot-card">
-                        <div class="screenshot-frame screenshot-frame--tall">
-                            <img src="images/dashboard-wochenplan.png"
-                                alt="Detailansicht einzelner Slots mit Buchen-Button und Status"
-                                loading="lazy" decoding="async"
-                                style="object-position: 62% 55%;">
-                        </div>
-                        <figcaption>
-                            <strong>Ressourcen-Status</strong>
-                            <span>Frei, belegt, blockiert oder exklusiv – in Echtzeit aktualisiert.</span>
-                        </figcaption>
-                    </figure>
+                    <ul class="product-callouts">
+                        <li>
+                            <span class="callout-dot" aria-hidden="true"></span>
+                            <div>
+                                <strong>Geführte Schritte</strong>
+                                <span>Von den Stammdaten bis zum Login – nichts wird vergessen, kein IT-Wissen nötig.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="callout-dot" aria-hidden="true"></span>
+                            <div>
+                                <strong>Design &amp; Branding</strong>
+                                <span>Logo, Schulfarben und Layout direkt bei der Einrichtung festlegen.</span>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="callout-dot" aria-hidden="true"></span>
+                            <div>
+                                <strong>IServ-Login &amp; E-Mail</strong>
+                                <span>Single Sign-On und Buchungsbestätigungen in wenigen Klicks verbinden.</span>
+                            </div>
+                        </li>
+                        <li class="callout-soon">
+                            <span class="callout-dot" aria-hidden="true"></span>
+                            <div>
+                                <strong>Wochenplan-Tour folgt</strong>
+                                <span>Eine ausführliche Screenshot-Tour durch Wochenplan und Admin-Cockpit ist in Arbeit.</span>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -166,36 +234,37 @@
                 <p class="section-label">Für Ihr Kollegium</p>
                 <h2 class="section-title">Buchungen in Sekunden – ohne Papierkram</h2>
                 <p class="section-intro">
-                    Das Dashboard zeigt die Schulwoche übersichtlich am PC oder den Tag kompakt auf dem Smartphone/Tablet. Reservierungen sind intuitiv erledigt.
+                    Am PC zeigt das Dashboard die ganze Schulwoche, auf Smartphone und Tablet den Tag
+                    kompakt. Reservieren ist intuitiv – ganz ohne Einarbeitung.
                 </p>
                 <div class="feature-split">
                     <ul class="feature-list">
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Stundenraster-Logik</strong>
-                                <span>Perfekt angepasst an das Stundenschema Ihrer Schule (z. B. 1. bis 10. Stunde).</span>
+                                <strong>Passt zu Ihrem Stundenplan</strong>
+                                <span>Das Raster wird exakt auf Ihr Stundenschema eingestellt (z. B. 1. bis 10. Stunde, mit Pausen).</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
                                 <strong>Klassen &amp; Gruppen</strong>
-                                <span>Buchen Sie ganze Schulklassen oder Kurse unter Angabe der Schüleranzahl für die Kapazitätsprüfung.</span>
+                                <span>Ganze Klassen oder Kurse mit Schülerzahl buchen – für die automatische Kapazitätsprüfung.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
                                 <strong>„Meine Buchungen“</strong>
-                                <span>Eigenen Belegungsplan einsehen, anpassen oder stornieren – komplett selbstständig.</span>
+                                <span>Den eigenen Belegungsplan einsehen, anpassen oder stornieren – komplett selbstständig.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
                                 <strong>Exklusive Freigaben</strong>
-                                <span>Besonders begehrte Räume (z. B. die Aula) werden per Klick angefragt und von Admins freigegeben.</span>
+                                <span>Besonders gefragte Räume (z. B. die Aula) werden per Klick angefragt und von der Verwaltung freigegeben.</span>
                             </div>
                         </li>
                     </ul>
@@ -204,28 +273,28 @@
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
                                 <strong>Faire Buchungsregeln</strong>
-                                <span>Feste Buchungsfristen und automatische Belegungsprüfung verhindern Planungskonflikte.</span>
+                                <span>Feste Fristen und automatische Belegungsprüfung verhindern Planungskonflikte.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Hilfe &amp; FAQ integriert</strong>
-                                <span>Ansprechpartner und schulspezifische Anleitungen direkt auf der Startseite eingebunden.</span>
+                                <strong>Hilfe direkt eingebaut</strong>
+                                <span>Ansprechpartner und schulspezifische Anleitungen sind direkt im Dashboard hinterlegt.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>IServ Single Sign-On (SSO)</strong>
-                                <span>Einfache Anmeldung mit den existierenden IServ-Zugangsdaten der Schule.</span>
+                                <strong>Ein Login für alle</strong>
+                                <span>Anmeldung mit den vorhandenen IServ-Zugangsdaten – kein zusätzliches Konto nötig.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Benachrichtigungen</strong>
-                                <span>Automatische E-Mails bei erfolgreicher Buchung oder Freigabe von Exklusiv-Ressourcen.</span>
+                                <strong>Automatische Benachrichtigungen</strong>
+                                <span>E-Mails bei erfolgreicher Buchung oder Freigabe einer exklusiven Reservierung.</span>
                             </div>
                         </li>
                     </ul>
@@ -233,41 +302,42 @@
             </div>
         </section>
 
-        <section id="betrieb">
+        <section id="betrieb" class="alt-bg">
             <div class="container">
-                <p class="section-label">Für IT-Beauftragte &amp; Schulleitung</p>
-                <h2 class="section-title">Einfache Ressourcenverwaltung ohne IT-Projekt</h2>
+                <p class="section-label">Für Schulleitung &amp; IT-Beauftragte</p>
+                <h2 class="section-title">Alles verwalten – ohne IT-Projekt</h2>
                 <p class="section-intro">
-                    Verwalten Sie Kapazitäten, Angebote, Klassen und das visuelle Design Ihrer gesamten Plattform über eine intuitive Admin-Oberfläche – ganz ohne Programmieraufwand.
+                    Kapazitäten, Angebote, Klassen und das Erscheinungsbild Ihrer Plattform steuern Sie
+                    über eine verständliche Oberfläche – ganz ohne Programmierkenntnisse.
                 </p>
                 <div class="feature-split">
                     <ul class="feature-list">
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Admin-Cockpit</strong>
-                                <span>Belegungsübersichten, offene Freigabe-Anfragen und detaillierte CSV-Exporte der Raumnutzungen.</span>
+                                <strong>Übersichts-Cockpit</strong>
+                                <span>Belegungen, offene Freigabe-Anfragen und Auswertungen als Tabelle zum Export.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
                                 <strong>Stunden, Räume &amp; Klassen</strong>
-                                <span>Stundenpläne, buchbare Fachräume/Säle sowie alle Klassenstufen direkt einpflegen.</span>
+                                <span>Stundenraster, buchbare Räume/Hallen und alle Klassenstufen selbst einpflegen.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Regel-Steuerung</strong>
-                                <span>Maximale Schülerzahl pro Slot, Vorlaufzeiten und Stornofristen flexibel konfigurieren.</span>
+                                <strong>Regeln festlegen</strong>
+                                <span>Maximale Schülerzahl pro Slot, Vorlaufzeiten und Stornofristen flexibel einstellen.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
                                 <strong>Sperrzeiten &amp; Ferien</strong>
-                                <span>Ressourcen während der Schulferien, an Feiertagen oder an schulinternen Fortbildungen gesammelt sperren.</span>
+                                <span>Räume für Ferien, Feiertage oder Fortbildungen mit wenigen Klicks gesammelt sperren.</span>
                             </div>
                         </li>
                     </ul>
@@ -275,29 +345,29 @@
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Einfaches Schul-CMS</strong>
-                                <span>Datenschutzerklärung, Impressum und den Hilfe-Bereich im Dashboard im laufenden Betrieb anpassen.</span>
+                                <strong>Eigene Raum-Verantwortliche</strong>
+                                <span>Einzelne Lehrkräfte können nur „ihren“ Raum verwalten – ohne Vollzugriff aufs System.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Visuelles Design &amp; Logo</strong>
-                                <span>Wappen, Schullogo und Schulfarben per Color Picker einbinden – passend zu Ihrem Auftritt.</span>
+                                <strong>Texte selbst pflegen</strong>
+                                <span>Datenschutz, Impressum und den Hilfe-Bereich im laufenden Betrieb anpassen.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Live-Benachrichtigungen</strong>
-                                <span>Neue Buchungen und exklusive Anfragen werden Admins sofort im Ticker und über ein Glocken-Icon signalisiert.</span>
+                                <strong>Ihr Logo, Ihre Farben</strong>
+                                <span>Wappen, Schullogo und Schulfarben einbinden – passend zu Ihrem Auftritt.</span>
                             </div>
                         </li>
                         <li>
                             <span class="check" aria-hidden="true">✓</span>
                             <div>
-                                <strong>Demo- &amp; Testmodus</strong>
-                                <span>Mit einem Klick Beispieldaten laden, um das Buchungsverhalten risikofrei zu testen.</span>
+                                <strong>Risikofrei testen</strong>
+                                <span>Mit einem Klick Beispieldaten laden und das Buchungsverhalten gefahrlos ausprobieren.</span>
                             </div>
                         </li>
                     </ul>
@@ -305,66 +375,136 @@
             </div>
         </section>
 
-        <section id="design" class="alt-bg">
+        <section id="design">
             <div class="container">
                 <p class="section-label">Ihr Schulportal</p>
                 <h2 class="section-title">Fünf Designs – passend zu Ihrer Schul-Identität</h2>
                 <p class="section-intro">
-                    Wählen Sie aus fünf vorgefertigten Themes das passende Layout. Jedes Design passt sich Ihren konfigurierten Schulfarben an – für ein harmonisches Gesamtbild.
+                    Wählen Sie aus fünf fertigen Layouts. Jedes passt sich Ihren Schulfarben an – für ein
+                    harmonisches Gesamtbild.
                 </p>
                 <div class="theme-grid theme-grid--five">
                     <article class="theme-card">
                         <div class="theme-preview classic">Klassisch</div>
                         <h4>Klassisch</h4>
-                        <p>Kräftig und übersichtlich – für Schulen, die Farbe und klare Kanten bevorzugen.</p>
+                        <p>Kräftig und übersichtlich – für Schulen, die Farbe und klare Kanten mögen.</p>
                     </article>
                     <article class="theme-card">
                         <div class="theme-preview minimal">Minimal</div>
                         <h4>Minimal</h4>
-                        <p>Klar und auf das Wesentliche reduziert – Ihre Schulfarbe setzt präzise Akzente.</p>
+                        <p>Reduziert auf das Wesentliche – Ihre Schulfarbe setzt präzise Akzente.</p>
                     </article>
                     <article class="theme-card">
-                        <div class="theme-preview slotra2">LernGrid 2.0</div>
-                        <h4>LernGrid 2.0</h4>
+                        <div class="theme-preview slotra2">LearnGrid 2.0</div>
+                        <h4>LearnGrid 2.0</h4>
                         <p>Rund, luftig und modern – Soft UI für eine moderne digitale Schule.</p>
                     </article>
                     <article class="theme-card">
-                        <div class="theme-preview slotra-reloaded">LernGrid Reloaded</div>
-                        <h4>LernGrid Reloaded</h4>
-                        <p>Dunkel, premium und kontrastreich – Dark-Dashboard mit Glassmorphism-Effekten.</p>
+                        <div class="theme-preview slotra-reloaded">LearnGrid Reloaded</div>
+                        <h4>LearnGrid Reloaded</h4>
+                        <p>Dunkel, premium und kontrastreich – Dark-Dashboard mit Glas-Effekten.</p>
                     </article>
                     <article class="theme-card">
                         <div class="theme-preview iserv">IServ</div>
                         <h4>IServ</h4>
-                        <p>Vertraut und funktional – die bekannte IServ-Optik für die höchste Akzeptanz im Kollegium.</p>
+                        <p>Vertraut und funktional – die bekannte IServ-Optik für hohe Akzeptanz.</p>
                     </article>
                 </div>
             </div>
         </section>
 
-        <section id="vertrauen">
+        <section id="vertrauen" class="alt-bg">
             <div class="container">
                 <p class="section-label">Sicherheit</p>
                 <h2 class="section-title">Entwickelt für den sicheren Schuleinsatz</h2>
                 <p class="section-intro">
-                    LernGrid ist speziell für den Schulalltag optimiert – mit Fokus auf Datenschutz, Benutzerfreundlichkeit und einfache Integration.
+                    LearnGrid ist auf den Schulalltag zugeschnitten – mit Fokus auf Datenschutz,
+                    Bedienbarkeit und einfache Integration.
                 </p>
                 <div class="trust-grid">
                     <article class="trust-card">
                         <div class="icon" aria-hidden="true">🔒</div>
                         <h3>DSGVO &amp; Datenschutz</h3>
-                        <p>Fremdbuchungen werden für andere Nutzer anonymisiert dargestellt (z. B. nur Angabe von Fach oder Klasse) – zum Schutz von Schüler- und Lehrerdaten.</p>
+                        <p>Fremde Buchungen werden für andere anonymisiert angezeigt (z. B. nur Fach oder
+                            Klasse) – zum Schutz von Schüler- und Lehrerdaten.</p>
                     </article>
                     <article class="trust-card">
                         <div class="icon" aria-hidden="true">🔑</div>
                         <h3>IServ Single Sign-On</h3>
-                        <p>Lehrkräfte und Schüler nutzen ihre bestehenden Schul-Logins. Keine manuelle Registrierung oder zusätzliche Passwortverwaltung erforderlich.</p>
+                        <p>Lehrkräfte und Schüler nutzen ihren bestehenden Schul-Login. Keine manuelle
+                            Registrierung, keine zusätzliche Passwortverwaltung.</p>
                     </article>
                     <article class="trust-card">
                         <div class="icon" aria-hidden="true">📊</div>
                         <h3>Auswertung &amp; Transparenz</h3>
-                        <p>Exportieren Sie detaillierte Belegungsdaten für die Schulleitung, um die Auslastung von Fachräumen, Computerräumen oder Sportanlagen nachzuweisen.</p>
+                        <p>Belegungsdaten für die Schulleitung exportieren – um die Auslastung von
+                            Räumen und Sportanlagen nachzuweisen.</p>
                     </article>
+                </div>
+            </div>
+        </section>
+
+        <section id="faq">
+            <div class="container faq-container">
+                <p class="section-label">Häufige Fragen</p>
+                <h2 class="section-title">Alles, was Schulen wissen wollen</h2>
+                <p class="section-intro">
+                    Kurz und ohne Fachchinesisch erklärt. Fehlt etwas? Schreiben Sie uns einfach.
+                </p>
+                <div class="faq-list">
+                    <details class="faq-item">
+                        <summary>Was ist LearnGrid eigentlich?</summary>
+                        <p>Ein digitales Buchungssystem für Schulen. Räume, Hallen, Geräte und Sprechzeiten
+                            werden über einen gemeinsamen Wochenplan reserviert – statt über Listen, Zettel
+                            oder Zuruf.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Für wen ist es gedacht?</summary>
+                        <p>Für das gesamte Kollegium, die Schulleitung und – je nach Wunsch – auch für
+                            Schülerinnen und Schüler. Auch Sportstätten und externe Vereine lassen sich
+                            einbinden.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Wie melden sich Lehrkräfte und Schüler an?</summary>
+                        <p>Mit dem vorhandenen IServ-Zugang. Ein Klick auf „Mit IServ anmelden“ genügt –
+                            es müssen keine neuen Konten oder Passwörter angelegt werden.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Was lässt sich buchen?</summary>
+                        <p>Alles, was an Ihrer Schule knapp ist: Fach- und Computerräume, Klassenräume,
+                            die Aula, Turnhallen und Sportflächen sowie Sprechzeiten und Beratungstermine.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Wie werden Doppelbuchungen verhindert?</summary>
+                        <p>Das System prüft bei jeder Buchung automatisch, ob der Slot noch frei ist und ob
+                            die Kapazität reicht. Ist ein Raum belegt, lässt er sich gar nicht erst doppelt
+                            reservieren.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Was passiert in den Ferien und an Feiertagen?</summary>
+                        <p>Die Verwaltung sperrt Ferien, Feiertage oder Fortbildungstage mit wenigen Klicks
+                            gesammelt – dann sind in diesen Zeiträumen keine Buchungen möglich.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Können externe Vereine Hallen buchen?</summary>
+                        <p>Ja. Sportflächen lassen sich für externe Nutzer freigeben, mit eigenen Sperrzeiten
+                            und – wo nötig – einer Freigabe durch die Verwaltung.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Wie sind die Daten geschützt?</summary>
+                        <p>LearnGrid ist DSGVO-konform aufgebaut. Buchungen anderer werden anonymisiert
+                            dargestellt, und es werden nur die Daten erhoben, die für die Buchung nötig sind.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Können wir das Design an unsere Schule anpassen?</summary>
+                        <p>Ja. Logo, Wappen und Schulfarben werden eingebunden, und Sie wählen aus fünf
+                            fertigen Designs das passende aus.</p>
+                    </details>
+                    <details class="faq-item">
+                        <summary>Wie starten wir?</summary>
+                        <p>Fragen Sie eine kostenlose Testinstanz an. Wir richten Ihr Stundenraster ein, und
+                            Sie können das System in Ruhe ausprobieren – mit Beispieldaten ganz ohne Risiko.</p>
+                    </details>
                 </div>
             </div>
         </section>
@@ -372,12 +512,13 @@
         <section id="kontakt">
             <div class="container">
                 <div class="cta">
-                    <h2>Bereit für ein digitalisiertes Buchungssystem?</h2>
+                    <h2>Bereit für ein digitales Buchungssystem?</h2>
                     <p>
-                        Teilen Sie uns die Anforderungen Ihrer Schule oder Einrichtung mit – wir stellen Ihnen eine kostenlose Testinstanz zur Verfügung und richten Ihr Stundenraster ein.
+                        Sagen Sie uns, was Ihre Schule oder Einrichtung braucht – wir stellen eine
+                        kostenlose Testinstanz bereit und richten Ihr Stundenraster ein.
                     </p>
                     <div class="cta-actions">
-                        <a href="mailto:info@lerngrid.de?subject=LernGrid%20Schul-Demo-Anfrage" class="btn btn-primary">E-Mail schreiben</a>
+                        <a href="mailto:info@lerngrid.de?subject=LearnGrid%20Schul-Demo-Anfrage" class="btn btn-primary">E-Mail schreiben</a>
                         <a href="#vorteile" class="btn btn-ghost">Vorteile ansehen</a>
                     </div>
                 </div>
@@ -387,7 +528,7 @@
 
     <footer class="site-footer">
         <div class="container footer-inner">
-            <p><strong>LernGrid</strong> – weil jeder Zeitslot zählt.</p>
+            <p><strong>LearnGrid</strong> – weil jeder Zeitslot zählt.</p>
             <p>
                 <a href="impressum.html">Impressum</a> · 
                 <a href="datenschutz.html">Datenschutzerklärung</a>

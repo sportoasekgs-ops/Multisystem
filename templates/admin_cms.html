@@ -246,10 +246,10 @@ input:checked + .slider:before { transform: translateX(24px); }
                 <div class="form-group">
                     <label class="form-label" for="cms-admin-theme">Wähle das globale Design-Template für alle Nutzer:</label>
                     <select name="admin_theme" id="cms-admin-theme" class="form-control" style="max-width: 300px;">
-                        <option value="classic" {% if cms.admin_theme == 'classic' %}selected{% endif %}>LernGrid Classic</option>
+                        <option value="classic" {% if cms.admin_theme == 'classic' %}selected{% endif %}>LearnGrid Classic</option>
                         <option value="minimal" {% if cms.admin_theme == 'minimal' %}selected{% endif %}>Minimal</option>
-                        <option value="slotra2" {% if cms.admin_theme == 'slotra2' %}selected{% endif %}>LernGrid 2.0</option>
-                        <option value="slotra-reloaded" {% if cms.admin_theme == 'slotra-reloaded' or not cms.admin_theme %}selected{% endif %}>LernGrid Reloaded</option>
+                        <option value="slotra2" {% if cms.admin_theme == 'slotra2' %}selected{% endif %}>LearnGrid 2.0</option>
+                        <option value="slotra-reloaded" {% if cms.admin_theme == 'slotra-reloaded' or not cms.admin_theme %}selected{% endif %}>LearnGrid Reloaded</option>
                         <option value="iserv" {% if cms.admin_theme == 'iserv' %}selected{% endif %}>IServ</option>
                     </select>
                     <p class="form-hint">Das gewählte Design gilt systemweit für alle Benutzer.</p>

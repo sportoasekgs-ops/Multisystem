@@ -1,2 +1,3 @@
 - [Multi-worker Gunicorn pitfalls](multi-worker-gunicorn.md) — auto-migration DuplicateColumn races are benign first-boot noise; per-row counters (login lockout, quotas) MUST use atomic SQL UPDATE...RETURNING, not Python read-modify-write.
 - [Room-admin authorization](room-admin-authorization.md) — room-scoped routes use _room_manage_allowed(room_id); derive room_id from persisted entity for edit/delete, validate forgeable form IDs, keep global ops admin-only + hide via is_global_admin.
+- [LearnGrid Branding & Homepage](learngrid-branding.md) — theme slugs slotra2/slotra-reloaded are DB-persisted keys (never rename in brand swaps); /homepage needs setup-bypass; the one screenshot is actually the setup wizard.

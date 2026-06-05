@@ -1,4 +1,4 @@
-# Slotra – Marketing-Homepage
+# LearnGrid – Marketing-Homepage
 
 Statische Verkaufsseite für Einrichtungen mit buchbaren Kursen, Beratungen und Terminen (ohne technische Details).
 
