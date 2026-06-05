@@ -2,6 +2,48 @@
 {% block title %}Kurse verwalten – Admin{% endblock %}
 
 {% block content %}
+<style>
+.grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+}
+.grid-table th {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 700;
+    padding: .75rem;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+.grid-table td {
+    border: 1px solid var(--border);
+    padding: .5rem;
+    text-align: center;
+}
+.grid-select {
+    width: 100%;
+    padding: .4rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: .85rem;
+}
+.warn-box {
+    background: var(--warning-bg);
+    border: 1px solid var(--warning-border);
+    color: var(--warning-text);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-size: .85rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+</style>
+
 <div class="dashboard">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
         <div>
@@ -15,176 +57,282 @@
         </div>
     </div>
 
+    <!-- Browser-style Room Tabs Area -->
+    {% if rooms and rooms|length > 0 %}
+    <div class="room-browser-tabs" style="display: flex; background: rgba(0,0,0,0.04); padding: 8px 8px 0; gap: 4px; border-radius: 10px 10px 0 0; border-bottom: 1px solid var(--border-light); margin-bottom: 1.5rem;">
+        <a href="{{ url_for('admin_dyn.courses', room_id=0) }}" 
+           class="room-browser-tab {% if room_id == 0 %}active{% endif %}"
+           style="text-decoration: none; padding: 8px 16px; border-radius: 8px 8px 0 0; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; transition: all var(--transition-fast); 
+                  background: {% if room_id == 0 %}var(--bg-card, #fff){% else %}rgba(0,0,0,0.03){% endif %}; 
+                  border-top: 3px solid {% if room_id == 0 %}var(--primary){% else %}transparent{% endif %};
+                  color: {% if room_id == 0 %}var(--text-primary, #1e1b4b){% else %}var(--text-secondary){% endif %};">
+            <span>📚</span>
+            <span>Kurse verwalten</span>
+        </a>
+        {% for r in rooms %}
+        <a href="{{ url_for('admin_dyn.courses', room_id=r.id) }}" 
+           class="room-browser-tab {% if room_id == r.id %}active{% endif %}"
+           style="text-decoration: none; padding: 8px 16px; border-radius: 8px 8px 0 0; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; transition: all var(--transition-fast); 
+                  background: {% if room_id == r.id %}var(--bg-card, #fff){% else %}rgba(0,0,0,0.03){% endif %}; 
+                  border-top: 3px solid {% if room_id == r.id %}{{ r.color or 'var(--primary)' }}{% else %}transparent{% endif %};
+                  color: {% if room_id == r.id %}var(--text-primary, #1e1b4b){% else %}var(--text-secondary){% endif %};">
+            <span>{{ r.icon }}</span>
+            <span>{{ r.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}{% for cat,msg in messages %}
     <div class="flash-message flash-{{ cat }}">{{ msg }}</div>
     {% endfor %}{% endif %}
     {% endwith %}
 
-    <!-- Feste Angebote -->
-    <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:2rem;">
-        <h3 style="margin:0 0 .5rem;">🗓️ Feste Wochenangebote</h3>
-        <p style="color:#888;font-size:.9rem;margin:0 0 1rem;">Fest eingeplante Kurse an bestimmten Wochentagen und Stunden.</p>
-
-        {% set fixed = courses | selectattr('course_type', 'equalto', 'fixed') | list %}
-        {% if fixed %}
-        <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:.9rem;">
-            <thead>
-                <tr style="background:#fce4ec;color:#c2185b;">
-                    <th style="padding:.65rem .9rem;text-align:left;">Kurs</th>
-                    <th style="padding:.65rem .9rem;text-align:left;">Tag</th>
-                    <th style="padding:.65rem .9rem;text-align:left;">Stunde</th>
-                    <th style="padding:.65rem .9rem;text-align:center;">Aktiv</th>
-                    <th style="padding:.65rem .9rem;text-align:right;">Aktionen</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for c in fixed %}
-            {% set wd_names = {'Mon':'Montag','Tue':'Dienstag','Wed':'Mittwoch','Thu':'Donnerstag','Fri':'Freitag'} %}
-            <tr style="border-bottom:1px solid #f0f0f0;" id="row-c-{{ c.id }}">
-                <td style="padding:.65rem .9rem;font-weight:600;">
-                    {% if c.icon %}<span>{{ c.icon }}</span> {% endif %}{{ c.name }}
-                </td>
-                <td style="padding:.65rem .9rem;">{{ wd_names.get(c.weekday, c.weekday or '–') }}</td>
-                <td style="padding:.65rem .9rem;">{{ c.period_number }}. Stunde</td>
-                <td style="padding:.65rem .9rem;text-align:center;">
-                    {% if c.is_active %}<span style="color:#4caf50;">✔</span>{% else %}<span style="color:#ccc;">✖</span>{% endif %}
-                </td>
-                <td style="padding:.65rem .9rem;text-align:right;">
-                    <button onclick="toggleEditCourse({{ c.id }})" class="btn btn-secondary" style="padding:.3rem .7rem;font-size:.82rem;">Bearbeiten</button>
-                    <form method="POST" action="{{ url_for('admin_dyn.courses_delete', course_id=c.id) }}" style="display:inline;" onsubmit="return confirm('Kurs löschen?');">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <button type="submit" class="btn" style="background:#f44336;color:#fff;padding:.3rem .7rem;font-size:.82rem;">Löschen</button>
-                    </form>
-                </td>
-            </tr>
-            <tr id="edit-c-{{ c.id }}" style="display:none;background:#fff8f9;">
-                <td colspan="5" style="padding:1rem;">
-                    <form method="POST" action="{{ url_for('admin_dyn.courses_edit', course_id=c.id) }}" style="display:flex;gap:.65rem;flex-wrap:wrap;align-items:flex-end;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <input type="hidden" name="course_type" value="fixed">
-                        <div>
-                            <label style="font-size:.8rem;color:#666;">Name</label><br>
-                            <input type="text" name="name" value="{{ c.name }}" required style="padding:.45rem;border:1px solid #ddd;border-radius:6px;min-width:180px;">
-                        </div>
-                        <div>
-                            <label style="font-size:.8rem;color:#666;">Wochentag</label><br>
-                            <select name="weekday" style="padding:.45rem;border:1px solid #ddd;border-radius:6px;">
-                                {% for wd, wdn in weekdays %}
-                                <option value="{{ wd }}" {% if c.weekday == wd %}selected{% endif %}>{{ wdn }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:.8rem;color:#666;">Stunde</label><br>
-                            <select name="period_number" style="padding:.45rem;border:1px solid #ddd;border-radius:6px;">
-                                {% for p in periods %}
-                                <option value="{{ p.number }}" {% if c.period_number == p.number %}selected{% endif %}>{{ p.name }}{% if p.period_kind == 'break' and p.after_lesson %} (nach {{ p.after_lesson }}. St.){% endif %}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:.8rem;color:#666;">Icon</label><br>
-                            <input type="text" name="icon" value="{{ c.icon or '' }}" placeholder="☀️" style="width:55px;padding:.45rem;border:1px solid #ddd;border-radius:6px;">
-                        </div>
-                        <div>
-                            <label style="font-size:.8rem;color:#666;">Aktiv</label><br>
-                            <select name="is_active" style="padding:.45rem;border:1px solid #ddd;border-radius:6px;">
-                                <option value="1" {% if c.is_active %}selected{% endif %}>Ja</option>
-                                <option value="0" {% if not c.is_active %}selected{% endif %}>Nein</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="padding:.45rem .9rem;">Speichern</button>
-                        <button type="button" onclick="toggleEditCourse({{ c.id }})" class="btn btn-secondary" style="padding:.45rem .9rem;">Abbrechen</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+    {% if room_id > 0 %}
+        <!-- ================= RAUMSPEZIFISCHE KURSZUORDNUNG ================= -->
+        {% if not room.use_custom_schedule %}
+        <div class="warn-box">
+            <span>⚠️ Dieser Raum nutzt aktuell den globalen Standard-Stundenplan. Sie müssen zuerst unter <a href="{{ url_for('admin_dyn.periods', room_id=room.id) }}" style="font-weight: 700; color: inherit; text-decoration: underline;">Stunden</a> den eigenen Stundenplan für diesen Raum aktivieren, um hier Raum-Kurszuweisungen zu treffen.</span>
         </div>
         {% else %}
-        <p style="color:#888;text-align:center;padding:1.5rem;">Noch keine festen Angebote vorhanden.</p>
-        {% endif %}
-    </div>
+        <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:2rem;">
+            <h3 style="margin:0 0 .5rem;">🗓️ Feste Kurs-Angebote pro Wochentag für {{ room.name }}</h3>
+            <p style="color:#666; font-size:.9rem; margin:0 0 1.5rem 0;">
+                Hier legen Sie fest, welche Kurse an bestimmten Wochentagen und Stunden in diesem Raum fest stattfinden.
+                Klassen können diese Slots dann exklusiv buchen, oder es wird für diese Klasse als vorgegeben angezeigt.
+            </p>
 
-    <!-- Freie Module -->
-    <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:2rem;">
-        <h3 style="margin:0 0 .5rem;">⭐ Freie Module (Freie-Wahl-Stunden)</h3>
-        <p style="color:#888;font-size:.9rem;margin:0 0 1rem;">Diese Module können Lehrkräfte bei freien Stunden wählen.</p>
-
-        {% set free = courses | selectattr('course_type', 'equalto', 'free') | list %}
-        {% if free %}
-        <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;">
-        {% for c in free %}
-        <div style="background:#fce4ec;border-radius:20px;padding:.4rem 1rem;display:flex;align-items:center;gap:.5rem;">
-            <span style="font-weight:600;color:#c2185b;">{{ c.name }}</span>
-            {% if not c.is_active %}<span style="color:#ccc;font-size:.75rem;">(inaktiv)</span>{% endif %}
-            <form method="POST" action="{{ url_for('admin_dyn.courses_delete', course_id=c.id) }}" style="display:inline;" onsubmit="return confirm('Modul löschen?');">
+            <form method="POST" action="{{ url_for('admin_dyn.room_schedule_courses_save', room_id=room.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button type="submit" style="background:none;border:none;cursor:pointer;color:#e91e63;font-size:1rem;padding:0;line-height:1;">✕</button>
+                
+                <div style="overflow-x:auto;">
+                    <table class="grid-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 180px;">Zeitfenster</th>
+                                <th>Montag</th>
+                                <th>Dienstag</th>
+                                <th>Mittwoch</th>
+                                <th>Donnerstag</th>
+                                <th>Freitag</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in periods %}
+                            {% if p.period_kind != 'break' and p.is_active %}
+                            <tr>
+                                <td style="text-align: left; font-weight: 600; background: var(--bg-secondary);">
+                                    <span class="period-number">{{ p.period_number }}. Stunde</span>
+                                    <div style="font-size: 0.78rem; font-weight: normal; color: var(--text-secondary); margin-top: .15rem;">
+                                        {{ p.name }} ({{ p.start_time }}–{{ p.end_time }})
+                                    </div>
+                                </td>
+                                {% for wd in ["Mon", "Tue", "Wed", "Thu", "Fri"] %}
+                                <td>
+                                    <select name="course_{{ wd }}_{{ p.period_number }}" class="grid-select">
+                                        <option value="">-- Freie Wahl --</option>
+                                        {% for course in courses %}
+                                            {% if course.is_active %}
+                                            <option value="{{ course.id }}"
+                                                {% if room_courses[wd] and room_courses[wd][p.period_number] == course.id %}selected{% endif %}>
+                                                {{ course.name }}
+                                            </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-primary" style="padding: .65rem 1.8rem; font-size: .95rem;">
+                        Kurs-Zuordnungen speichern
+                    </button>
+                </div>
             </form>
         </div>
-        {% endfor %}
-        </div>
-        {% else %}
-        <p style="color:#888;font-size:.9rem;">Noch keine freien Module vorhanden.</p>
         {% endif %}
-    </div>
 
-    <!-- Neuen Kurs hinzufügen -->
-    <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);">
-        <h3 style="margin:0 0 1rem;">➕ Neuen Kurs / neues Modul hinzufügen</h3>
-        <form method="POST" action="{{ url_for('admin_dyn.courses_add') }}" style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <div>
-                <label style="font-size:.85rem;color:#666;">Typ</label><br>
-                <select name="course_type" id="courseTypeSelect" onchange="toggleFixedFields()" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;">
-                    <option value="fixed">Festes Angebot</option>
-                    <option value="free">Freies Modul</option>
-                </select>
+    {% else %}
+        <!-- ================= GLOBAL COURSE MANAGEMENT ================= -->
+        <!-- Feste Angebote -->
+        <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:2rem;">
+            <h3 style="margin:0 0 .5rem;">🗓️ Feste Wochenangebote</h3>
+            <p style="color:#888;font-size:.9rem;margin:0 0 1rem;">Fest eingeplante Kurse an bestimmten Wochentagen und Stunden.</p>
+
+            {% set fixed = courses | selectattr('course_type', 'equalto', 'fixed') | list %}
+            {% if fixed %}
+            <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:.9rem;">
+                <thead>
+                    <tr style="background:#fce4ec;color:#c2185b;">
+                        <th style="padding:.65rem .9rem;text-align:left;">Kurs</th>
+                        <th style="padding:.65rem .9rem;text-align:left;">Tag</th>
+                        <th style="padding:.65rem .9rem;text-align:left;">Stunde</th>
+                        <th style="padding:.65rem .9rem;text-align:center;">Aktiv</th>
+                        <th style="padding:.65rem .9rem;text-align:right;">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for c in fixed %}
+                {% set wd_names = {'Mon':'Montag','Tue':'Dienstag','Wed':'Mittwoch','Thu':'Donnerstag','Fri':'Freitag'} %}
+                <tr style="border-bottom:1px solid #f0f0f0;" id="row-c-{{ c.id }}">
+                    <td style="padding:.65rem .9rem;font-weight:600;">
+                        {% if c.icon %}<span>{{ c.icon }}</span> {% endif %}{{ c.name }}
+                    </td>
+                    <td style="padding:.65rem .9rem;">{{ wd_names.get(c.weekday, c.weekday or '–') }}</td>
+                    <td style="padding:.65rem .9rem;">{{ c.period_number }}. Stunde</td>
+                    <td style="padding:.65rem .9rem;text-align:center;">
+                        {% if c.is_active %}<span style="color:#4caf50;">✔</span>{% else %}<span style="color:#ccc;">✖</span>{% endif %}
+                    </td>
+                    <td style="padding:.65rem .9rem;text-align:right;">
+                        <button onclick="toggleEditCourse({{ c.id }})" class="btn btn-secondary" style="padding:.3rem .7rem;font-size:.82rem;">Bearbeiten</button>
+                        <form method="POST" action="{{ url_for('admin_dyn.courses_delete', course_id=c.id) }}" style="display:inline;" onsubmit="return confirm('Kurs löschen?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn" style="background:#f44336;color:#fff;padding:.3rem .7rem;font-size:.82rem;">Löschen</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr id="edit-c-{{ c.id }}" style="display:none;background:#fff8f9;">
+                    <td colspan="5" style="padding:1rem;">
+                        <form method="POST" action="{{ url_for('admin_dyn.courses_edit', course_id=c.id) }}" style="display:flex;gap:.65rem;flex-wrap:wrap;align-items:flex-end;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="course_type" value="fixed">
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Name</label><br>
+                                <input type="text" name="name" value="{{ c.name }}" required style="padding:.45rem;border:1px solid #ddd;border-radius:6px;min-width:180px;">
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Wochentag</label><br>
+                                <select name="weekday" style="padding:.45rem;border:1px solid #ddd;border-radius:6px;">
+                                    {% for wd, wdn in weekdays %}
+                                    <option value="{{ wd }}" {% if c.weekday == wd %}selected{% endif %}>{{ wdn }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Stunde</label><br>
+                                <select name="period_number" style="padding:.45rem;border:1px solid #ddd;border-radius:6px;">
+                                    {% for p in global_periods %}
+                                    <option value="{{ p.number }}" {% if c.period_number == p.number %}selected{% endif %}>{{ p.name }}{% if p.period_kind == 'break' and p.after_lesson %} (nach {{ p.after_lesson }}. St.){% endif %}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Icon</label><br>
+                                <input type="text" name="icon" value="{{ c.icon or '' }}" placeholder="☀️" style="width:55px;padding:.45rem;border:1px solid #ddd;border-radius:6px;">
+                            </div>
+                            <div>
+                                <label style="font-size:.8rem;color:#666;">Aktiv</label><br>
+                                <select name="is_active" style="padding:.45rem;border:1px solid #ddd;border-radius:6px;">
+                                    <option value="1" {% if c.is_active %}selected{% endif %}>Ja</option>
+                                    <option value="0" {% if not c.is_active %}selected{% endif %}>Nein</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="padding:.45rem .9rem;">Speichern</button>
+                            <button type="button" onclick="toggleEditCourse({{ c.id }})" class="btn btn-secondary" style="padding:.45rem .9rem;">Abbrechen</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
             </div>
-            <div>
-                <label style="font-size:.85rem;color:#666;">Name</label><br>
-                <input type="text" name="name" required placeholder="z.B. Yoga-Balance" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;min-width:180px;">
+            {% else %}
+            <p style="color:#888;text-align:center;padding:1.5rem;">Noch keine festen Angebote vorhanden.</p>
+            {% endif %}
+        </div>
+
+        <!-- Freie Module -->
+        <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:2rem;">
+            <h3 style="margin:0 0 .5rem;">⭐ Freie Module (Freie-Wahl-Stunden)</h3>
+            <p style="color:#888;font-size:.9rem;margin:0 0 1rem;">Diese Module können Lehrkräfte bei freien Stunden wählen.</p>
+
+            {% set free = courses | selectattr('course_type', 'equalto', 'free') | list %}
+            {% if free %}
+            <div style="display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem;">
+            {% for c in free %}
+            <div style="background:#fce4ec;border-radius:20px;padding:.4rem 1rem;display:flex;align-items:center;gap:.5rem;">
+                <span style="font-weight:600;color:#c2185b;">{{ c.name }}</span>
+                {% if not c.is_active %}<span style="color:#ccc;font-size:.75rem;">(inaktiv)</span>{% endif %}
+                <form method="POST" action="{{ url_for('admin_dyn.courses_delete', course_id=c.id) }}" style="display:inline;" onsubmit="return confirm('Modul löschen?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" style="background:none;border:none;cursor:pointer;color:#e91e63;font-size:1rem;padding:0;line-height:1;">✕</button>
+                </form>
             </div>
-            <div id="fixedFields" style="display:flex;gap:.75rem;flex-wrap:wrap;">
+            {% endfor %}
+            </div>
+            {% else %}
+            <p style="color:#888;font-size:.9rem;">Noch keine freien Module vorhanden.</p>
+            {% endif %}
+        </div>
+
+        <!-- Neuen Kurs hinzufügen -->
+        <div class="admin-card-full" style="background:#fff;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+            <h3 style="margin:0 0 1rem;">➕ Neuen Kurs / neues Modul hinzufügen</h3>
+            <form method="POST" action="{{ url_for('admin_dyn.courses_add') }}" style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div>
-                    <label style="font-size:.85rem;color:#666;">Wochentag</label><br>
-                    <select name="weekday" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;">
-                        {% for wd, wdn in weekdays %}
-                        <option value="{{ wd }}">{{ wdn }}</option>
-                        {% endfor %}
+                    <label style="font-size:.85rem;color:#666;">Typ</label><br>
+                    <select name="course_type" id="courseTypeSelect" onchange="toggleFixedFields()" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;">
+                        <option value="fixed">Festes Angebot</option>
+                        <option value="free">Freies Modul</option>
                     </select>
                 </div>
                 <div>
-                    <label style="font-size:.85rem;color:#666;">Stunde</label><br>
-                    <select name="period_number" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;">
-                        {% for p in periods %}
-                        <option value="{{ p.number }}">{{ p.name }}{% if p.period_kind == 'break' and p.after_lesson %} (nach {{ p.after_lesson }}. St.){% endif %}</option>
-                        {% endfor %}
-                    </select>
+                    <label style="font-size:.85rem;color:#666;">Name</label><br>
+                    <input type="text" name="name" required placeholder="z.B. Yoga-Balance" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;min-width:180px;">
                 </div>
-            </div>
-            <div>
-                <label style="font-size:.85rem;color:#666;">Icon (optional)</label><br>
-                <input type="text" name="icon" placeholder="☀️" style="width:60px;padding:.6rem;border:1px solid #ddd;border-radius:8px;">
-            </div>
-            <button type="submit" class="btn btn-primary">Hinzufügen</button>
-        </form>
-    </div>
+                <div id="fixedFields" style="display:flex;gap:.75rem;flex-wrap:wrap;">
+                    <div>
+                        <label style="font-size:.85rem;color:#666;">Wochentag</label><br>
+                        <select name="weekday" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;">
+                            {% for wd, wdn in weekdays %}
+                            <option value="{{ wd }}">{{ wdn }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:.85rem;color:#666;">Stunde</label><br>
+                        <select name="period_number" style="padding:.6rem;border:1px solid #ddd;border-radius:8px;">
+                            {% for p in global_periods %}
+                            <option value="{{ p.number }}">{{ p.name }}{% if p.period_kind == 'break' and p.after_lesson %} (nach {{ p.after_lesson }}. St.){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size:.85rem;color:#666;">Icon (optional)</label><br>
+                    <input type="text" name="icon" placeholder="☀️" style="width:60px;padding:.6rem;border:1px solid #ddd;border-radius:8px;">
+                </div>
+                <button type="submit" class="btn btn-primary">Hinzufügen</button>
+            </form>
+        </div>
+    {% endif %}
 </div>
 
 <script>
 function toggleEditCourse(id) {
     const row = document.getElementById('edit-c-' + id);
-    row.style.display = row.style.display === 'none' ? '' : 'none';
+    if (row) {
+        row.style.display = row.style.display === 'none' ? '' : 'none';
+    }
 }
 function toggleFixedFields() {
-    const type = document.getElementById('courseTypeSelect').value;
-    document.getElementById('fixedFields').style.display = type === 'fixed' ? 'flex' : 'none';
+    const typeSelect = document.getElementById('courseTypeSelect');
+    const fixedFields = document.getElementById('fixedFields');
+    if (typeSelect && fixedFields) {
+        fixedFields.style.display = typeSelect.value === 'fixed' ? 'flex' : 'none';
+    }
 }
-toggleFixedFields();
+document.addEventListener('DOMContentLoaded', function() {
+    toggleFixedFields();
+});
 </script>
 {% endblock %}

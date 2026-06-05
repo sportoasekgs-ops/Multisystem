@@ -1146,7 +1146,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         border-right: 1px solid rgba(111, 76, 219, 0.1);
         border-bottom: none;
         box-shadow: 4px 0 20px rgba(111, 76, 219, 0.05);
-        padding: 2rem 1rem;
+        padding: 1.25rem 0.85rem;
         z-index: 1000;
         overflow-y: auto;
         box-sizing: border-box;
@@ -1155,19 +1155,21 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     html[data-admin-theme="slotra-reloaded"] .top-nav .container {
         padding: 0;
         max-width: 100%;
-        height: 100%;
+        height: auto;
+        min-height: 100%;
     }
 
     html[data-admin-theme="slotra-reloaded"] .top-nav nav {
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 2rem;
-        height: 100%;
+        gap: 1.25rem;
+        min-height: 100%;
+        height: auto;
     }
 
     html[data-admin-theme="slotra-reloaded"] .nav-logo-link {
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.75rem;
         padding-left: 0.5rem;
     }
 
@@ -1175,7 +1177,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         display: flex;
         flex-direction: column;
         align-items: stretch;
-        gap: 0.5rem;
+        gap: 0.35rem;
         flex-grow: 1;
         margin-left: 0;
     }
@@ -1186,7 +1188,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         border-radius: 10px;
         font-weight: 600;
         font-size: 0.88rem;
-        padding: 0.75rem 1rem;
+        padding: 0.6rem 0.85rem;
         color: #6e6f8a;
         transition: all 0.2s ease;
         text-decoration: none;
@@ -1256,9 +1258,9 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
     html[data-admin-theme="slotra-reloaded"] .nav-tools {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.75rem;
         margin-top: auto;
-        padding-top: 1.5rem;
+        padding-top: 1rem;
         border-top: 1px solid rgba(111, 76, 219, 0.1);
         border-left: none;
         margin-left: 0;

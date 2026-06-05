@@ -201,23 +201,44 @@ def periods():
     if not _admin_required():
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
-    from models import Period, PeriodTemplate
-    all_periods = Period.query.order_by(Period.sort_order, Period.number).all()
+    from models import Period, PeriodTemplate, Room, RoomPeriod
+    
+    room_id = request.args.get('room_id', default=0, type=int)
+    rooms = Room.query.order_by(Room.sort_order, Room.name).all()
+    
+    if room_id > 0:
+        room = Room.query.get_or_404(room_id)
+        if room.use_custom_schedule:
+            all_periods = RoomPeriod.query.filter_by(room_id=room_id).order_by(RoomPeriod.sort_order, RoomPeriod.period_number).all()
+        else:
+            all_periods = []
+        next_num = 1
+        if all_periods:
+            lessons = [p for p in all_periods if p.period_kind == 'lesson']
+            next_num = max([p.period_number for p in lessons]) + 1 if lessons else 1
+    else:
+        room = None
+        all_periods = Period.query.order_by(Period.sort_order, Period.number).all()
+        next_num = _next_period_number()
+        
     saved_templates = PeriodTemplate.query.order_by(PeriodTemplate.created_at.desc()).all()
     lesson_count = sum(1 for p in all_periods if p.is_active and _is_lesson(p))
     break_after_lessons = {
         p.after_lesson
         for p in all_periods
-        if p.is_active and (p.period_kind or 'lesson') == 'break' and p.after_lesson
+        if p.is_active and getattr(p, 'period_kind', 'lesson') == 'break' and p.after_lesson
     }
     return render_template(
         'admin_periods.html',
+        room_id=room_id,
+        rooms=rooms,
+        room=room,
         periods=all_periods,
         saved_templates=saved_templates,
         builtin_templates=_BUILTIN_TEMPLATES,
         lesson_count=lesson_count,
         break_after_lessons=break_after_lessons,
-        next_period_number=_next_period_number(),
+        next_period_number=next_num,
     )
 
 
@@ -583,15 +604,48 @@ def courses():
     if not _admin_required():
         flash('Zugriff verweigert.', 'error')
         return redirect(url_for('dashboard'))
-    from models import Course, Period
+    from models import Course, Period, Room, RoomPeriod, RoomCourse
+    
+    room_id = request.args.get('room_id', default=0, type=int)
+    rooms = Room.query.order_by(Room.sort_order, Room.name).all()
+    
     all_courses = Course.query.order_by(Course.course_type.desc(), Course.weekday, Course.period_number, Course.sort_order).all()
+    weekdays = [('Mon', 'Montag'), ('Tue', 'Dienstag'), ('Wed', 'Mittwoch'), ('Thu', 'Donnerstag'), ('Fri', 'Freitag')]
+    
+    if room_id > 0:
+        room = Room.query.get_or_404(room_id)
+        if room.use_custom_schedule:
+            periods = RoomPeriod.query.filter_by(room_id=room_id).order_by(RoomPeriod.sort_order, RoomPeriod.period_number).all()
+            custom_courses_list = RoomCourse.query.filter_by(room_id=room_id).all()
+            room_courses = {wd: {} for wd in ("Mon", "Tue", "Wed", "Thu", "Fri")}
+            for rc in custom_courses_list:
+                room_courses.setdefault(rc.weekday, {})[rc.period_number] = rc.course_id
+        else:
+            periods = []
+            room_courses = {}
+    else:
+        room = None
+        periods = []
+        room_courses = {}
+        
     all_periods = (
         Period.query.filter_by(is_active=True)
         .order_by(Period.sort_order, Period.number)
         .all()
     )
-    weekdays = [('Mon', 'Montag'), ('Tue', 'Dienstag'), ('Wed', 'Mittwoch'), ('Thu', 'Donnerstag'), ('Fri', 'Freitag')]
-    return render_template('admin_courses.html', courses=all_courses, periods=all_periods, weekdays=weekdays)
+    
+    return render_template(
+        'admin_courses.html',
+        room_id=room_id,
+        rooms=rooms,
+        room=room,
+        courses=all_courses,
+        periods=periods,
+        global_periods=all_periods,
+        room_courses=room_courses,
+        weekdays=weekdays,
+        csrf_token=session.get('csrf_token')
+    )
 
 
 @admin_dyn_bp.route('/courses/add', methods=['POST'])
@@ -989,36 +1043,7 @@ def rooms_delete(room_id):
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule', methods=['GET'])
 def room_schedule(room_id):
-    if not _admin_required():
-        flash('Zugriff verweigert.', 'error')
-        return redirect(url_for('dashboard'))
-    
-    from models import Room, RoomPeriod, RoomCourse, Course
-    room = Room.query.get_or_404(room_id)
-    
-    # Alle aktiven Kurse für die Zuweisung laden
-    from models import Course
-    courses = Course.query.filter_by(is_active=True).order_by(Course.name).all()
-    
-    # Stunden und Pausen des Raums holen
-    if room.use_custom_schedule:
-        periods = RoomPeriod.query.filter_by(room_id=room_id).order_by(RoomPeriod.sort_order, RoomPeriod.period_number).all()
-        # Custom Courses laden und organisieren
-        custom_courses_list = RoomCourse.query.filter_by(room_id=room_id).all()
-        # Organisieren als {weekday: {period_number: course_id}}
-        room_courses = {wd: {} for wd in ("Mon", "Tue", "Wed", "Thu", "Fri")}
-        for rc in custom_courses_list:
-            room_courses.setdefault(rc.weekday, {})[rc.period_number] = rc.course_id
-    else:
-        periods = []
-        room_courses = {}
-        
-    return render_template('admin_room_schedule.html',
-                           room=room,
-                           periods=periods,
-                           room_courses=room_courses,
-                           courses=courses,
-                           csrf_token=session.get('csrf_token'))
+    return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/toggle', methods=['POST'])
@@ -1028,7 +1053,7 @@ def room_schedule_toggle(room_id):
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
         
     from models import Room, RoomPeriod, RoomCourse, copy_global_schedule_to_room, copy_global_courses_to_room
     room = Room.query.get_or_404(room_id)
@@ -1053,7 +1078,7 @@ def room_schedule_toggle(room_id):
         db.session.rollback()
         flash(f'Fehler beim Umschalten des Stundenplans: {e}', 'error')
         
-    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+    return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/copy_global', methods=['POST'])
@@ -1063,13 +1088,13 @@ def room_schedule_copy_global(room_id):
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
         
     from models import Room, copy_global_schedule_to_room, copy_global_courses_to_room
     room = Room.query.get_or_404(room_id)
     if not room.use_custom_schedule:
         flash('Der raumspezifische Stundenplan ist nicht aktiv.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
         
     try:
         copy_global_schedule_to_room(room_id)
@@ -1081,7 +1106,7 @@ def room_schedule_copy_global(room_id):
         db.session.rollback()
         flash(f'Fehler beim Kopieren des globalen Stundenplans: {e}', 'error')
         
-    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+    return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/add', methods=['POST'])
@@ -1091,13 +1116,13 @@ def room_schedule_period_add(room_id):
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
         
     from models import Room, RoomPeriod
     room = Room.query.get_or_404(room_id)
     if not room.use_custom_schedule:
         flash('Der raumspezifische Stundenplan ist nicht aktiv.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
         
     try:
         number = int(request.form.get('number', 0))
@@ -1111,16 +1136,16 @@ def room_schedule_period_add(room_id):
         
         if number <= 0:
             flash('Ungültige Periodennummer.', 'error')
-            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            return redirect(url_for('admin_dyn.periods', room_id=room_id))
             
         if not name or not start or not end:
             flash('Bitte füllen Sie Name, Startzeit und Endzeit aus.', 'error')
-            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            return redirect(url_for('admin_dyn.periods', room_id=room_id))
             
         # Prüfen auf Duplikate
         if RoomPeriod.query.filter_by(room_id=room_id, period_number=number).first():
             flash(f'Eine Periode mit der Nummer {number} existiert bereits für diesen Raum.', 'error')
-            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            return redirect(url_for('admin_dyn.periods', room_id=room_id))
             
         rp = RoomPeriod(
             room_id=room_id,
@@ -1141,7 +1166,7 @@ def room_schedule_period_add(room_id):
         db.session.rollback()
         flash(f'Fehler beim Hinzufügen der Periode: {e}', 'error')
         
-    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+    return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/<int:period_id>/edit', methods=['POST'])
@@ -1151,7 +1176,7 @@ def room_schedule_period_edit(room_id, period_id):
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
         
     from models import Room, RoomPeriod
     room = Room.query.get_or_404(room_id)
@@ -1170,17 +1195,17 @@ def room_schedule_period_edit(room_id, period_id):
         
         if number <= 0:
             flash('Ungültige Periodennummer.', 'error')
-            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            return redirect(url_for('admin_dyn.periods', room_id=room_id))
             
         if not name or not start or not end:
             flash('Bitte füllen Sie Name, Startzeit und Endzeit aus.', 'error')
-            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            return redirect(url_for('admin_dyn.periods', room_id=room_id))
             
         # Prüfen auf Duplikate bei anderer ID
         dup = RoomPeriod.query.filter_by(room_id=room_id, period_number=number).first()
         if dup and dup.id != period_id:
             flash(f'Eine Periode mit der Nummer {number} existiert bereits.', 'error')
-            return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+            return redirect(url_for('admin_dyn.periods', room_id=room_id))
             
         rp.period_number = number
         rp.name = name
@@ -1198,7 +1223,7 @@ def room_schedule_period_edit(room_id, period_id):
         db.session.rollback()
         flash(f'Fehler beim Aktualisieren der Periode: {e}', 'error')
         
-    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+    return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/period/<int:period_id>/delete', methods=['POST'])
@@ -1208,7 +1233,7 @@ def room_schedule_period_delete(room_id, period_id):
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.periods', room_id=room_id))
         
     from models import Room, RoomPeriod
     room = Room.query.get_or_404(room_id)
@@ -1224,7 +1249,7 @@ def room_schedule_period_delete(room_id, period_id):
         db.session.rollback()
         flash(f'Fehler beim Löschen der Periode: {e}', 'error')
         
-    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+    return redirect(url_for('admin_dyn.periods', room_id=room_id))
 
 
 @admin_dyn_bp.route('/rooms/<int:room_id>/schedule/courses/save', methods=['POST'])
@@ -1234,13 +1259,13 @@ def room_schedule_courses_save(room_id):
         return redirect(url_for('dashboard'))
     if not _validate_csrf(request.form.get('csrf_token', '')):
         flash('Ungültiges Sicherheits-Token.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.courses', room_id=room_id))
         
     from models import Room, RoomCourse, RoomPeriod
     room = Room.query.get_or_404(room_id)
     if not room.use_custom_schedule:
         flash('Der raumspezifische Stundenplan ist nicht aktiv.', 'error')
-        return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+        return redirect(url_for('admin_dyn.courses', room_id=room_id))
         
     try:
         # Alle bestehenden Kurszuordnungen für diesen Raum löschen
@@ -1274,5 +1299,5 @@ def room_schedule_courses_save(room_id):
         db.session.rollback()
         flash(f'Fehler beim Speichern der Kurs-Zuordnungen: {e}', 'error')
         
-    return redirect(url_for('admin_dyn.room_schedule', room_id=room_id))
+    return redirect(url_for('admin_dyn.courses', room_id=room_id))
 

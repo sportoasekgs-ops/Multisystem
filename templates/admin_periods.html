@@ -118,7 +118,7 @@
 }
 .add-form .form-group { margin: 0; }
 .add-form label { font-size: .8rem; color: var(--text-secondary); display: block; margin-bottom: .25rem; }
-.add-form input { padding: .55rem .7rem; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-primary); font-size: .9rem; }
+.add-form input, .add-form select { padding: .55rem .7rem; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg-input); color: var(--text-primary); font-size: .9rem; }
 .kind-badge {
     display: inline-block;
     font-size: .72rem;
@@ -192,10 +192,36 @@
         <div>
             <a href="{{ url_for('admin') }}" style="text-decoration:none;color:var(--text-secondary);font-size:.9rem;">← Admin</a>
             <h2 style="margin:.25rem 0 0;">⏱️ Stunden verwalten</h2>
-            <p style="color:var(--text-secondary);margin:.25rem 0 0;">Unterrichtszeiten und große Pausen mit individuellen Uhrzeiten – erscheinen im Wochenplan</p>
+            <p style="color:var(--text-secondary);margin:.25rem 0 0;">Unterrichtszeiten und große Pausen für den Wochenplan</p>
         </div>
         <a href="{{ url_for('admin_dyn.courses') }}" class="btn btn-secondary">📚 Kurse</a>
     </div>
+
+    <!-- Browser-style Room Tabs Area -->
+    {% if rooms and rooms|length > 0 %}
+    <div class="room-browser-tabs" style="display: flex; background: rgba(0,0,0,0.04); padding: 8px 8px 0; gap: 4px; border-radius: 10px 10px 0 0; border-bottom: 1px solid var(--border-light); margin-bottom: 1.5rem;">
+        <a href="{{ url_for('admin_dyn.periods', room_id=0) }}" 
+           class="room-browser-tab {% if room_id == 0 %}active{% endif %}"
+           style="text-decoration: none; padding: 8px 16px; border-radius: 8px 8px 0 0; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; transition: all var(--transition-fast); 
+                  background: {% if room_id == 0 %}var(--bg-card, #fff){% else %}rgba(0,0,0,0.03){% endif %}; 
+                  border-top: 3px solid {% if room_id == 0 %}var(--primary){% else %}transparent{% endif %};
+                  color: {% if room_id == 0 %}var(--text-primary, #1e1b4b){% else %}var(--text-secondary){% endif %};">
+            <span>🌍</span>
+            <span>Globaler Standard</span>
+        </a>
+        {% for r in rooms %}
+        <a href="{{ url_for('admin_dyn.periods', room_id=r.id) }}" 
+           class="room-browser-tab {% if room_id == r.id %}active{% endif %}"
+           style="text-decoration: none; padding: 8px 16px; border-radius: 8px 8px 0 0; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; transition: all var(--transition-fast); 
+                  background: {% if room_id == r.id %}var(--bg-card, #fff){% else %}rgba(0,0,0,0.03){% endif %}; 
+                  border-top: 3px solid {% if room_id == r.id %}{{ r.color or 'var(--primary)' }}{% else %}transparent{% endif %};
+                  color: {% if room_id == r.id %}var(--text-primary, #1e1b4b){% else %}var(--text-secondary){% endif %};">
+            <span>{{ r.icon }}</span>
+            <span>{{ r.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}{% for cat,msg in messages %}
@@ -203,302 +229,546 @@
     {% endfor %}{% endif %}
     {% endwith %}
 
-    <!-- ═══ VORLAGEN ═══════════════════════════════════════════════════════════ -->
-    <div class="section-card">
-        <h3>📋 Vorlagen</h3>
-        <p style="font-size:.85rem;color:var(--text-secondary);margin:-.5rem 0 1rem;">
-            Lade eine fertige Vorlage oder speichere deine aktuellen Stunden als eigene Vorlage.
-            Beim Laden werden alle bisherigen Stunden ersetzt.
-        </p>
-
-        <!-- Eingebaute Vorlagen -->
-        <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
-            Eingebaute Vorlagen
-        </h4>
-        <div class="template-grid" style="margin-bottom:1.25rem;">
-            {% for t in builtin_templates %}
-            <div class="template-card builtin">
-                <div class="t-name">{{ t.name }}</div>
-                <div class="t-desc">{{ t.description }}</div>
-                <div class="t-periods">
-                    {% for p in t.periods %}{{ p.number }}. {{ p.start }}–{{ p.end }}{% if not loop.last %} · {% endif %}{% endfor %}
+    {% if room_id > 0 %}
+        <!-- ================= RAUMSPEZIFISCHER PLAN ================= -->
+        <div class="section-card" style="border-left: 5px solid {% if room.use_custom_schedule %}#4caf50{% else %}var(--border){% endif %};">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <h3 style="margin:0 0 .5rem;">
+                        Status: 
+                        {% if room.use_custom_schedule %}
+                        <span style="color:#4caf50;">Raumspezifischer Stundenplan AKTIV</span>
+                        {% else %}
+                        <span style="color:#888;">Nutzt globalen Standard-Plan</span>
+                        {% endif %}
+                    </h3>
+                    <p style="margin:0; font-size:.9rem; color:var(--text-secondary);">
+                        {% if room.use_custom_schedule %}
+                        Dieser Raum überschreibt die globalen Zeitfenster. Änderungen hier gelten nur für diesen Raum.
+                        {% else %}
+                        Dieser Raum erbt den globalen Stundenplan.
+                        {% endif %}
+                    </p>
                 </div>
-                <form method="POST" action="{{ url_for('admin_dyn.periods_templates_load_builtin') }}"
-                      onsubmit="return confirm('Vorlage „{{ t.name }}" laden? Aktuelle Stunden werden ersetzt.');">
+                <div>
+                    <form method="POST" action="{{ url_for('admin_dyn.room_schedule_toggle', room_id=room.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        {% if room.use_custom_schedule %}
+                        <input type="hidden" name="use_custom_schedule" value="0">
+                        <button type="submit" class="btn" style="background:#f44336; color:#fff;" onclick="return confirm('Möchten Sie den eigenen Stundenplan deaktivieren? Alle individuellen Zeiten für diesen Raum gehen unwiderruflich verloren.');">
+                            Eigenen Plan deaktivieren
+                        </button>
+                        {% else %}
+                        <input type="hidden" name="use_custom_schedule" value="1">
+                        <button type="submit" class="btn btn-primary">
+                            Eigenen Plan aktivieren & kopieren
+                        </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if room.use_custom_schedule %}
+        <div class="section-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 style="margin:0;">Aktuelle Stunden & Pausen für {{ room.name }}</h3>
+                <form method="POST" action="{{ url_for('admin_dyn.room_schedule_copy_global', room_id=room.id) }}" onsubmit="return confirm('Möchten Sie den globalen Stundenplan erneut in diesen Raum kopieren? Alle aktuellen raumspezifischen Stunden und Pausen werden überschrieben.');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <input type="hidden" name="builtin_id" value="{{ t.id }}">
-                    <button type="submit" class="btn-load" style="width:100%;">⬇️ Laden</button>
+                    <button type="submit" class="btn btn-secondary" style="font-size:.82rem; padding:.4rem .8rem;">
+                        🔄 Vom globalen Plan überschreiben
+                    </button>
                 </form>
             </div>
-            {% endfor %}
+
+            {% if periods %}
+            <div style="overflow-x:auto;">
+                <table class="periods-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px; text-align: center;">Sortierung</th>
+                            <th style="width: 80px; text-align: center;">Nummer</th>
+                            <th>Bezeichnung</th>
+                            <th style="width: 140px;">Typ</th>
+                            <th style="width: 180px;">Zeitraum</th>
+                            <th style="width: 90px; text-align: center;">Aktiv</th>
+                            <th style="width: 140px; text-align: right;">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in periods %}
+                        <tr class="{% if p.period_kind == 'break' %}period-row-break{% endif %}" id="row-period-{{ p.id }}">
+                            <td style="text-align: center; font-weight: bold; color: var(--text-secondary);">{{ p.sort_order }}</td>
+                            <td style="text-align: center;"><span class="period-number">{{ p.period_number }}</span></td>
+                            <td style="font-weight: 600;">
+                                {{ p.name }}
+                                {% if p.period_kind == 'break' and p.after_lesson %}
+                                <span style="font-size: 0.78rem; font-weight: normal; color: var(--text-secondary);">
+                                    (nach {{ p.after_lesson }}. Stunde)
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="kind-badge kind-{{ p.period_kind or 'lesson' }}">
+                                    {{ 'Pause' if p.period_kind == 'break' else 'Stunde' }}
+                                </span>
+                            </td>
+                            <td style="font-family: monospace; font-size: 0.95rem;">{{ p.start_time }} – {{ p.end_time }}</td>
+                            <td style="text-align: center;">
+                                {% if p.is_active %}
+                                <span class="active-dot">✔</span>
+                                {% else %}
+                                <span class="inactive-dot">✖</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <button type="button" class="btn btn-secondary" style="font-size: .8rem; padding: .25rem .5rem; margin-right: .2rem;" onclick="toggleEditPeriod({{ p.id }})">
+                                    Bearbeiten
+                                </button>
+                                <form method="POST" action="{{ url_for('admin_dyn.room_schedule_period_delete', room_id=room.id, period_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Periode {{ p.name }} löschen?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="btn" style="background:#f44336; color:#fff; font-size: .8rem; padding: .25rem .5rem;">
+                                        ✕
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <!-- Bearbeiten Zeile -->
+                        <tr class="edit-row" id="edit-period-{{ p.id }}">
+                            <td colspan="7">
+                                <form method="POST" action="{{ url_for('admin_dyn.room_schedule_period_edit', room_id=room.id, period_id=p.id) }}" style="display: flex; gap: .75rem; align-items: flex-end; flex-wrap: wrap;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    
+                                    <div style="flex: 0 0 70px;">
+                                        <label style="font-size:.78rem; color:var(--text-secondary); display:block; margin-bottom:.25rem;">Nummer</label>
+                                        <input type="number" name="number" value="{{ p.period_number }}" required min="1" style="width:100%; padding:.45rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); color:var(--text-primary);">
+                                    </div>
+                                    <div style="flex: 1 1 180px;">
+                                        <label style="font-size:.78rem; color:var(--text-secondary); display:block; margin-bottom:.25rem;">Bezeichnung</label>
+                                        <input type="text" name="name" value="{{ p.name }}" required style="width:100%; padding:.45rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); color:var(--text-primary);">
+                                    </div>
+                                    <div style="flex: 0 0 110px;">
+                                        <label style="font-size:.78rem; color:var(--text-secondary); display:block; margin-bottom:.25rem;">Typ</label>
+                                        <select name="kind" id="edit-kind-{{ p.id }}" onchange="updateEditFields({{ p.id }})" style="width:100%; padding:.45rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); color:var(--text-primary);">
+                                            <option value="lesson" {% if p.period_kind == 'lesson' %}selected{% endif %}>Stunde</option>
+                                            <option value="break" {% if p.period_kind == 'break' %}selected{% endif %}>Pause</option>
+                                        </select>
+                                    </div>
+                                    <div style="flex: 0 0 130px;" id="edit-after-lesson-group-{{ p.id }}">
+                                        <label style="font-size:.78rem; color:var(--text-secondary); display:block; margin-bottom:.25rem;">Nach Stunde</label>
+                                        <input type="number" name="after_lesson" value="{{ p.after_lesson or '' }}" min="1" placeholder="z.B. 2" style="width:100%; padding:.45rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); color:var(--text-primary);">
+                                    </div>
+                                    <div style="flex: 0 0 90px;">
+                                        <label style="font-size:.78rem; color:var(--text-secondary); display:block; margin-bottom:.25rem;">Startzeit</label>
+                                        <input type="text" name="start" value="{{ p.start_time }}" placeholder="08:00" required style="width:100%; padding:.45rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); color:var(--text-primary);">
+                                    </div>
+                                    <div style="flex: 0 0 90px;">
+                                        <label style="font-size:.78rem; color:var(--text-secondary); display:block; margin-bottom:.25rem;">Endzeit</label>
+                                        <input type="text" name="end" value="{{ p.end_time }}" placeholder="08:45" required style="width:100%; padding:.45rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); color:var(--text-primary);">
+                                    </div>
+                                    <div style="flex: 0 0 70px;">
+                                        <label style="font-size:.78rem; color:var(--text-secondary); display:block; margin-bottom:.25rem;">Sortierung</label>
+                                        <input type="number" name="sort_order" value="{{ p.sort_order }}" required style="width:100%; padding:.45rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); color:var(--text-primary);">
+                                    </div>
+                                    <div style="flex: 0 0 100px;">
+                                        <label style="font-size:.78rem; color:var(--text-secondary); display:block; margin-bottom:.25rem;">Status</label>
+                                        <select name="is_active" style="width:100%; padding:.45rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-card); color:var(--text-primary);">
+                                            <option value="1" {% if p.is_active %}selected{% endif %}>Aktiv</option>
+                                            <option value="0" {% if not p.is_active %}selected{% endif %}>Inaktiv</option>
+                                        </select>
+                                    </div>
+                                    <div style="margin-left: auto; display: flex; gap: .4rem;">
+                                        <button type="button" onclick="toggleEditPeriod({{ p.id }})" class="btn btn-secondary" style="font-size: .85rem; padding: .45rem .8rem;">Abbrechen</button>
+                                        <button type="submit" class="btn btn-primary" style="font-size: .85rem; padding: .45rem .8rem;">Speichern</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color:#888; text-align:center; padding:2rem 0; margin:0;">Noch keine Perioden angelegt.</p>
+            {% endif %}
         </div>
 
-        <!-- Gespeicherte Vorlagen -->
-        <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
-            Eigene Vorlagen
-        </h4>
-        {% if saved_templates %}
-        <div class="template-grid" style="margin-bottom:1.25rem;">
-            {% for t in saved_templates %}
-            <div class="template-card saved">
-                <div class="t-name">{{ t.name }}</div>
-                {% if t.description %}<div class="t-desc">{{ t.description }}</div>{% endif %}
-                <div class="t-meta">Gespeichert: {{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '–' }}</div>
-                <div class="t-periods">
-                    {% for p in t.get_periods() %}{{ p.number }}. {{ p.start }}–{{ p.end }}{% if not loop.last %} · {% endif %}{% endfor %}
+        <!-- Neue hinzufügen -->
+        <div class="section-card">
+            <h3 style="margin-top: 0;">➕ Neue Stunde / Pause anlegen</h3>
+            <form method="POST" action="{{ url_for('admin_dyn.room_schedule_period_add', room_id=room.id) }}" class="add-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <div class="form-group" style="width: 80px;">
+                    <label>Nummer</label>
+                    <input type="number" name="number" required min="1" value="{{ next_period_number }}" style="width:100%;">
                 </div>
-                <div class="template-actions">
-                    <form method="POST" action="{{ url_for('admin_dyn.periods_templates_load', tmpl_id=t.id) }}" style="flex:1;"
+                <div class="form-group" style="flex: 1; min-width: 180px;">
+                    <label>Bezeichnung</label>
+                    <input type="text" name="name" placeholder="z.B. 1. Stunde, Frühstückspause" required style="width:100%;">
+                </div>
+                <div class="form-group" style="width: 120px;">
+                    <label>Typ</label>
+                    <select name="kind" id="add-kind" onchange="updateAddFields()" style="width:100%; height:38px;">
+                        <option value="lesson">Stunde</option>
+                        <option value="break">Pause</option>
+                    </select>
+                </div>
+                <div class="form-group" style="width: 130px;" id="add-after-lesson-group">
+                    <label>Nach Stunde</label>
+                    <input type="number" name="after_lesson" min="1" placeholder="z.B. 2" style="width:100%;">
+                </div>
+                <div class="form-group" style="width: 90px;">
+                    <label>Startzeit</label>
+                    <input type="text" name="start" placeholder="07:50" required style="width:100%;">
+                </div>
+                <div class="form-group" style="width: 90px;">
+                    <label>Endzeit</label>
+                    <input type="text" name="end" placeholder="08:35" required style="width:100%;">
+                </div>
+                <div class="form-group" style="width: 80px;">
+                    <label>Sortierung</label>
+                    <input type="number" name="sort_order" value="0" required style="width:100%;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="height: 38px; padding: 0 1.2rem;">Hinzufügen</button>
+            </form>
+        </div>
+        {% endif %}
+
+    {% else %}
+        <!-- ================= GLOBAL STANDARD CONFIGURATION ================= -->
+        <!-- ═══ VORLAGEN ═══════════════════════════════════════════════════════════ -->
+        <div class="section-card">
+            <h3>📋 Vorlagen</h3>
+            <p style="font-size:.85rem;color:var(--text-secondary);margin:-.5rem 0 1rem;">
+                Lade eine fertige Vorlage oder speichere deine aktuellen Stunden als eigene Vorlage.
+                Beim Laden werden alle bisherigen Stunden ersetzt.
+            </p>
+
+            <!-- Eingebaute Vorlagen -->
+            <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
+                Eingebaute Vorlagen
+            </h4>
+            <div class="template-grid" style="margin-bottom:1.25rem;">
+                {% for t in builtin_templates %}
+                <div class="template-card builtin">
+                    <div class="t-name">{{ t.name }}</div>
+                    <div class="t-desc">{{ t.description }}</div>
+                    <div class="t-periods">
+                        {% for p in t.periods %}{{ p.number }}. {{ p.start }}–{{ p.end }}{% if not loop.last %} · {% endif %}{% endfor %}
+                    </div>
+                    <form method="POST" action="{{ url_for('admin_dyn.periods_templates_load_builtin') }}"
                           onsubmit="return confirm('Vorlage „{{ t.name }}" laden? Aktuelle Stunden werden ersetzt.');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="builtin_id" value="{{ t.id }}">
                         <button type="submit" class="btn-load" style="width:100%;">⬇️ Laden</button>
                     </form>
-                    <form method="POST" action="{{ url_for('admin_dyn.periods_templates_delete', tmpl_id=t.id) }}"
-                          onsubmit="return confirm('Vorlage „{{ t.name }}" wirklich löschen?');">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <button type="submit" class="btn-delete-tmpl">🗑</button>
-                    </form>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p style="font-size:.85rem;color:var(--text-secondary);padding:.5rem 0 1rem;">
-            Noch keine eigenen Vorlagen gespeichert. Konfiguriere deine Stunden und speichere sie als Vorlage.
-        </p>
-        {% endif %}
-
-        <!-- Aktuelle Konfiguration als Vorlage speichern -->
-        <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
-            Aktuelle Stunden als Vorlage speichern
-        </h4>
-        {% if not periods %}
-        <div class="warn-box">⚠️ Noch keine Stunden konfiguriert – zuerst Stunden anlegen, dann speichern.</div>
-        {% else %}
-        <form method="POST" action="{{ url_for('admin_dyn.periods_templates_save') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <div class="save-form">
-                <div class="form-group">
-                    <label style="font-size:.8rem;color:var(--text-secondary);display:block;margin-bottom:.3rem;">Name der Vorlage *</label>
-                    <input type="text" name="template_name" required
-                           placeholder='z.B. "KGS Pattensen Standard"'
-                           style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:.9rem;">
-                </div>
-                <div class="form-group">
-                    <label style="font-size:.8rem;color:var(--text-secondary);display:block;margin-bottom:.3rem;">Beschreibung (optional)</label>
-                    <input type="text" name="template_desc"
-                           placeholder="z.B. Schuljahr 2025/26"
-                           style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:.9rem;">
-                </div>
-                <button type="submit" class="btn btn-primary" style="height:42px;white-space:nowrap;">
-                    💾 Speichern
-                </button>
-            </div>
-        </form>
-        {% endif %}
-    </div>
-
-    <!-- ═══ GROSSE PAUSEN VERWALTEN ═══════════════════════════════════════════ -->
-    <div class="section-card break-setup-card">
-        <h3>☕ Große Pausen</h3>
-        <p style="font-size:.88rem;color:var(--text-secondary);margin:-.25rem 0 1rem;line-height:1.5;">
-            Haken setzen = Pause <strong>nach</strong> dieser Unterrichtsstunde; Haken entfernen = Pause löschen.
-            Anschließend <strong>Speichern</strong> klicken. Die Reihenfolge im Wochenplan passt sich automatisch an.
-        </p>
-        {% if lesson_count < 1 %}
-        <div class="warn-box">⚠️ Zuerst Unterrichtsstunden anlegen oder eine Vorlage laden, dann Pausen einfügen.</div>
-        {% else %}
-        <form method="POST" action="{{ url_for('admin_dyn.periods_setup_standard_breaks') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <p style="font-size:.85rem;font-weight:600;margin:0 0 .35rem;">Pause nach Unterrichtsstunde</p>
-            <div class="break-setup-grid">
-                {% for n in [2, 4, 6, 8] %}
-                {% if n <= lesson_count %}
-                <label><input type="checkbox" name="after_lesson" value="{{ n }}"
-                    {% if n in break_after_lessons %}checked{% endif %}> nach {{ n }}. Stunde</label>
-                {% endif %}
                 {% endfor %}
             </div>
-            <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;">
-                <div>
-                    <label style="font-size:.78rem;color:var(--text-secondary);">Pausendauer (Min., nur für neu angelegte Pausen)</label><br>
-                    <input type="number" name="pause_minutes" value="20" min="5" max="90" style="width:80px;padding:.5rem;border:1px solid var(--border);border-radius:6px;">
+
+            <!-- Gespeicherte Vorlagen -->
+            <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
+                Eigene Vorlagen
+            </h4>
+            {% if saved_templates %}
+            <div class="template-grid" style="margin-bottom:1.25rem;">
+                {% for t in saved_templates %}
+                <div class="template-card saved">
+                    <div class="t-name">{{ t.name }}</div>
+                    {% if t.description %}<div class="t-desc">{{ t.description }}</div>{% endif %}
+                    <div class="t-meta">Gespeichert: {{ t.created_at.strftime('%d.%m.%Y %H:%M') if t.created_at else '–' }}</div>
+                    <div class="t-periods">
+                        {% for p in t.get_periods() %}{{ p.number }}. {{ p.start }}–{{ p.end }}{% if not loop.last %} · {% endif %}{% endfor %}
+                    </div>
+                    <div class="template-actions">
+                        <form method="POST" action="{{ url_for('admin_dyn.periods_templates_load', tmpl_id=t.id) }}" style="flex:1;"
+                              onsubmit="return confirm('Vorlage „{{ t.name }}" laden? Aktuelle Stunden werden ersetzt.');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn-load" style="width:100%;">⬇️ Laden</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin_dyn.periods_templates_delete', tmpl_id=t.id) }}"
+                              onsubmit="return confirm('Vorlage „{{ t.name }}" wirklich löschen?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn-delete-tmpl">🗑</button>
+                        </form>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="padding:.55rem 1.4rem;">💾 Speichern</button>
+                {% endfor %}
             </div>
-            <p class="form-hint" style="margin-top:.65rem;">Neue Pausen: Beginn = Ende der Stunde, Ende = Beginn + Dauer. Bestehende Pausen behalten ihre Uhrzeiten.</p>
-        </form>
+            {% else %}
+            <p style="font-size:.85rem;color:var(--text-secondary);padding:.5rem 0 1rem;">
+                Noch keine eigenen Vorlagen gespeichert. Konfiguriere deine Stunden und speichere sie als Vorlage.
+            </p>
+            {% endif %}
 
-        <form method="POST" action="{{ url_for('admin_dyn.periods_insert_break') }}" class="insert-break-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <div>
-                <label style="font-size:.78rem;color:var(--text-secondary);">Einzelne Pause nach</label><br>
-                <select name="after_lesson" required style="padding:.5rem;border:1px solid var(--border);border-radius:6px;min-width:160px;">
-                    {% for n in range(1, lesson_count + 1) %}
-                    <option value="{{ n }}">{{ n }}. Unterrichtsstunde</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label style="font-size:.78rem;color:var(--text-secondary);">Bezeichnung</label><br>
-                <input type="text" name="name" value="Große Pause" style="padding:.5rem;border:1px solid var(--border);border-radius:6px;">
-            </div>
-            <div>
-                <label style="font-size:.78rem;color:var(--text-secondary);">Beginn (leer = Ende der Stunde)</label><br>
-                <input type="text" name="start_time" pattern="\d{2}:\d{2}" placeholder="09:20" style="width:90px;padding:.5rem;font-family:monospace;">
-            </div>
-            <div>
-                <label style="font-size:.78rem;color:var(--text-secondary);">Ende (leer = +20 Min.)</label><br>
-                <input type="text" name="end_time" pattern="\d{2}:\d{2}" placeholder="09:40" style="width:90px;padding:.5rem;font-family:monospace;">
-            </div>
-            <input type="hidden" name="pause_minutes" value="20">
-            <button type="submit" class="btn btn-primary" style="padding:.55rem 1rem;">➕ Pause einfügen</button>
-        </form>
-        {% endif %}
-    </div>
-
-    <!-- ═══ AKTUELLE STUNDEN ════════════════════════════════════════════════════ -->
-    <div class="section-card">
-        <h3>📅 Stundenplan ({{ periods|length }} Zeitfenster)</h3>
-        {% if periods %}
-        <div style="overflow-x:auto;">
-        <table class="periods-table">
-            <thead>
-                <tr>
-                    <th>Intern</th>
-                    <th>Art</th>
-                    <th>Bezeichnung / Position</th>
-                    <th>Beginn</th>
-                    <th>Ende</th>
-                    <th style="text-align:center;">Aktiv</th>
-                    <th style="text-align:right;">Aktionen</th>
-                </tr>
-            </thead>
-            <tbody>
-            {% for p in periods %}
-            <tr id="row-p-{{ p.id }}" class="{% if p.period_kind == 'break' %}period-row-break{% endif %}">
-                <td class="period-number">{{ p.number }}<span class="period-pos-hint">ID</span></td>
-                <td>{% if p.period_kind == 'break' %}<span class="kind-badge kind-break">Pause</span>{% else %}<span class="kind-badge kind-lesson">Stunde</span>{% endif %}</td>
-                <td>
-                    {{ p.name }}
-                    {% if p.period_kind == 'break' and p.after_lesson %}
-                    <span class="period-pos-hint"> · nach {{ p.after_lesson }}. Stunde</span>
-                    {% endif %}
-                </td>
-                <td style="font-family:monospace;">{{ p.start_time }}</td>
-                <td style="font-family:monospace;">{{ p.end_time }}</td>
-                <td style="text-align:center;">
-                    {% if p.is_active %}
-                    <span class="active-dot">✔</span>
-                    {% else %}
-                    <span class="inactive-dot">✖</span>
-                    {% endif %}
-                </td>
-                <td style="text-align:right;">
-                    <button onclick="toggleEditPeriod({{ p.id }})" class="btn btn-secondary" style="padding:.3rem .7rem;font-size:.82rem;">Bearbeiten</button>
-                    <form method="POST" action="{{ url_for('admin_dyn.periods_delete', period_id=p.id) }}" style="display:inline;"
-                          onsubmit="return confirm('Stunde {{ p.number }} wirklich löschen?');">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <button type="submit" class="btn" style="background:#f44336;color:#fff;padding:.3rem .7rem;font-size:.82rem;">Löschen</button>
-                    </form>
-                </td>
-            </tr>
-            <tr id="edit-p-{{ p.id }}" class="edit-row">
-                <td colspan="7">
-                    <form method="POST" action="{{ url_for('admin_dyn.periods_edit', period_id=p.id) }}"
-                          style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <div>
-                            <label style="font-size:.78rem;color:var(--text-secondary);">Art</label><br>
-                            <select name="period_kind" style="padding:.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
-                                <option value="lesson" {% if p.period_kind != 'break' %}selected{% endif %}>Unterricht</option>
-                                <option value="break" {% if p.period_kind == 'break' %}selected{% endif %}>Große Pause</option>
-                            </select>
-                        </div>
-                        {% if p.period_kind == 'break' %}
-                        <div>
-                            <label style="font-size:.78rem;color:var(--text-secondary);">Nach Stunde</label><br>
-                            <input type="number" name="after_lesson" min="1" max="20" value="{{ p.after_lesson or '' }}"
-                                   style="width:70px;padding:.5rem;border:1px solid var(--border);border-radius:6px;">
-                        </div>
-                        {% endif %}
-                        <div>
-                            <label style="font-size:.78rem;color:var(--text-secondary);">Bezeichnung</label><br>
-                            <input type="text" name="name" value="{{ p.name }}" required
-                                   style="padding:.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
-                        </div>
-                        <div>
-                            <label style="font-size:.78rem;color:var(--text-secondary);">Beginn (HH:MM)</label><br>
-                            <input type="text" name="start_time" value="{{ p.start_time }}" pattern="\d{2}:\d{2}" required
-                                   style="width:85px;padding:.5rem;border:1px solid var(--border);border-radius:6px;font-family:monospace;background:var(--bg-input);color:var(--text-primary);">
-                        </div>
-                        <div>
-                            <label style="font-size:.78rem;color:var(--text-secondary);">Ende (HH:MM)</label><br>
-                            <input type="text" name="end_time" value="{{ p.end_time }}" pattern="\d{2}:\d{2}" required
-                                   style="width:85px;padding:.5rem;border:1px solid var(--border);border-radius:6px;font-family:monospace;background:var(--bg-input);color:var(--text-primary);">
-                        </div>
-                        <div>
-                            <label style="font-size:.78rem;color:var(--text-secondary);">Aktiv</label><br>
-                            <select name="is_active"
-                                    style="padding:.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
-                                <option value="1" {% if p.is_active %}selected{% endif %}>Ja</option>
-                                <option value="0" {% if not p.is_active %}selected{% endif %}>Nein</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="padding:.5rem 1rem;">Speichern</button>
-                        <button type="button" onclick="toggleEditPeriod({{ p.id }})" class="btn btn-secondary" style="padding:.5rem 1rem;">Abbrechen</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+            <!-- Aktuelle Konfiguration als Vorlage speichern -->
+            <h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin:0 0 .6rem;">
+                Aktuelle Stunden als Vorlage speichern
+            </h4>
+            {% if not periods %}
+            <div class="warn-box">⚠️ Noch keine Stunden konfiguriert – zuerst Stunden anlegen, dann speichern.</div>
+            {% else %}
+            <form method="POST" action="{{ url_for('admin_dyn.periods_templates_save') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="save-form">
+                    <div class="form-group">
+                        <label style="font-size:.8rem;color:var(--text-secondary);display:block;margin-bottom:.3rem;">Name der Vorlage *</label>
+                        <input type="text" name="template_name" required
+                               placeholder='z.B. "KGS Pattensen Standard"'
+                               style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:.9rem;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size:.8rem;color:var(--text-secondary);display:block;margin-bottom:.3rem;">Beschreibung (optional)</label>
+                        <input type="text" name="template_desc"
+                               placeholder="z.B. Schuljahr 2025/26"
+                               style="width:100%;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;background:var(--bg-input);color:var(--text-primary);font-size:.9rem;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="height:42px;white-space:nowrap;">
+                        💾 Speichern
+                    </button>
+                </div>
+            </form>
+            {% endif %}
         </div>
-        {% else %}
-        <p style="color:var(--text-secondary);text-align:center;padding:1.5rem 0;">
-            📋 Noch keine Stunden vorhanden. Lade eine Vorlage oder füge unten eine Stunde hinzu.
-        </p>
-        {% endif %}
-    </div>
 
-    <!-- ═══ NEUE UNTERRICHTSSTUNDE ═════════════════════════════════════════════ -->
-    <div class="section-card">
-        <h3>➕ Unterrichtsstunde hinzufügen</h3>
-        <p class="form-hint" style="margin:-.5rem 0 1rem;">Für <strong>Pausen</strong> bitte den Bereich „Große Pausen einfügen“ oben nutzen.</p>
-        <form method="POST" action="{{ url_for('admin_dyn.periods_add') }}" class="add-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" name="period_kind" value="lesson">
-            <div class="form-group">
-                <label>Interne Nr. (automatisch vorgeschlagen)</label>
-                <input type="number" name="number" min="1" max="999" required value="{{ next_period_number }}" style="width:85px;">
+        <!-- ═══ GROSSE PAUSEN VERWALTEN ═══════════════════════════════════════════ -->
+        <div class="section-card break-setup-card">
+            <h3>☕ Große Pausen</h3>
+            <p style="font-size:.88rem;color:var(--text-secondary);margin:-.25rem 0 1rem;line-height:1.5;">
+                Haken setzen = Pause <strong>nach</strong> dieser Unterrichtsstunde; Haken entfernen = Pause löschen.
+                Anschließend <strong>Speichern</strong> klicken. Die Reihenfolge im Wochenplan passt sich automatisch an.
+            </p>
+            {% if lesson_count < 1 %}
+            <div class="warn-box">⚠️ Zuerst Unterrichtsstunden anlegen oder eine Vorlage laden, dann Pausen einfügen.</div>
+            {% else %}
+            <form method="POST" action="{{ url_for('admin_dyn.periods_setup_standard_breaks') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <p style="font-size:.85rem;font-weight:600;margin:0 0 .35rem;">Pause nach Unterrichtsstunde</p>
+                <div class="break-setup-grid">
+                    {% for n in [2, 4, 6, 8] %}
+                    {% if n <= lesson_count %}
+                    <label><input type="checkbox" name="after_lesson" value="{{ n }}"
+                        {% if n in break_after_lessons %}checked{% endif %}> nach {{ n }}. Stunde</label>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;">
+                    <div>
+                        <label style="font-size:.78rem;color:var(--text-secondary);">Pausendauer (Min., nur für neu angelegte Pausen)</label><br>
+                        <input type="number" name="pause_minutes" value="20" min="5" max="90" style="width:80px;padding:.5rem;border:1px solid var(--border);border-radius:6px;">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="padding:.55rem 1.4rem;">💾 Speichern</button>
+                </div>
+                <p class="form-hint" style="margin-top:.65rem;">Neue Pausen: Beginn = Ende der Stunde, Ende = Beginn + Dauer. Bestehende Pausen behalten ihre Uhrzeiten.</p>
+            </form>
+
+            <form method="POST" action="{{ url_for('admin_dyn.periods_insert_break') }}" class="insert-break-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div>
+                    <label style="font-size:.78rem;color:var(--text-secondary);">Einzelne Pause nach</label><br>
+                    <select name="after_lesson" required style="padding:.5rem;border:1px solid var(--border);border-radius:6px;min-width:160px;">
+                        {% for n in range(1, lesson_count + 1) %}
+                        <option value="{{ n }}">{{ n }}. Unterrichtsstunde</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:.78rem;color:var(--text-secondary);">Bezeichnung</label><br>
+                    <input type="text" name="name" value="Große Pause" style="padding:.5rem;border:1px solid var(--border);border-radius:6px;">
+                </div>
+                <div>
+                    <label style="font-size:.78rem;color:var(--text-secondary);">Beginn (leer = Ende der Stunde)</label><br>
+                    <input type="text" name="start_time" pattern="\d{2}:\d{2}" placeholder="09:20" style="width:90px;padding:.5rem;font-family:monospace;">
+                </div>
+                <div>
+                    <label style="font-size:.78rem;color:var(--text-secondary);">Ende (leer = +20 Min.)</label><br>
+                    <input type="text" name="end_time" pattern="\d{2}:\d{2}" placeholder="09:40" style="width:90px;padding:.5rem;font-family:monospace;">
+                </div>
+                <input type="hidden" name="pause_minutes" value="20">
+                <button type="submit" class="btn btn-primary" style="padding:.55rem 1rem;">➕ Pause einfügen</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- ═══ AKTUELLE STUNDEN ════════════════════════════════════════════════════ -->
+        <div class="section-card">
+            <h3>📅 Stundenplan ({{ periods|length }} Zeitfenster)</h3>
+            {% if periods %}
+            <div style="overflow-x:auto;">
+            <table class="periods-table">
+                <thead>
+                    <tr>
+                        <th>Intern</th>
+                        <th>Art</th>
+                        <th>Bezeichnung / Position</th>
+                        <th>Beginn</th>
+                        <th>Ende</th>
+                        <th style="text-align:center;">Aktiv</th>
+                        <th style="text-align:right;">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for p in periods %}
+                <tr id="row-p-{{ p.id }}" class="{% if p.period_kind == 'break' %}period-row-break{% endif %}">
+                    <td class="period-number">{{ p.number }}<span class="period-pos-hint">ID</span></td>
+                    <td>{% if p.period_kind == 'break' %}<span class="kind-badge kind-break">Pause</span>{% else %}<span class="kind-badge kind-lesson">Stunde</span>{% endif %}</td>
+                    <td>
+                        {{ p.name }}
+                        {% if p.period_kind == 'break' and p.after_lesson %}
+                        <span class="period-pos-hint"> · nach {{ p.after_lesson }}. Stunde</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-family:monospace;">{{ p.start_time }}</td>
+                    <td style="font-family:monospace;">{{ p.end_time }}</td>
+                    <td style="text-align:center;">
+                        {% if p.is_active %}
+                        <span class="active-dot">✔</span>
+                        {% else %}
+                        <span class="inactive-dot">✖</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:right;">
+                        <button onclick="toggleEditPeriod({{ p.id }})" class="btn btn-secondary" style="padding:.3rem .7rem;font-size:.82rem;">Bearbeiten</button>
+                        <form method="POST" action="{{ url_for('admin_dyn.periods_delete', period_id=p.id) }}" style="display:inline;"
+                              onsubmit="return confirm('Stunde {{ p.number }} wirklich löschen?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" class="btn" style="background:#f44336;color:#fff;padding:.3rem .7rem;font-size:.82rem;">Löschen</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr id="edit-p-{{ p.id }}" class="edit-row">
+                    <td colspan="7">
+                        <form method="POST" action="{{ url_for('admin_dyn.periods_edit', period_id=p.id) }}"
+                              style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <div>
+                                <label style="font-size:.78rem;color:var(--text-secondary);">Art</label><br>
+                                <select name="period_kind" style="padding:.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
+                                    <option value="lesson" {% if p.period_kind != 'break' %}selected{% endif %}>Unterricht</option>
+                                    <option value="break" {% if p.period_kind == 'break' %}selected{% endif %}>Große Pause</option>
+                                </select>
+                            </div>
+                            {% if p.period_kind == 'break' %}
+                            <div>
+                                <label style="font-size:.78rem;color:var(--text-secondary);">Nach Stunde</label><br>
+                                <input type="number" name="after_lesson" min="1" max="20" value="{{ p.after_lesson or '' }}"
+                                       style="width:70px;padding:.5rem;border:1px solid var(--border);border-radius:6px;">
+                            </div>
+                            {% endif %}
+                            <div>
+                                <label style="font-size:.78rem;color:var(--text-secondary);">Bezeichnung</label><br>
+                                <input type="text" name="name" value="{{ p.name }}" required
+                                       style="padding:.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label style="font-size:.78rem;color:var(--text-secondary);">Beginn (HH:MM)</label><br>
+                                <input type="text" name="start_time" value="{{ p.start_time }}" pattern="\d{2}:\d{2}" required
+                                       style="width:85px;padding:.5rem;border:1px solid var(--border);border-radius:6px;font-family:monospace;background:var(--bg-input);color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label style="font-size:.78rem;color:var(--text-secondary);">Ende (HH:MM)</label><br>
+                                <input type="text" name="end_time" value="{{ p.end_time }}" pattern="\d{2}:\d{2}" required
+                                       style="width:85px;padding:.5rem;border:1px solid var(--border);border-radius:6px;font-family:monospace;background:var(--bg-input);color:var(--text-primary);">
+                            </div>
+                            <div>
+                                <label style="font-size:.78rem;color:var(--text-secondary);">Aktiv</label><br>
+                                <select name="is_active"
+                                        style="padding:.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);color:var(--text-primary);">
+                                    <option value="1" {% if p.is_active %}selected{% endif %}>Ja</option>
+                                    <option value="0" {% if not p.is_active %}selected{% endif %}>Nein</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="padding:.5rem 1rem;">Speichern</button>
+                            <button type="button" onclick="toggleEditPeriod({{ p.id }})" class="btn btn-secondary" style="padding:.5rem 1rem;">Abbrechen</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
             </div>
-            <div class="form-group">
-                <label>Bezeichnung</label>
-                <input type="text" name="name" required placeholder="Große Pause" style="min-width:140px;">
-            </div>
-            <div class="form-group">
-                <label>Beginn (HH:MM)</label>
-                <input type="text" name="start_time" pattern="\d{2}:\d{2}" required placeholder="13:10" style="width:90px;font-family:monospace;">
-            </div>
-            <div class="form-group">
-                <label>Ende (HH:MM)</label>
-                <input type="text" name="end_time" pattern="\d{2}:\d{2}" required placeholder="13:55" style="width:90px;font-family:monospace;">
-            </div>
-            <button type="submit" class="btn btn-primary">Hinzufügen</button>
-        </form>
-    </div>
+            {% else %}
+            <p style="color:var(--text-secondary);text-align:center;padding:1.5rem 0;">
+                📋 Noch keine Stunden vorhanden. Lade eine Vorlage oder füge unten eine Stunde hinzu.
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- ═══ NEUE UNTERRICHTSSTUNDE ═════════════════════════════════════════════ -->
+        <div class="section-card">
+            <h3>➕ Unterrichtsstunde hinzufügen</h3>
+            <p class="form-hint" style="margin:-.5rem 0 1rem;">Für <strong>Pausen</strong> bitte den Bereich „Große Pausen einfügen“ oben nutzen.</p>
+            <form method="POST" action="{{ url_for('admin_dyn.periods_add') }}" class="add-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="period_kind" value="lesson">
+                <div class="form-group">
+                    <label>Interne Nr. (automatisch vorgeschlagen)</label>
+                    <input type="number" name="number" min="1" max="999" required value="{{ next_period_number }}" style="width:85px;">
+                </div>
+                <div class="form-group">
+                    <label>Bezeichnung</label>
+                    <input type="text" name="name" required placeholder="1. Stunde" style="min-width:140px;">
+                </div>
+                <div class="form-group">
+                    <label>Beginn (HH:MM)</label>
+                    <input type="text" name="start_time" pattern="\d{2}:\d{2}" required placeholder="13:10" style="width:90px;font-family:monospace;">
+                </div>
+                <div class="form-group">
+                    <label>Ende (HH:MM)</label>
+                    <input type="text" name="end_time" pattern="\d{2}:\d{2}" required placeholder="13:55" style="width:90px;font-family:monospace;">
+                </div>
+                <button type="submit" class="btn btn-primary">Hinzufügen</button>
+            </form>
+        </div>
+    {% endif %}
 </div>
 
 <script>
 function toggleEditPeriod(id) {
-    const row = document.getElementById('edit-p-' + id);
+    // Falls room-specific, nutzen wir 'edit-period-', sonst 'edit-p-'
+    const row = document.getElementById('edit-period-' + id) || document.getElementById('edit-p-' + id);
+    if (!row) return;
     const isHidden =
         row.style.display === 'none' ||
         getComputedStyle(row).display === 'none';
     document.querySelectorAll('.edit-row').forEach((r) => {
-        if (r.id !== 'edit-p-' + id) r.style.display = 'none';
+        if (r.id !== 'edit-period-' + id && r.id !== 'edit-p-' + id) r.style.display = 'none';
     });
     row.style.display = isHidden ? 'table-row' : 'none';
 }
+
+function updateEditFields(id) {
+    const kindSelect = document.getElementById('edit-kind-' + id);
+    const afterLessonGroup = document.getElementById('edit-after-lesson-group-' + id);
+    if (kindSelect && afterLessonGroup) {
+        if (kindSelect.value === 'break') {
+            afterLessonGroup.style.display = 'block';
+        } else {
+            afterLessonGroup.style.display = 'none';
+        }
+    }
+}
+
+function updateAddFields() {
+    const kindSelect = document.getElementById('add-kind');
+    const afterLessonGroup = document.getElementById('add-after-lesson-group');
+    if (kindSelect && afterLessonGroup) {
+        if (kindSelect.value === 'break') {
+            afterLessonGroup.style.display = 'block';
+        } else {
+            afterLessonGroup.style.display = 'none';
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateAddFields();
+    {% if room_id > 0 and periods %}
+        {% for p in periods %}
+        updateEditFields({{ p.id }});
+        {% endfor %}
+    {% endif %}
+});
 </script>
 {% endblock %}

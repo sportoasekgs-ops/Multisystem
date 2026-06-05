@@ -67,7 +67,7 @@
                         {% if room.is_active %}<span style="color:#4caf50;">✔</span>{% else %}<span style="color:#ccc;">✖</span>{% endif %}
                     </td>
                     <td style="padding:.6rem .8rem;text-align:right;white-space:nowrap;">
-                        <a href="{{ url_for('admin_dyn.room_schedule', room_id=room.id) }}" class="btn btn-secondary" style="padding:.28rem .6rem;font-size:.8rem;text-decoration:none;margin-right:0.25rem;">📅 Stundenplan</a>
+                        <a href="{{ url_for('admin_dyn.periods', room_id=room.id) }}" class="btn btn-secondary" style="padding:.28rem .6rem;font-size:.8rem;text-decoration:none;margin-right:0.25rem;">📅 Stundenplan</a>
                         <button onclick="toggleEditRoom({{ room.id }})" class="btn btn-secondary" style="padding:.28rem .6rem;font-size:.8rem;margin-right:0.25rem;">Edit</button>
                         <form method="POST" action="{{ url_for('admin_dyn.rooms_delete', room_id=room.id) }}" style="display:inline;" onsubmit="return confirm('Raum {{ room.name }} löschen? (Nur möglich, wenn keine Buchungen darauf liegen)');">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
