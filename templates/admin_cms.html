@@ -911,8 +911,12 @@ input:checked + .slider:before { transform: translateX(24px); }
 function showTab(name) {
     document.querySelectorAll('.cms-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.cms-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    event.target.classList.add('active');
+    const panel = document.getElementById('tab-' + name);
+    if (panel) panel.classList.add('active');
+    document.querySelectorAll('.cms-tab').forEach(t => {
+        const oc = t.getAttribute('onclick') || '';
+        if (oc.includes("'" + name + "'")) t.classList.add('active');
+    });
 }
 
 function updateResetBtn() {
