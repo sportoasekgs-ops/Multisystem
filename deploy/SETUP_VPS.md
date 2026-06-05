@@ -1,172 +1,182 @@
-# VPS Deployment – Buchungssystem
+# LearnGrid – VPS Deployment Guide
 
-**VPS:** 87.106.155.5 | Ubuntu 24.04  
-**Domain:** igsbadenstedt.learngrid.app  
-**Ports:** 80, 443 offen
-
----
-
-## Erstinstallation (einmalig)
-
-### Schritt 1 – Code auf den VPS übertragen
-
-**Option A: Über GitHub (empfohlen)**  
-Erst das Replit-Projekt mit GitHub verbinden (Replit → Version Control → Connect to GitHub), dann:
-```bash
-ssh root@87.106.155.5
-git clone https://github.com/DEIN_USER/DEIN_REPO /opt/buchungssystem
-```
-
-**Option B: Direkt per rsync (von deinem PC aus)**
-```bash
-rsync -avz --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
-  /pfad/zum/projekt/ root@87.106.155.5:/opt/buchungssystem/
-```
-
-**Option C: Zip herunterladen & hochladen**
-```bash
-# Zip auf VPS hochladen
-scp buchungssystem.zip root@87.106.155.5:/tmp/
-ssh root@87.106.155.5
-mkdir -p /opt/buchungssystem
-cd /opt/buchungssystem
-unzip /tmp/buchungssystem.zip
-```
+**Server:** Ubuntu 22.04 / 24.04  
+**Struktur:** Jede Schule bekommt eigene DB, App-Instanz, Subdomain und HTTPS-Zertifikat.
 
 ---
 
-### Schritt 2 – Installationsskript ausführen
+## Schnellreferenz
 
-```bash
-ssh root@87.106.155.5
-bash /opt/buchungssystem/deploy/install.sh
-```
-
-Das Skript erledigt alles automatisch:
-- Python-Pakete installieren (venv)
-- `.env` mit DATABASE_URL und SESSION_SECRET anlegen
-- Systemd-Service einrichten und starten
-- nginx konfigurieren
-- SSL-Zertifikat (Let's Encrypt) holen
+| Aufgabe | Befehl |
+|---|---|
+| Neue Schule anlegen | `bash deploy/provision_school.sh "IGS Badenstedt"` |
+| Code pushen + alle Schulen neu starten | `bash deploy/push_to_vps.sh` |
+| Nur eine Schule patchen | `bash deploy/push_to_vps.sh igs-badenstedt` |
+| Alle Schulen auf VPS neu starten | `ssh root@VPS "bash /opt/learngrid/deploy/redeploy.sh"` |
+| Status aller Instanzen | `ssh root@VPS "bash /opt/learngrid/deploy/redeploy.sh --status"` |
 
 ---
 
-## Neue Schule hinzufügen (Multi-School)
+## Erstinstallation (einmalig pro VPS)
 
-Eine weitere Schule auf demselben VPS anlegen – Datenbank, Subdomain-Instanz,
-nginx und HTTPS werden automatisch erzeugt:
+### 1. Code auf den VPS bringen
 
+**Option A: Git (empfohlen)**
 ```bash
-ssh root@87.106.155.5
-bash /opt/buchungssystem/deploy/provision_school.sh "IGS Badenstedt"
+ssh root@DEIN_VPS_IP
+git clone https://github.com/DEIN_USER/DEIN_REPO /opt/learngrid
 ```
 
-Das Skript:
-- legt eine **eigene PostgreSQL-Datenbank** für die Schule an
-- erstellt eine **isolierte App-Instanz** (eigenes Verzeichnis unter `/srv/learngrid/<slug>`, eigener Port, eigener systemd-Service `learngrid@<slug>`)
-- richtet den **nginx-vhost** für `<slug>.learngrid.app` ein
-- holt das **HTTPS-Zertifikat** (Let's Encrypt)
+**Option B: Direkt per rsync vom Entwicklungsrechner**
+```bash
+bash deploy/push_to_vps.sh   # (konfiguriert sich beim ersten Aufruf selbst)
+```
 
-Beim ersten Lauf werden Basis-Domain, VPS-IP und Let's-Encrypt-E-Mail einmalig
-abgefragt und in `/etc/learngrid/provision.conf` gespeichert.
+### 2. Installationsskript ausführen
+```bash
+ssh root@DEIN_VPS_IP
+bash /opt/learngrid/deploy/install.sh
+```
+Richtet nginx, PostgreSQL, systemd und das erste SSL-Zertifikat ein.
 
-**Einziger manueller Schritt:** Wenn das Skript dazu auffordert, bei IONOS einen
-**A-Record** anlegen (`<slug>` → VPS-IP). Das Skript wartet automatisch, bis der
-Eintrag aktiv ist, und holt dann das Zertifikat. Danach ist
-`https://<slug>.learngrid.app` aufrufbar und der Einrichtungs-Assistent führt
-durch den Rest.
+---
 
-Optional lässt sich der Subdomain-Name (Slug) als 2. Parameter überschreiben:
+## Neue Schule hinzufügen
+
+```bash
+ssh root@DEIN_VPS_IP
+bash /opt/learngrid/deploy/provision_school.sh "IGS Badenstedt"
+```
+
+**Was das Skript automatisch erledigt:**
+1. PostgreSQL-Datenbank + eigenen DB-User anlegen
+2. Isoliertes App-Verzeichnis unter `/srv/learngrid/<slug>/` erstellen
+3. Freien Port zuweisen und `.env` mit DB-URL + Session-Secret schreiben
+4. systemd-Service `learngrid@<slug>` einrichten und starten
+5. nginx-vhost für `<slug>.learngrid.app` anlegen
+6. Let's-Encrypt-Zertifikat holen (nach DNS-Verbreitung)
+
+**Einziger manueller Schritt:** Das Skript zeigt dir genau, welchen A-Record
+du bei deinem DNS-Anbieter setzen musst, und wartet automatisch auf die Verbreitung.
+
+Nach dem Skript öffnet der Einrichtungs-Assistent bei `https://<slug>.learngrid.app`
+und führt durch die Schulkonfiguration (Name, Branding, IServ-OAuth, E-Mail, etc.).
+
+**Optionaler eigener Slug (Subdomain-Name):**
 ```bash
 bash deploy/provision_school.sh "IGS Badenstedt" igs-bs
+# → https://igs-bs.learngrid.app
 ```
 
-Verwaltung einer Schul-Instanz:
+**Alle Instanzen anzeigen:**
 ```bash
-systemctl status learngrid@igs-badenstedt
-journalctl -u learngrid@igs-badenstedt -f
-systemctl restart learngrid@igs-badenstedt
-```
-
----
-
-## Updates einspielen (Redeploy)
-
-**Multi-School (empfohlen):** aktualisiert den Code in **allen** Schul-Instanzen
-und startet sie neu. Pro Schule bleiben `.env`, `buchungssystem_local.json` und
-`static/uploads` (Logos) unberührt.
-
-```bash
-ssh root@87.106.155.5
-bash /opt/buchungssystem/deploy/redeploy.sh
-```
-
-Varianten:
-```bash
-bash deploy/redeploy.sh --no-pull        # ohne git pull (Code schon aktuell)
-bash deploy/redeploy.sh igs-badenstedt   # nur eine bestimmte Schule
-```
-
-Wenn der Code per rsync statt git kommt, erst übertragen, dann `--no-pull`:
-```bash
-rsync -avz --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
-  --exclude='.env' --exclude='buchungssystem_local.json' \
-  /pfad/zum/projekt/ root@87.106.155.5:/opt/buchungssystem/
-ssh root@87.106.155.5 "bash /opt/buchungssystem/deploy/redeploy.sh --no-pull"
-```
-
-**Altes Einzel-Setup (nur eine Schule, ohne Multi-School):**
-```bash
-ssh root@87.106.155.5
-bash /opt/buchungssystem/deploy/update.sh
+bash /opt/learngrid/deploy/provision_school.sh --list
 ```
 
 ---
 
-## Nützliche Befehle auf dem VPS
+## Updates / Patches einspielen
+
+### Von deinem Entwicklungsrechner oder Replit (empfohlen)
 
 ```bash
-# Live-Logs
-journalctl -u buchungssystem -f
+# Einmalig konfigurieren (wird in deploy/.push_config gespeichert):
+bash deploy/push_to_vps.sh
+# → fragt VPS-Adresse ab und speichert sie
 
+# Ab dann einfach:
+bash deploy/push_to_vps.sh                  # alle Schulen
+bash deploy/push_to_vps.sh igs-badenstedt   # nur eine Schule
+bash deploy/push_to_vps.sh --dry-run        # Vorschau ohne Änderungen
+```
+
+Was passiert:
+- rsync überträgt nur geänderte Dateien (`.env`, `static/uploads`, Logs bleiben unangetastet)
+- Ruft auf dem VPS `redeploy.sh --no-pull` auf
+- Jede Instanz wird kurz neu gestartet, Gesundheitscheck folgt
+
+### Direkt auf dem VPS (z.B. via Git-Workflow)
+
+```bash
+ssh root@DEIN_VPS_IP
+bash /opt/learngrid/deploy/redeploy.sh              # git pull + alle Schulen
+bash /opt/learngrid/deploy/redeploy.sh --no-pull    # ohne git pull
+bash /opt/learngrid/deploy/redeploy.sh igs-bs       # nur eine Schule
+bash /opt/learngrid/deploy/redeploy.sh --status     # nur Status anzeigen
+```
+
+---
+
+## Verwaltung einzelner Schulen
+
+```bash
 # Status
-systemctl status buchungssystem
+systemctl status learngrid@igs-badenstedt
+
+# Live-Logs
+journalctl -u learngrid@igs-badenstedt -f
 
 # Neustart
-systemctl restart buchungssystem
+systemctl restart learngrid@igs-badenstedt
 
-# App läuft auf Port 5000?
-ss -tlnp | grep 5000
-
-# HTTPS testen
-curl -I https://igsbadenstedt.learngrid.app
+# Stoppen / Starten
+systemctl stop learngrid@igs-badenstedt
+systemctl start learngrid@igs-badenstedt
 ```
-
----
-
-## Häufige Fehler
-
-| Problem | Lösung |
-|---|---|
-| `502 Bad Gateway` | `systemctl restart buchungssystem` |
-| App startet nicht | `journalctl -u buchungssystem -n 50` |
-| DB-Verbindung schlägt fehl | DATABASE_URL in `/opt/buchungssystem/.env` prüfen |
-| Zertifikat abgelaufen | `certbot renew && systemctl reload nginx` |
-| nginx-Fehler | `nginx -t` zum Testen |
 
 ---
 
 ## Dateistruktur auf dem VPS
 
 ```
-/opt/buchungssystem/
-├── .env                        ← DATABASE_URL + SESSION_SECRET (geheim!)
-├── buchungssystem_local.json   ← wird vom Setup-Wizard erstellt
-├── venv/                       ← Python-Umgebung
-├── static/uploads/             ← Logos, Favicons
+/opt/learngrid/                         ← Quellcode (git repo oder rsync-Ziel)
+├── app.py, models.py, ...
+├── requirements.txt
 └── deploy/
-    ├── install.sh              ← Erstinstallation
-    ├── update.sh               ← Updates
-    ├── buchungssystem.service  ← Systemd-Unit
-    └── nginx.conf              ← nginx-Konfiguration
+    ├── provision_school.sh             ← Neue Schule anlegen
+    ├── redeploy.sh                     ← Code + Neustart auf dem VPS
+    ├── push_to_vps.sh                  ← Push vom Entwicklungsrechner
+    ├── install.sh                      ← Erstinstallation
+    └── SETUP_VPS.md                    ← Diese Anleitung
+
+/srv/learngrid/
+├── venv/                               ← Gemeinsame Python-Umgebung
+├── igs-badenstedt/                     ← Instanz Schule 1
+│   ├── .env                            ← DB-URL + Session-Secret (geheim!)
+│   ├── buchungssystem_local.json       ← vom Setup-Wizard erstellt
+│   ├── static/uploads/                 ← Logos, Favicons (nicht überschrieben)
+│   └── logs/                           ← access.log, error.log
+├── kgs-muster/                         ← Instanz Schule 2
+│   └── ...
+└── ...
+
+/etc/learngrid/provision.conf           ← Domain, IP, LE-E-Mail (einmalig gespeichert)
+/etc/nginx/sites-available/learngrid-*  ← nginx-vhosts
+/etc/systemd/system/learngrid@.service  ← systemd-Template
+```
+
+---
+
+## Häufige Probleme
+
+| Problem | Lösung |
+|---|---|
+| `502 Bad Gateway` | `systemctl restart learngrid@<slug>` |
+| Service startet nicht | `journalctl -u learngrid@<slug> -n 50` |
+| Datenbank-Fehler | `.env` in `/srv/learngrid/<slug>/` prüfen |
+| Zertifikat abgelaufen | `certbot renew && systemctl reload nginx` |
+| nginx-Fehler | `nginx -t` |
+| SSH-Key fehlt | `ssh-copy-id root@VPS_IP` |
+| Port belegt | `ss -tlnp \| grep PORT` |
+
+---
+
+## HTTPS nachträglich einrichten
+
+Falls beim Provisionieren das DNS noch nicht aktiv war:
+```bash
+certbot --nginx -d <slug>.learngrid.app \
+    --non-interactive --agree-tos \
+    -m deine@email.de --redirect
+systemctl reload nginx
 ```

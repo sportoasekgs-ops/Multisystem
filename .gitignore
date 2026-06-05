@@ -58,3 +58,6 @@ logs/
 # Lokale Konfiguration (enthält DB-URL und andere Secrets – NICHT in Git!)
 buchungssystem_local.json
 sportoase_local.json
+
+# VPS Push-Konfiguration (SSH-Adresse – nicht in Git)
+deploy/.push_config
