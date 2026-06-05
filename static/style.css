@@ -7044,7 +7044,8 @@ footer {
     border-radius: var(--radius);
     box-shadow: var(--shadow-lg);
     z-index: 1050;
-    overflow: hidden;
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
     margin-top: 4px;
 }
 

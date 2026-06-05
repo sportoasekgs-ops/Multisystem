@@ -1651,7 +1651,8 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         border-radius: 10px;
         box-shadow: var(--shadow-md);
         z-index: 1005;
-        overflow: hidden;
+        overflow-y: auto;
+        max-height: calc(100vh - 100px);
     }
 
     html[data-admin-theme="slotra-reloaded"] .admin-quick-menu.show {
