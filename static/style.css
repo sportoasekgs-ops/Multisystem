@@ -2320,7 +2320,7 @@ details.help-section[open] .toggle-arrow {
 }
 
 /* Responsive - Mobile Optimierung */
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
     /* Container & Spacing */
     .container {
         padding: 0 0.75rem;
