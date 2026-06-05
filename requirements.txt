@@ -11,3 +11,8 @@ pytz>=2024.1
 requests>=2.31.0
 sqlalchemy>=2.0.23
 werkzeug>=3.0.1
+email_validator
+flask
+flask-sqlalchemy
+gunicorn
+psycopg2-binary
