@@ -20,6 +20,20 @@
 # ============================================================
 set -euo pipefail
 
+# SRC_DIR: automatisch suchen wenn nicht explizit gesetzt
+if [[ -z "${SRC_DIR:-}" ]]; then
+    for _candidate in \
+        "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)" \
+        /opt/learngrid \
+        /opt/buchungssystem \
+        /opt/slotra \
+        /var/www/learngrid; do
+        if [[ -f "$_candidate/main.py" ]]; then
+            SRC_DIR="$_candidate"
+            break
+        fi
+    done
+fi
 SRC_DIR="${SRC_DIR:-/opt/learngrid}"
 BASE_ROOT="/srv/learngrid"
 SHARED_VENV="$BASE_ROOT/venv"
