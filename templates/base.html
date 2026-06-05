@@ -272,7 +272,7 @@
                     <div class="nav-links-wrapper" id="navLinksWrapper">
                         <a href="{{ url_for('dashboard') }}" class="nav-link-dashboard{% if request.endpoint == 'dashboard' %} active{% endif %}">🏠 Dashboard</a>
                         <a href="{{ url_for('meine_buchungen') }}" class="nav-link-my-bookings{% if request.endpoint == 'meine_buchungen' %} active{% endif %}">📅 Meine Buchungen</a>
-                        <a href="{{ url_for('posteingang') }}" class="nav-link-inbox{% if request.endpoint == 'posteingang' %} active{% endif %}" style="position: relative; display: inline-flex; align-items: center;">
+                        <a href="{{ url_for('posteingang') }}" class="nav-link-inbox{% if request.endpoint == 'posteingang' %} active{% endif %}" style="position: relative;">
                             📥 Posteingang
                             <span id="navInboxBadge" class="nav-inbox-badge" style="display:none; background: var(--primary); color: white; border-radius: 10px; padding: 1px 6px; font-size: 0.72rem; font-weight: bold; min-width: 15px; text-align: center; margin-left: 5px; box-shadow: var(--shadow-glow);">0</span>
                         </a>
@@ -727,7 +727,7 @@
 
             {% if session.user_id %}
             updateUnreadCount();
-            setInterval(updateUnreadCount, 60000); // check every 60s
+            setInterval(updateUnreadCount, 10000); // check every 10s
             {% endif %}
         });
 
