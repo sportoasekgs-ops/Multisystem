@@ -1199,7 +1199,7 @@ html[data-admin-theme="slotra-reloaded"] .bg-glow-orb {
         transform: translateX(4px);
     }
 
-    html[data-admin-theme="slotra-reloaded"] .top-nav nav a.nav-link-dashboard {
+    html[data-admin-theme="slotra-reloaded"] .top-nav nav a.active {
         background: rgba(111, 76, 219, 0.12);
         color: var(--brand-primary);
     }

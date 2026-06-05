@@ -270,15 +270,15 @@
 
                     <!-- Navigation Links Wrapper -->
                     <div class="nav-links-wrapper" id="navLinksWrapper">
-                        <a href="{{ url_for('dashboard') }}" class="nav-link-dashboard">🏠 Dashboard</a>
-                        <a href="{{ url_for('meine_buchungen') }}" class="nav-link-my-bookings">📅 Meine Buchungen</a>
-                        <a href="{{ url_for('posteingang') }}" class="nav-link-inbox">📥 Posteingang</a>
+                        <a href="{{ url_for('dashboard') }}" class="nav-link-dashboard{% if request.endpoint == 'dashboard' %} active{% endif %}">🏠 Dashboard</a>
+                        <a href="{{ url_for('meine_buchungen') }}" class="nav-link-my-bookings{% if request.endpoint == 'meine_buchungen' %} active{% endif %}">📅 Meine Buchungen</a>
+                        <a href="{{ url_for('posteingang') }}" class="nav-link-inbox{% if request.endpoint == 'posteingang' %} active{% endif %}">📥 Posteingang</a>
 
                         {% if session.user_role == 'admin' %}
                         <div class="admin-menu-dropdown-wrapper">
                             <div class="admin-menu-split-link">
                                 <button type="button" class="admin-plus-btn" onclick="toggleAdminQuickMenu(event)" title="Admin Schnellzugriff">＋</button>
-                                <a href="{{ url_for('admin') }}" class="nav-link-admin">⚙️ Admin</a>
+                                <a href="{{ url_for('admin') }}" class="nav-link-admin{% if request.endpoint == 'admin' %} active{% endif %}">⚙️ Admin</a>
                             </div>
                             <div class="admin-quick-menu" id="adminQuickMenu">
                                 <span class="quick-menu-group-title">📅 Verwaltung</span>
